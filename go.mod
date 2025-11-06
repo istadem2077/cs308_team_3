@@ -1,3 +1,3 @@
-module cs308_team_3
+module sabanci_pharmacy
 
-go 1.22.2
+go 1.25
