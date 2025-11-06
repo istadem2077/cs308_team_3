@@ -1,0 +1,23 @@
+/* A custom style to approximate the logo font */
+.logo-font {
+    font-family: 'Garamond', 'Times New Roman', serif;
+    letter-spacing: 0.5px;
+}
+
+/* Ensure Lucide icons are sized correctly */
+i[data-lucide] {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Custom scroll-to-top button visibility */
+#scrollToTopBtn {
+    display: none; /* Hidden by default */
+    position: fixed;
+    bottom: 20px;
+    right: 20px; /* Adjusted position after removing WhatsApp btn */
+    z-index: 99;
+}
+
