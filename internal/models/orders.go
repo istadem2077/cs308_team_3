@@ -12,3 +12,6 @@ type Order struct {
 type OrderModel struct {
 	DB *sql.DB
 }
+
+func (om *OrderModel) GetOrderByID() (*Order, error)  {}
+func (om *OrderModel) GetAllOrders() ([]Order, error) {}

@@ -16,3 +16,6 @@ type Product struct {
 type ProductModel struct {
 	DB *sql.DB
 }
+
+func (p *ProductModel) GetAllProducts() ([]Product, error) {}
+func (p *ProductModel) GetProductByID() (*Product, error)  {}

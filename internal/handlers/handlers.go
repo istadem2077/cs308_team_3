@@ -20,6 +20,8 @@ func NewHandler(m models.Models) *Handler {
 	}
 }
 
+func (h *Handler) ProductsHandler(w http.ResponseWriter, r *http.Request) {}
+
 func (h *Handler) HelloAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"message": "Hello World!"}`))
