@@ -1,28 +1,20 @@
 $(document).ready(function() {
     
     // =================================================================
-    // MOCK DATABASE
+    // APP STATE
     // =================================================================
-    const allProducts = [
-        { id: 1, name: 'Vitamin C 1000mg', price: 199.90, image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Vitamin+C', category: 'vitamins', description: 'High-potency Vitamin C for daily immune support and antioxidant protection.' },
-        { id: 2, name: 'Omega 3 Fish Oil', price: 450.50, image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Fish+Oil', category: 'fish-oils', description: 'Purified fish oil capsules, rich in EPA and DHA to support heart and brain health.' },
-        { id: 3, name: 'Vitamin D3+K2', price: 320.00, category: 'vitamins', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Vitamin+D', description: 'Essential vitamins for bone health, calcium absorption, and cardiovascular support.' },
-        { id: 4, name: 'Nutraxin Multivitamin', price: 315.00, category: 'minerals', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Multivitamin', description: 'A comprehensive blend of essential vitamins and minerals for men.' },
-        { id: 5, name: 'Probiotic 10 Billion', price: 299.00, category: 'new-products', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Probiotic', description: 'Supports digestive health and a balanced gut microbiome with 10 billion active cultures.' },
-        { id: 6, name: 'Solgar Vitamin B12', price: 275.00, category: 'vitamins', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Vitamin+B12', description: 'High-quality Vitamin B12 for energy metabolism and nervous system health.' },
-        { id: 7, name: 'Nordic Naturals Cod Liver Oil', price: 550.00, category: 'fish-oils', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Cod+Liver+Oil', description: 'Premium cod liver oil, a great source of Vitamins A and D.' },
-        { id: 8, name: 'Magnesium Glycinate', price: 380.00, category: 'minerals', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Magnesium', description: 'Highly absorbable magnesium for muscle relaxation, sleep, and stress relief.' },
-        { id: 9, name: 'Collagen Peptides', price: 620.00, category: 'new-products', image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Collagen', description: 'Supports healthy skin, hair, nails, and joints. Unflavored and easily dissolvable.' },
-        { id: 10, name: 'Special Discount Vitamin Pack', price: 400.00, image: 'https://placehold.co/200x200/F5F5F5/AAA?text=Discount+Pack', category: 'discounted-products', description: 'A limited-time offer pack containing Vitamin C, D, and Zinc.' },
-    ];
-
+    
+    let productsCache = []; // We will fetch products from the API and store them here.
+    
+    // Maps category IDs (from URL) to their display names.
+    // Based on your example, category 4 is "New Products". I've mapped the rest.
     const categoryNames = {
-        'vitamins': 'Vitamins',
-        'fish-oils': 'Fish Oils',
-        'minerals': 'Minerals',
-        'new-products': 'New Products',
-        'discounted-products': 'Discounted Products',
-        'all': 'All Products' // Added this line
+        '1': 'Vitamins',
+        '2': 'Fish Oils',
+        '3': 'Minerals',
+        '4': 'New Products',
+        '5': 'Discounted Products',
+        'all': 'All Products'
     };
 
     // =================================================================
@@ -45,27 +37,42 @@ $(document).ready(function() {
     function addToCart(productId, quantity) {
         let cart = getCart();
         const existingItemIndex = cart.findIndex(item => item.id === productId);
-        const product = allProducts.find(p => p.id === productId);
+        
+        // Find the product in our cache.
+        const product = productsCache.find(p => p.id === productId);
 
         if (!product) {
-            console.error('Product not found!');
-            return;
+            console.error('Product not found in cache!');
+            return false;
         }
+
+        // --- Stock Check ---
+        const itemInCart = cart.find(item => item.id === productId);
+        const currentCartQuantity = itemInCart ? itemInCart.quantity : 0;
+        
+        if (currentCartQuantity + quantity > product.quantity) {
+            console.error("Not enough stock!");
+            return false; // Signal that adding failed
+        }
+        // --- End Stock Check ---
+
 
         if (existingItemIndex > -1) {
             // Update quantity
             cart[existingItemIndex].quantity += quantity;
         } else {
             // Add new item
+            // Note: we adapt the API's 'image_url' to the cart's 'image'
             cart.push({
                 id: product.id,
                 name: product.name,
                 price: product.price,
-                image: product.image,
+                image: product.image_url, // Adapted from new API structure
                 quantity: quantity
             });
         }
         saveCart(cart);
+        return true; // Signal that adding was successful
     }
 
     /** Removes an item from the cart */
@@ -76,10 +83,24 @@ $(document).ready(function() {
 
     /** Updates the quantity of a cart item */
     function updateCartQuantity(productId, newQuantity) {
+        // Find product to check stock
+        const product = productsCache.find(p => p.id === productId);
+        if (!product) {
+            console.error("Product not found, removing from cart");
+            removeFromCart(productId);
+            return;
+        }
+
+        // Clamp quantity to max stock
+        if (newQuantity > product.quantity) {
+            newQuantity = product.quantity;
+        }
+
         if (newQuantity < 1) {
             removeFromCart(productId);
             return;
         }
+
         let cart = getCart();
         const itemIndex = cart.findIndex(item => item.id === productId);
         if (itemIndex > -1) {
@@ -88,7 +109,7 @@ $(document).ready(function() {
         }
     }
 
-/** Updates the cart icon counter */
+    /** Updates the cart icon counter */
     function updateCartIcon() {
         const cart = getCart();
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -127,9 +148,10 @@ $(document).ready(function() {
         
         let products;
         if (categorySlug === 'all') {
-            products = allProducts; // Get all products
+            products = productsCache; // Get all products
         } else {
-            products = allProducts.filter(p => p.category === categorySlug); // Get filtered products
+            // Find products where category_id (a number) matches the slug (a string)
+            products = productsCache.filter(p => p.category_id.toString() === categorySlug);
         }
         
         $('#page-category-title').text(categoryName);
@@ -145,11 +167,16 @@ $(document).ready(function() {
             const productHtml = `
                 <div class="border rounded-lg p-4 shadow-sm hover:shadow-lg transition-shadow flex flex-col justify-between">
                     <a href="#product=${product.id}">
-                        <img src="${product.image}" alt="${product.name}" class="w-full h-40 object-contain mb-4 rounded">
+                        <img src="${product.image_url}" alt="${product.name}" class="w-full h-40 object-contain mb-4 rounded">
                         <h3 class="font-semibold text-gray-800 h-12 overflow-hidden">${product.name}</h3>
                         <p class="text-lg font-bold text-brand-green mt-2">${product.price.toFixed(2)} TL</p>
                     </a>
-                    <button class="add-to-cart-btn mt-4 w-full bg-brand-gold text-white py-2 rounded-md hover:bg-brand-gold-dark transition-colors" data-product-id="${product.id}">Add to Cart</button>
+                    
+                    <!-- Stock-aware Button -->
+                    ${product.quantity > 0
+                        ? `<button class="add-to-cart-btn mt-4 w-full bg-brand-gold text-white py-2 rounded-md hover:bg-brand-gold-dark transition-colors" data-product-id="${product.id}">Add to Cart</button>`
+                        : `<button class="mt-4 w-full bg-gray-300 text-gray-500 py-2 rounded-md cursor-not-allowed" disabled>Out of Stock</button>`
+                    }
                 </div>
             `;
             $grid.append(productHtml);
@@ -163,19 +190,40 @@ $(document).ready(function() {
 
     /** Renders the Product Detail page */
     function renderProductPage(productId) {
-        const product = allProducts.find(p => p.id === parseInt(productId));
+        // Find the product from our cache instead of a new API call
+        const product = productsCache.find(p => p.id === parseInt(productId));
 
         if (!product) {
-            renderHomePage(); // Or show a 404 page
+            console.error("Product not found in cache!");
+            renderHomePage(); // Go home if product doesn't exist
             return;
         }
 
-        $('#product-detail-image').attr('src', product.image).attr('alt', product.name);
+        // Get elements
+        const $stockMessage = $('#product-stock-message');
+        const $quantityInput = $('#product-detail-quantity');
+        const $addToCartBtn = $('#product-detail-add-to-cart');
+
+        // Populate the page with product data
+        $('#product-detail-image').attr('src', product.image_url).attr('alt', product.name);
         $('#product-detail-name').text(product.name);
         $('#product-detail-price').text(`${product.price.toFixed(2)} TL`);
         $('#product-detail-description').text(product.description);
-        $('#product-detail-quantity').val(1); // Reset quantity to 1
         $('#product-detail-add-to-cart').data('product-id', product.id); // Set product ID on button
+
+        // --- Handle Stock UI ---
+        if (product.quantity > 0) {
+            // Product is IN STOCK
+            $stockMessage.addClass('hidden');
+            $quantityInput.attr('max', product.quantity).val(1).prop('disabled', false);
+            $addToCartBtn.prop('disabled', false).html('<i data-lucide="shopping-cart"></i><span>Add to Cart</span>');
+        } else {
+            // Product is OUT OF STOCK
+            $stockMessage.removeClass('hidden');
+            $quantityInput.val(0).prop('disabled', true);
+            $addToCartBtn.prop('disabled', true).html('Out of Stock');
+        }
+        // --- End Handle Stock UI ---
 
         showPage('#page-product');
     }
@@ -197,6 +245,10 @@ $(document).ready(function() {
         cart.forEach(item => {
             const itemTotal = item.price * item.quantity;
             subtotal += itemTotal;
+            // Find product stock
+            const product = productsCache.find(p => p.id === item.id);
+            const stock = product ? product.quantity : item.quantity; // Default to item's quantity if product not found
+
             const itemHtml = `
                 <div class="flex items-center justify-between border-b py-4 gap-4">
                     <div class="flex items-center gap-4">
@@ -207,7 +259,7 @@ $(document).ready(function() {
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <input type="number" value="${item.quantity}" min="1" class="cart-item-quantity w-20 border border-gray-300 rounded-md p-2 text-center" data-product-id="${item.id}">
+                        <input type="number" value="${item.quantity}" min="1" max="${stock}" class="cart-item-quantity w-20 border border-gray-300 rounded-md p-2 text-center" data-product-id="${item.id}">
                         <p class="text-lg font-semibold w-24 text-right">${itemTotal.toFixed(2)} TL</p>
                         <button class="remove-from-cart-btn text-red-600 hover:text-red-800" data-product-id="${item.id}">
                             <i data-lucide="trash-2"></i>
@@ -249,72 +301,118 @@ $(document).ready(function() {
         }
     }
 
-    // --- Initial Page Load ---
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-    updateCartIcon();
-    handleHashChange(); // Render correct page on load
+    // --- Main Application Initialization ---
+    function initApp() {
+        // 1. Show a loading indicator (optional, but good practice)
+        $('body').append('<div id="loading-overlay" class="fixed inset-0 bg-white z-[999] flex items-center justify-center"><p class="text-2xl">Loading Pharmacy...</p></div>');
 
-    // --- Listen for Hash Changes ---
-    $(window).on('hashchange', handleHashChange);
-
-    // --- Scroll-to-Top Button ---
-    var $scrollToTopBtn = $('#scrollToTopBtn');
-    $(window).scroll(function() {
-        if ($(window).scrollTop() > 300) {
-            $scrollToTopBtn.fadeIn();
-        } else {
-            $scrollToTopBtn.fadeOut();
-        }
-    });
-    $scrollToTopBtn.click(function() {
-        $('html, body').animate({ scrollTop: 0 }, 500);
-        return false;
-    });
-
-    // --- Event Delegation for "Add to Cart" ---
-    $('body').on('click', '.add-to-cart-btn', function() {
-        const $button = $(this);
-        const productId = $button.data('product-id');
-        let quantity = 1;
-
-        // Check if we are on the product page to get specific quantity
-        if ($button.attr('id') === 'product-detail-add-to-cart') {
-            quantity = parseInt($('#product-detail-quantity').val()) || 1;
-        }
-
-        addToCart(productId, quantity);
-
-        // Show confirmation
-        const originalText = $button.html();
-        $button.html('<i data-lucide="check"></i> Added!');
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-        setTimeout(() => {
-            $button.html(originalText);
-            // Re-render original icon if it had one
-            if (originalText.includes('shopping-cart')) {
-                 if (typeof lucide !== 'undefined') {
+        // 2. Fetch all products from the API
+        $.getJSON("/api/products")
+            .done(function(data) {
+                productsCache = data; // Store in cache
+                
+                // 3. Once data is loaded, initialize the app
+                if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
-                 }
-            }
-        }, 1500);
-    });
+                }
+                updateCartIcon();
+                handleHashChange(); // Render the correct page
 
-    // --- Event Delegation for "Remove from Cart" ---
-    $('body').on('click', '.remove-from-cart-btn', function() {
-        const productId = $(this).data('product-id');
-        removeFromCart(productId);
-        renderCartPage(); // Re-render the cart
-    });
+                // 4. Set up all event listeners
+                $(window).on('hashchange', handleHashChange);
 
-    // --- Event Delegation for "Update Quantity" in cart ---
-    $('body').on('change', '.cart-item-quantity', function() {
-        const productId = $(this).data('product-id');
-        const newQuantity = parseInt($(this).val());
-        updateCartQuantity(productId, newQuantity);
-        renderCartPage(); // Re-render the cart
-    });
+                // --- Scroll-to-Top Button ---
+                var $scrollToTopBtn = $('#scrollToTopBtn');
+                $(window).scroll(function() {
+                    if ($(window).scrollTop() > 300) {
+                        $scrollToTopBtn.fadeIn();
+                    } else {
+                        $scrollToTopBtn.fadeOut();
+                    }
+                });
+                $scrollToTopBtn.click(function() {
+                    $('html, body').animate({ scrollTop: 0 }, 500);
+                    return false;
+                });
+
+                // --- Event Delegation for "Add to Cart" ---
+                $('body').on('click', '.add-to-cart-btn', function() {
+                    const $button = $(this);
+                    const productId = $button.data('product-id');
+                    let quantity = 1;
+
+                    // Check if we are on the product page to get specific quantity
+                    if ($button.attr('id') === 'product-detail-add-to-cart') {
+                        quantity = parseInt($('#product-detail-quantity').val()) || 1;
+                    }
+
+                    const success = addToCart(productId, quantity);
+                    const originalText = $button.html();
+
+                    if (success) {
+                        // Show confirmation
+                        $button.html('<i data-lucide="check"></i> Added!');
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                        setTimeout(() => {
+                            $button.html(originalText);
+                            if (originalText.includes('shopping-cart')) {
+                                if (typeof lucide !== 'undefined') {
+                                    lucide.createIcons();
+                                }
+                            }
+                        }, 1500);
+                    } else {
+                        // Show error
+                        $button.html('Not Enough Stock!');
+                        $button.prop('disabled', true); // Temporarily disable
+                        setTimeout(() => {
+                            $button.html(originalText);
+                            $button.prop('disabled', false);
+                            if (originalText.includes('shopping-cart')) {
+                                if (typeof lucide !== 'undefined') {
+                                    lucide.createIcons();
+                                }
+                            }
+                        }, 2000);
+                    }
+                });
+
+                // --- Event Delegation for "Remove from Cart" ---
+                $('body').on('click', '.remove-from-cart-btn', function() {
+                    const productId = $(this).data('product-id');
+                    removeFromCart(productId);
+                    renderCartPage(); // Re-render the cart
+                });
+
+                // --- Event Delegation for "Update Quantity" in cart ---
+                $('body').on('change', '.cart-item-quantity', function() {
+                    const $input = $(this);
+                    const productId = $input.data('product-id');
+                    let newQuantity = parseInt($input.val());
+                    
+                    // Check against max stock
+                    const product = productsCache.find(p => p.id === productId);
+                    if (product && newQuantity > product.quantity) {
+                        newQuantity = product.quantity;
+                        $input.val(newQuantity); // Correct the input field
+                    }
+                    
+                    updateCartQuantity(productId, newQuantity);
+                    renderCartPage(); // Re-render the cart
+                });
+
+            })
+            .fail(function() {
+                console.error("Failed to load products from /api/products.");
+                $('body').html('<h1 class="text-center text-red-500 p-10">Error: Could not load product data. Please try again later.</h1>');
+            })
+            .always(function() {
+                // 5. Remove loading indicator
+                $('#loading-overlay').fadeOut(300, function() { $(this).remove(); });
+            });
+    }
+
+    initApp(); // Run the app
 });
