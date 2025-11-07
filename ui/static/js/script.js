@@ -7,7 +7,6 @@ $(document).ready(function() {
     let productsCache = []; // We will fetch products from the API and store them here.
     
     // Maps category IDs (from URL) to their display names.
-    // Based on your example, category 4 is "New Products". I've mapped the rest.
     const categoryNames = {
         '1': 'Vitamins',
         '2': 'Fish Oils',
@@ -137,9 +136,62 @@ $(document).ready(function() {
         window.scrollTo(0, 0);
     }
 
-    /** Renders the Home page */
+    /** Renders the Home page dynamically */
     function renderHomePage() {
+        // Populate Mini Product Previews (Products 1 and 4)
+        const $miniPreviews = $('#mini-product-previews');
+        $miniPreviews.empty();
+        const product1 = productsCache.find(p => p.id === 1);
+        const product4 = productsCache.find(p => p.id === 4);
+        
+        if (product1) {
+            $miniPreviews.append(`
+                <a href="#product=1" class="bg-white p-2 rounded-lg shadow-sm text-center block hover:shadow-md">
+                    <img src="${product1.image_url}" alt="${product1.name}" class="mx-auto h-16 w-16 object-contain mb-2">
+                    <p class="text-xs font-semibold">Vitamin C 1000mg...</p>
+                    <p class="text-sm font-bold text-red-600">${product1.price.toFixed(2)} TL</p>
+                </a>
+            `);
+        }
+        if (product4) {
+            $miniPreviews.append(`
+                <a href="#product=4" class="bg-white p-2 rounded-lg shadow-sm text-center block hover:shadow-md">
+                    <img src="${product4.image_url}" alt="${product4.name}" class="mx-auto h-16 w-16 object-contain mb-2">
+                    <p class="text-xs font-semibold">Nutraxin...</p>
+                    <p class="text-sm font-bold text-red-600">${product4.price.toFixed(2)} TL</p>
+                </a>
+            `);
+        }
+
+        // Populate Featured Deals (First 5 products)
+        const $featuredGrid = $('#featured-products-grid');
+        $featuredGrid.empty();
+        const featuredProducts = productsCache.slice(0, 5);
+
+        featuredProducts.forEach(product => {
+            const productHtml = `
+                <div class="border rounded-lg p-4 shadow-sm hover:shadow-lg transition-shadow flex flex-col justify-between">
+                    <a href="#product=${product.id}">
+                        <img src="${product.image_url}" alt="${product.name}" class="w-full h-40 object-contain mb-4 rounded">
+                        <h3 class="font-semibold text-gray-800 h-12 overflow-hidden">${product.name}</h3>
+                        <p class="text-lg font-bold text-brand-green mt-2">${product.price.toFixed(2)} TL</p>
+                    </a>
+                    
+                    <!-- Stock-aware Button -->
+                    ${product.quantity > 0
+                        ? `<button class="add-to-cart-btn mt-4 w-full bg-brand-gold text-white py-2 rounded-md hover:bg-brand-gold-dark transition-colors" data-product-id="${product.id}">Add to Cart</button>`
+                        : `<button class="mt-4 w-full bg-gray-300 text-gray-500 py-2 rounded-md cursor-not-allowed" disabled>Out of Stock</button>`
+                    }
+                </div>
+            `;
+            $featuredGrid.append(productHtml);
+        });
+
+
         showPage('#page-home');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons(); // Re-render icons
+        }
     }
 
     /** Renders the Category page */
@@ -151,7 +203,7 @@ $(document).ready(function() {
             products = productsCache; // Get all products
         } else {
             // Find products where category_id (a number) matches the slug (a string)
-            products = productsCache.filter(p => p.category_id.toString() === categorySlug);
+            products = productsCache.filter(p => p.category_id && p.category_id.toString() === categorySlug);
         }
         
         $('#page-category-title').text(categoryName);
