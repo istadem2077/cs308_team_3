@@ -20,7 +20,14 @@ func NewHandler(m models.Models) *Handler {
 	}
 }
 
-func (h *Handler) ProductsHandler(w http.ResponseWriter, r *http.Request) {}
+func (h *Handler) ProductsHandler(w http.ResponseWriter, r *http.Request)  {}
+func (h *Handler) ProductIDHandler(w http.ResponseWriter, r *http.Request) {}
+
+func (h *Handler) CartItemsHandler(w http.ResponseWriter, r *http.Request)   {}
+func (h *Handler) CartSummaryHandler(w http.ResponseWriter, r *http.Request) {}
+
+func (h *Handler) CategoriesHandler(w http.ResponseWriter, r *http.Request) {}
+func (h *Handler) CatProdHandler(w http.ResponseWriter, r *http.Request)    {}
 
 func (h *Handler) HelloAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
