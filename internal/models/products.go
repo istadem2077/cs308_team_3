@@ -19,8 +19,7 @@ type ProductModel struct {
 	DB *sql.DB
 }
 
-func (ProductModel *ProductModel) GetAllProducts() ([]Product, error) {
-
+func (ProductModel *ProductModel) GetAllProducts() ([]*Product, error) {
 	stmt := `SELECT id, name, description, image_url, quantity, price, category_id FROM db_308.products`
 	rows, err := ProductModel.DB.Query(stmt)
 	if err != nil {
@@ -30,9 +29,9 @@ func (ProductModel *ProductModel) GetAllProducts() ([]Product, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	products := make([]Product, 0)
+	products := []*Product{}
 	for rows.Next() {
-		product := Product{}
+		product := &Product{}
 		if err := rows.Scan(&product.Id, &product.Name, &product.Description,
 			&product.ImageUrl, &product.Quantity, &product.Price,
 			&product.CategoryId); err != nil {
