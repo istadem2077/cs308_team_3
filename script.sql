@@ -1,4 +1,14 @@
-create table if not exists products
+create table categories
+(
+    id          int auto_increment
+        primary key,
+    name        varchar(100) not null,
+    description text         null,
+    constraint name
+        unique (name)
+);
+
+create table products
 (
     id              int auto_increment
         primary key,
@@ -8,11 +18,15 @@ create table if not exists products
     price           decimal(10, 2) null,
     warranty_months int            null,
     distributor     varchar(100)   null,
+    category_id     int            null,
+    constraint fk_products_categories
+        foreign key (category_id) references categories (id)
+            on delete set null,
     check (`quantity` >= 0),
     check (`price` >= 0)
 );
 
-create table if not exists users
+create table users
 (
     id       int auto_increment
         primary key,
@@ -24,7 +38,7 @@ create table if not exists users
         unique (email)
 );
 
-create table if not exists orders
+create table orders
 (
     id         int auto_increment
         primary key,
@@ -36,7 +50,7 @@ create table if not exists orders
             on update cascade on delete cascade
 );
 
-create table if not exists order_items
+create table order_items
 (
     id         int auto_increment
         primary key,
@@ -54,7 +68,7 @@ create table if not exists order_items
     check (`unit_price` >= 0)
 );
 
-create table if not exists reviews
+create table reviews
 (
     id         int auto_increment
         primary key,
@@ -72,5 +86,4 @@ create table if not exists reviews
     constraint chk_rating
         check ((`rating` >= 1) and (`rating` <= 5))
 );
-
 
