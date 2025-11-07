@@ -4,27 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Pharmacy - Trusted & Modern & Healthy</title>
-    
-    <!-- Load Tailwind CSS -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Load jQuery -->
-    <script src="/static/js/jquery-3.6.0.min.js"></script>
-    
-    <!-- Load Lucide Icons (using standard, non-dev version) -->
-    <script src="/static/js/lucide.min.js"></script>
 
-    <!-- Load Custom Stylesheet -->
-    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Custom Tailwind Configuration -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="style.css">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'brand-green': '#960029', /* Changed from green to dark red */
-                        'brand-green-light': '#b8244f', /* Changed to a lighter red */
+                        'brand-green': '#960029', 
+                        'brand-green-light': '#b8244f', 
                         'brand-gold': '#D1A954',
                         'brand-gold-light': '#F5E5C0',
                         'brand-gold-dark': '#B89240',
@@ -95,14 +90,14 @@
         <div class="container mx-auto px-4">
             <div class="flex flex-wrap justify-center items-center -mx-2">
                 <a href="#home" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Home</a>
-                <a href="#category=vitamins" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Vitamins</a>
-                <a href="#category=fish-oils" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Fish Oils</a>
-                <a href="#category=minerals" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Minerals</a>
+                <a href="#category=1" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Vitamins</a>
+                <a href="#category=2" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Fish Oils</a>
+                <a href="#category=3" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Minerals</a>
                 <a href="#" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Digestive System</a>
                 <a href="#category=all" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">All Products</a>
                 <a href="#" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Corporate</a>
-                <a href="#category=new-products" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">New Products</a>
-                <a href="#category=discounted-products" class="px-3 py-4 text-white hover:bg-brand-gold-dark bg-brand-gold transition-colors text-sm font-medium">Discounted Products</a>
+                <a href="#category=4" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">New Products</a>
+                <a href="#category=5" class="px-3 py-4 text-white hover:bg-brand-green-light transition-colors text-sm font-medium">Discounted Products</a>
             </div>
         </div>
     </nav>
@@ -331,6 +326,9 @@
                         <p id="product-detail-description" class="text-gray-700 mb-8 leading-relaxed">
                             This is a detailed description of the product. It supports immune health, provides antioxidant support, and is essential for collagen production.
                         </p>
+
+                        <!-- Added Out of Stock Message Container -->
+                        <p id="product-stock-message" class="text-red-600 font-semibold mb-4 hidden">Out of Stock</p>
                         
                         <div class="flex items-center space-x-4 mb-8">
                             <label for="quantity" class="font-semibold">Quantity:</label>
@@ -414,7 +412,7 @@
 
 
     <!-- Load Custom Script -->
-    <script src="/static/js/script.js"></script>
+    <script src="script.js"></script>
 
 </body>
 </html>
