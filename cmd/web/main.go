@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,7 +14,16 @@ import (
 
 type Application struct {
 	Config config.Config
-	DB     *sql.DB
+	Models models.Models
+}
+
+type modelWrapper struct {
+	Users      models.UserModel
+	Orders     models.OrderModel
+	OrderItems models.OrderItemModel
+	Products   models.ProductModel
+	Reviews    models.ReviewModel
+	Categories models.CategoryModel
 }
 
 func main() {
@@ -29,12 +37,14 @@ func main() {
 
 	fmt.Println("Connected to DB")
 
+	appModels := models.NewModels(db)
+
 	app := &Application{
 		Config: cfg,
-		DB:     db,
+		Models: appModels,
 	}
 
-	handler := handlers.NewHandler(app.DB, app.Config)
+	handler := handlers.NewHandler(app.Models)
 
 	router := handler.Routes()
 
