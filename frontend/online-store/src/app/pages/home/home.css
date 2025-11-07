@@ -1,0 +1,102 @@
+/* RESET + BASE */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: #FFF7ED; /* warm cream */
+  color: #374151; /* soft charcoal */
+}
+
+/* HERO SECTION */
+.hero {
+  background: linear-gradient(180deg, #F59E0B 0%, #FFF7ED 80%);
+  text-align: center;
+  padding: 5rem 1rem 4rem;
+  color: #1F2937;
+  border-bottom: 1px solid #fcdca9;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.hero-content h1 span {
+  color: #92400E; /* deep brown accent */
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  color: #4B5563;
+  margin-bottom: 2rem;
+}
+
+/* BUTTON */
+.btn-shop {
+  display: inline-block;
+  background-color: #F59E0B;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-shop:hover {
+  background-color: #92400E;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(146, 64, 14, 0.3);
+}
+
+/* FEATURES */
+.features {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 3rem 1rem 4rem;
+  background-color: #fff;
+}
+
+.feature {
+  background-color: #FFF7ED;
+  border: 1px solid #FCD34D;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  width: 280px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature h3 {
+  color: #92400E;
+  margin-bottom: 0.75rem;
+}
+
+.feature p {
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+}

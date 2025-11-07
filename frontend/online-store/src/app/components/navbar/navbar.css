@@ -1,0 +1,113 @@
+/* 🌞 WARM AMBER THEME NAVBAR */
+.navbar {
+  background-color: #FFF7ED; /* Warm cream background */
+  border-bottom: 1px solid #FCD34D; /* light amber border */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* LEFT SECTION (LOGO + MENU) */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* LOGO */
+.navbar-logo img {
+  height: 40px;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+.navbar-logo img:hover {
+  transform: scale(1.05);
+}
+
+/* MENU */
+.navbar-menu {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.navbar-menu a {
+  text-decoration: none;
+  color: #374151; /* soft charcoal */
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.3s ease, border-bottom 0.3s ease;
+  padding-bottom: 4px;
+}
+
+.navbar-menu a:hover {
+  color: #92400E; /* deep brown hover */
+  border-bottom: 2px solid #F59E0B; /* amber underline */
+}
+
+/* RIGHT SECTION (BUTTONS) */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cart-btn,
+.account-btn {
+  text-decoration: none;
+  font-weight: 500;
+  color: #374151;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  background-color: #FCD34D20; /* subtle amber tint */
+  border: 1px solid transparent;
+}
+
+.cart-btn:hover,
+.account-btn:hover {
+  background-color: #F59E0B; /* amber */
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(245, 158, 11, 0.25);
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .navbar-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .navbar-menu {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .navbar-right {
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+}
