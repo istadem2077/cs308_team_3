@@ -30,9 +30,7 @@ func (h *Handler) ProductsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	for _, product := range products {
-		h.writeJSON(w, product)
-	}
+	h.writeJSON(w, products)
 }
 func (h *Handler) ProductIDHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
