@@ -12,7 +12,6 @@ type Product struct {
 	ImageUrl    string  `json:"image_url"`
 	Quantity    int     `json:"quantity"`
 	Price       float64 `json:"price"`
-	Distributor string  `json:"distributor"`
 	CategoryId  int     `json:"category_id"`
 }
 
@@ -22,7 +21,7 @@ type ProductModel struct {
 
 func (ProductModel *ProductModel) GetAllProducts() ([]Product, error) {
 
-	stmt := `SELECT id, name, description, image_url, quantity, price, distributor, category_id FROM db_308.products`
+	stmt := `SELECT id, name, description, image_url, quantity, price, category_id FROM db_308.products`
 	rows, err := ProductModel.DB.Query(stmt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -35,7 +34,7 @@ func (ProductModel *ProductModel) GetAllProducts() ([]Product, error) {
 	for rows.Next() {
 		product := Product{}
 		if err := rows.Scan(&product.Id, &product.Name, &product.Description,
-			&product.ImageUrl, &product.Quantity, &product.Price, &product.Distributor,
+			&product.ImageUrl, &product.Quantity, &product.Price,
 			&product.CategoryId); err != nil {
 			log.Fatal(err)
 		}
@@ -53,13 +52,13 @@ func (ProductModel *ProductModel) GetAllProducts() ([]Product, error) {
 	return products, nil
 }
 func (ProductModel *ProductModel) GetProductByID(id int) (*Product, error) {
-	stmt := `SELECT id, name, description, image_url, quantity, price, distributor, category_id FROM db_308.products WHERE id = ?`
+	stmt := `SELECT id, name, description, image_url, quantity, price, category_id FROM db_308.products WHERE id = ?`
 
 	row := ProductModel.DB.QueryRow(stmt, id)
 
 	product := &Product{}
 
-	err := row.Scan(&product.Id, &product.Name, &product.Description, &product.ImageUrl, &product.Quantity, &product.Price, &product.Distributor, &product.CategoryId)
+	err := row.Scan(&product.Id, &product.Name, &product.Description, &product.ImageUrl, &product.Quantity, &product.Price, &product.CategoryId)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
