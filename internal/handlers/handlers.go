@@ -66,11 +66,6 @@ func (h *Handler) CartSummaryHandler(w http.ResponseWriter, r *http.Request) {}
 func (h *Handler) CategoriesHandler(w http.ResponseWriter, r *http.Request) {}
 func (h *Handler) CatProdHandler(w http.ResponseWriter, r *http.Request)    {}
 
-func (h *Handler) HelloAPIHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message": "Hello World!"}`))
-}
-
 func (h *Handler) HomePageHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./ui/html/index.html")
 }

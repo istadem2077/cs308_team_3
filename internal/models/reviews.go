@@ -14,3 +14,6 @@ type Review struct {
 type ReviewModel struct {
 	DB *sql.DB
 }
+
+//func (ReviewModel *ReviewModel) GetReviewByID(id int) (*Review, error) {}
+//func (ReviewModel *ReviewModel) GetAllReviews() ([]Review, error) {}

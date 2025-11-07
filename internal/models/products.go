@@ -20,7 +20,6 @@ type ProductModel struct {
 }
 
 func (ProductModel *ProductModel) GetAllProducts() ([]Product, error) {
-
 	stmt := `SELECT id, name, description, image_url, quantity, price, category_id FROM db_308.products`
 	rows, err := ProductModel.DB.Query(stmt)
 	if err != nil {
