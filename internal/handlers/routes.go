@@ -10,6 +10,7 @@ func (h *Handler) Routes() http.Handler {
 
 	mux.HandleFunc("/", h.HomePageHandler)
 	mux.HandleFunc("/api/hello", h.HelloAPIHandler)
+	mux.HandleFunc("/api/users/{id}", h.UsersHandler)
 
 	return mux
 }

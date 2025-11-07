@@ -1,5 +1,7 @@
 package models
 
+import "database/sql"
+
 type Product struct {
 	Id             int     `json:"id"`
 	Name           string  `json:"name"`
@@ -9,4 +11,8 @@ type Product struct {
 	WarrantyMonths int     `json:"warranty_months"`
 	Distributor    string  `json:"distributor"`
 	CategoryId     int     `json:"category_id"`
+}
+
+type ProductModel struct {
+	DB *sql.DB
 }

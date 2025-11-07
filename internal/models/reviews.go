@@ -1,5 +1,7 @@
 package models
 
+import "database/sql"
+
 type Review struct {
 	Id        int    `json:"id"`
 	ProductId int    `json:"product_id"`
@@ -7,4 +9,8 @@ type Review struct {
 	Rating    int    `json:"rating"`
 	Comment   string `json:"comment"`
 	CreatedAt string `json:"created_at"`
+}
+
+type ReviewModel struct {
+	DB *sql.DB
 }
