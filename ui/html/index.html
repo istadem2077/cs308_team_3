@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-M">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Pharmacy - Trusted & Modern & Healthy</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <script src="/static/js/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="/static/js/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="style.css">
 
-    <!-- Custom Tailwind Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -43,21 +42,16 @@
 </head>
 <body class="font-sans bg-white text-gray-800">
 
-    <!-- 
-      HEADER SECTION 
-    -->
     <header class="border-b border-gray-200 py-4">
         <div class="container mx-auto px-4">
             <div class="flex flex-wrap justify-between items-center gap-4">
                 
-                <!-- Logo -->
                 <div class="flex-shrink-0">
                     <a href="#home" class="text-brand-green">
                         <h1 class="logo-font text-4xl font-bold">Sabanci Pharmacy 308</h1>
                     </a>
                 </div>
 
-                <!-- Search Bar -->
                 <div class="flex-grow max-w-xl w-full order-3 lg:order-2">
                     <form class="flex">
                         <input type="text" placeholder="Search for product, category, or brand" class="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-brand-gold">
@@ -67,13 +61,11 @@
                     </form>
                 </div>
 
-                <!-- User Links & Cart -->
                 <div class="flex items-center space-x-4 order-2 lg:order-3">
                     <a href="#" class="flex items-center space-x-1 text-gray-600 hover:text-brand-gold">
                         <i data-lucide="heart" class="w-5 h-5"></i>
                         <span class="hidden md:inline">My Favorites</span>
                     </a>
-                    <!-- REMOVED Sign In Button -->
                     <a href="#cart" class="relative flex items-center space-x-2 bg-brand-gold hover:bg-brand-gold-dark text-white font-bold py-2 px-4 rounded-md shadow-md transition-colors">
                         <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                         <span id="cart-item-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
@@ -84,9 +76,6 @@
         </div>
     </header>
 
-    <!-- 
-      NAVIGATION BAR 
-    -->
     <nav class="bg-brand-green sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex flex-wrap justify-center items-center -mx-2">
@@ -103,24 +92,13 @@
         </div>
     </nav>
 
-    <!-- 
-      ==================================================================
-      PAGE WRAPPERS (We show/hide these with JS)
-      ==================================================================
-    -->
-
-    <!-- 
-      HOME PAGE 
-    -->
     <div id="page-home">
         <main class="py-8">
             <div class="container mx-auto px-4">
 
-                <!-- Hero Section -->
                 <section class="mb-12">
                     <div class="flex flex-col lg:flex-row gap-6">
                         
-                        <!-- Main Slider Placeholder -->
                         <div class="w-full lg:w-3/4 relative rounded-lg overflow-hidden shadow-lg">
                             <img src="https://placehold.co/1000x400/969696/FFFFFF?text=+" 
                                  alt="Start the Day Energized Banner" 
@@ -133,7 +111,6 @@
                                     </a>
                                 </div>
                             </div>
-                            <!-- Slider Arrows -->
                             <button class="absolute left-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-70 p-2 rounded-full hover:bg-opacity-100 shadow-md">
                                 <i data-lucide="chevron-left" class="text-gray-800"></i>
                             </button>
@@ -142,7 +119,6 @@
                             </button>
                         </div>
 
-                        <!-- Side Banner -->
                         <div class="w-full lg:w-1/4 bg-gray-100 p-6 rounded-lg shadow-lg flex flex-col justify-between"
                              style="background: url('https://placehold.co/400x400/E0E0E0/B0B0B0?text=Product+Collage') no-repeat center center; background-size: cover;">
                             <div class="relative z-10">
@@ -153,15 +129,12 @@
                                 </a>
                             </div>
                             
-                            <!-- Mini Product Previews - Will be populated by JS -->
                             <div id="mini-product-previews" class="relative z-10 grid grid-cols-2 gap-2 mt-8 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg p-2">
-                                <!-- JS will populate this -->
-                            </div>
+                                </div>
                         </div>
                     </div>
                 </section>
                 
-                <!-- Featured Deals -->
                 <section class="mb-12">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="logo-font text-3xl text-brand-green font-semibold">Featured Deals</h2>
@@ -179,13 +152,10 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Product Grid Placeholder - Will be populated by JS -->
                     <div id="featured-products-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                        <!-- JS will populate this -->
-                    </div>
+                        </div>
                 </section>
 
-                <!-- Other Category Sections (Structure Only) -->
                 <section class="mb-12">
                     <div class="flex justify-between items-center mb-4 border-t pt-8">
                         <h2 class="logo-font text-3xl text-brand-green font-semibold">Brands You're Looking For</h2>
@@ -201,7 +171,6 @@
                     </div>
                 </section>
 
-                <!-- Info Bar -->
                 <section class="border-t border-b py-8 my-12">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div class="flex items-center space-x-4">
@@ -237,36 +206,25 @@
             </div>
         </main>
 
-        <!-- NEWSLETTER SIGNUP -->
-        <!-- REMOVED this section -->
-    </div>
+        </div>
 
-    <!-- 
-      CATEGORY PAGE (Hidden by default)
-    -->
     <div id="page-category" class="hidden">
         <main class="py-12">
             <div class="container mx-auto px-4">
                 <h1 id="page-category-title" class="logo-font text-4xl text-brand-green font-semibold mb-8">Category Name</h1>
                 <div id="page-category-products-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    <!-- Products will be injected here by JavaScript -->
-                </div>
+                    </div>
             </div>
         </main>
     </div>
 
-    <!-- 
-      PRODUCT DETAIL PAGE (Hidden by default)
-    -->
     <div id="page-product" class="hidden">
         <main class="py-12">
             <div class="container mx-auto px-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-                    <!-- Product Image -->
                     <div>
                         <img id="product-detail-image" src="https://placehold.co/600x600/F5F5F5/AAA?text=Product" alt="Product Image" class="w-full h-auto object-contain rounded-lg shadow-lg border">
                     </div>
-                    <!-- Product Details -->
                     <div>
                         <h1 id="product-detail-name" class="logo-font text-4xl text-brand-green font-bold mb-4">Product Name</h1>
                         <p id="product-detail-price" class="text-3xl font-light text-brand-green mb-6">199.90 TL</p>
@@ -275,8 +233,7 @@
                             This is a detailed description of the product. It supports immune health, provides antioxidant support, and is essential for collagen production.
                         </p>
 
-                        <!-- Added Out of Stock Message Container -->
-                        <p id="product-stock-message" class="text-red-600 font-semibold mb-4 hidden">Out of Stock</p>
+                        <p id="product-detail-stock" class="text-gray-600 mb-4"></p>
                         
                         <div class="flex items-center space-x-4 mb-8">
                             <label for="quantity" class="font-semibold">Quantity:</label>
@@ -293,19 +250,13 @@
         </main>
     </div>
 
-    <!-- 
-      CART PAGE (Hidden by default)
-    -->
     <div id="page-cart" class="hidden">
         <main class="py-12">
             <div class="container mx-auto px-4">
                 <h1 class="logo-font text-4xl text-brand-green font-semibold mb-8">Shopping Cart</h1>
                 
                 <div id="cart-items-container" class="mb-8">
-                    <!-- Cart items will be injected here by JavaScript -->
-                    <!-- Example of an empty cart message: -->
-                    <!-- <p class="text-center text-gray-600 text-xl">Your cart is empty.</p> -->
-                </div>
+                    </div>
 
                 <div id="cart-summary" class="flex justify-end hidden">
                     <div class="w-full max-w-sm bg-gray-50 p-6 rounded-lg shadow-md">
@@ -324,16 +275,6 @@
         </main>
     </div>
 
-    <!-- 
-      ==================================================================
-      END OF PAGE WRAPPERS
-      ==================================================================
-    -->
-
-
-    <!-- 
-      FOOTER 
-    -->
     <footer class="bg-brand-green text-gray-300 py-8 border-t border-gray-600">
         <div class="container mx-auto px-4 text-center">
             <div class="flex justify-center space-x-6 mb-4">
@@ -347,20 +288,12 @@
         </div>
     </footer>
 
-    <!-- 
-      FLOATING ACTION BUTTONS 
-    -->
-    
-
-
-    <!-- Scroll to Top Button -->
     <button id="scrollToTopBtn" class="bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-900 transition-colors">
         <i data-lucide="arrow-up" class="w-6 h-6"></i>
     </button>
 
 
-    <!-- Load Custom Script -->
-    <script src="/static/js/script.js"></script>
+    <script src="script.js"></script>
 
 </body>
 </html>

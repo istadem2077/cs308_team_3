@@ -148,7 +148,7 @@ $(document).ready(function() {
             $miniPreviews.append(`
                 <a href="#product=1" class="bg-white p-2 rounded-lg shadow-sm text-center block hover:shadow-md">
                     <img src="${product1.image_url}" alt="${product1.name}" class="mx-auto h-16 w-16 object-contain mb-2">
-                    <p class="text-xs font-semibold">Vitamin C 1000mg...</p>
+                    <p class="text-xs font-semibold h-8 overflow-hidden">${product1.name}</p>
                     <p class="text-sm font-bold text-red-600">${product1.price.toFixed(2)} TL</p>
                 </a>
             `);
@@ -157,7 +157,7 @@ $(document).ready(function() {
             $miniPreviews.append(`
                 <a href="#product=4" class="bg-white p-2 rounded-lg shadow-sm text-center block hover:shadow-md">
                     <img src="${product4.image_url}" alt="${product4.name}" class="mx-auto h-16 w-16 object-contain mb-2">
-                    <p class="text-xs font-semibold">Nutraxin...</p>
+                    <p class="text-xs font-semibold h-8 overflow-hidden">${product4.name}</p>
                     <p class="text-sm font-bold text-red-600">${product4.price.toFixed(2)} TL</p>
                 </a>
             `);
@@ -177,7 +177,6 @@ $(document).ready(function() {
                         <p class="text-lg font-bold text-brand-green mt-2">${product.price.toFixed(2)} TL</p>
                     </a>
                     
-                    <!-- Stock-aware Button -->
                     ${product.quantity > 0
                         ? `<button class="add-to-cart-btn mt-4 w-full bg-brand-gold text-white py-2 rounded-md hover:bg-brand-gold-dark transition-colors" data-product-id="${product.id}">Add to Cart</button>`
                         : `<button class="mt-4 w-full bg-gray-300 text-gray-500 py-2 rounded-md cursor-not-allowed" disabled>Out of Stock</button>`
@@ -224,7 +223,6 @@ $(document).ready(function() {
                         <p class="text-lg font-bold text-brand-green mt-2">${product.price.toFixed(2)} TL</p>
                     </a>
                     
-                    <!-- Stock-aware Button -->
                     ${product.quantity > 0
                         ? `<button class="add-to-cart-btn mt-4 w-full bg-brand-gold text-white py-2 rounded-md hover:bg-brand-gold-dark transition-colors" data-product-id="${product.id}">Add to Cart</button>`
                         : `<button class="mt-4 w-full bg-gray-300 text-gray-500 py-2 rounded-md cursor-not-allowed" disabled>Out of Stock</button>`
@@ -252,7 +250,7 @@ $(document).ready(function() {
         }
 
         // Get elements
-        const $stockMessage = $('#product-stock-message');
+        const $stockDisplay = $('#product-detail-stock');
         const $quantityInput = $('#product-detail-quantity');
         const $addToCartBtn = $('#product-detail-add-to-cart');
 
@@ -266,12 +264,12 @@ $(document).ready(function() {
         // --- Handle Stock UI ---
         if (product.quantity > 0) {
             // Product is IN STOCK
-            $stockMessage.addClass('hidden');
+            $stockDisplay.text(`Stock: ${product.quantity} available`).removeClass('text-red-600 font-semibold').addClass('text-gray-600');
             $quantityInput.attr('max', product.quantity).val(1).prop('disabled', false);
             $addToCartBtn.prop('disabled', false).html('<i data-lucide="shopping-cart"></i><span>Add to Cart</span>');
         } else {
             // Product is OUT OF STOCK
-            $stockMessage.removeClass('hidden');
+            $stockDisplay.text('Out of Stock').removeClass('text-gray-600').addClass('text-red-600 font-semibold');
             $quantityInput.val(0).prop('disabled', true);
             $addToCartBtn.prop('disabled', true).html('Out of Stock');
         }
