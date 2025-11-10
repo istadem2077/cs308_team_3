@@ -1,20 +1,40 @@
-import { Component } from '@angular/core';
-import { PRODUCTS } from '../../data/products';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ProductService, Product } from '../../services/product';
 
 @Component({
   selector: 'app-products',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './products.html',
   styleUrl: './products.css',
 })
-export class ProductsComponent {
-  products = PRODUCTS;
+export class ProductsComponent implements OnInit {  
+  products: Product[] = [];
+  loading = true;
+  error = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private productService: ProductService,
+    private router: Router
+  ) {}
 
-  viewDetails(product: any) {
+  ngOnInit(): void {
+    this.productService.getProducts().subscribe({
+      next: (data) => {
+        this.products = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('API error:', err);
+        this.error = 'Failed to load products.';
+        this.loading = false;
+      }
+    });
+  }
+  
+  viewDetails(product: Product) {
     this.router.navigate(['/product-detail', product.id]);
   }
 }

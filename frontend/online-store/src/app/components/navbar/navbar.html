@@ -1,24 +1,24 @@
 <nav class="navbar">
-  <div class="navbar-container">
-    <div class="navbar-left">
-      <a class="navbar-logo" routerLink="/">
-        <img src="https://www.creativefabrica.com/wp-content/uploads/2020/09/17/Vector-floral-logo-template-minimalist-Graphics-5541532-1.jpg" alt="Logo">
-      </a>
+  <div class="nav-left">
+    <div class="logo">Sabanci Pharmacy</div>
+  </div>
 
-      <ul class="navbar-menu">
-        <li><a routerLink="/">Home</a></li>
-        <li><a routerLink="/categories">Categories</a></li>
-        <li><a routerLink="/products">Products</a></li>
-        <li><a routerLink="/navbar-template-1">Navbar Template 1</a></li>
-        <li><a routerLink="/navbar-template-2">Navbar Template 2</a></li>
-        <li><a routerLink="/navbar-template-3">Navbar Template 3</a></li>
-        <li><a> </a></li>
-      </ul>
-    </div>
+  <input type="checkbox" id="menu-toggle" />
+  <label for="menu-toggle" class="menu-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </label>
 
-    <div class="navbar-right">
-      <a class="cart-btn" routerLink="/cart">My Cart</a>
-      <a class="account-btn" routerLink="/account">Account</a>
-    </div>
+  <ul class="nav-links">
+    <li><a routerLink="/home">Home</a></li>
+    <li><a routerLink="/categories">Categories</a></li>
+    <li><a routerLink="/products">Products</a></li>
+    <li><a routerLink="/cart">Cart</a></li>
+  </ul>
+
+  <div class="nav-right">
+    <a *ngIf="!isLoggedIn" routerLink="/login">Login</a>
+    <a *ngIf="isLoggedIn" routerLink="/account">Account</a>
   </div>
 </nav>
