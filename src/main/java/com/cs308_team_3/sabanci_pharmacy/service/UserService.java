@@ -1,16 +1,14 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.cs308_team_3.sabanci_pharmacy.dto.AddressUpdateRequest;
-import com.cs308_team_3.sabanci_pharmacy.dto.LoginRequest;
-import com.cs308_team_3.sabanci_pharmacy.dto.PasswordUpdateRequest;
-import com.cs308_team_3.sabanci_pharmacy.dto.RegisterRequest;
+import com.cs308_team_3.sabanci_pharmacy.dto.User.AddressUpdateRequest;
+import com.cs308_team_3.sabanci_pharmacy.dto.User.LoginRequest;
+import com.cs308_team_3.sabanci_pharmacy.dto.User.PasswordUpdateRequest;
+import com.cs308_team_3.sabanci_pharmacy.dto.User.RegisterRequest;
 import com.cs308_team_3.sabanci_pharmacy.entity.User;
 import com.cs308_team_3.sabanci_pharmacy.repository.UserRepository;
-import jdk.jshell.spi.ExecutionControl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 public class UserService {
