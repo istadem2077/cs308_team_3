@@ -4,22 +4,29 @@ import com.cs308_team_3.sabanci_pharmacy.dto.User.AddressUpdateRequest;
 import com.cs308_team_3.sabanci_pharmacy.dto.User.LoginRequest;
 import com.cs308_team_3.sabanci_pharmacy.dto.User.PasswordUpdateRequest;
 import com.cs308_team_3.sabanci_pharmacy.dto.User.RegisterRequest;
+import com.cs308_team_3.sabanci_pharmacy.entity.Cart;
 import com.cs308_team_3.sabanci_pharmacy.entity.User;
+import com.cs308_team_3.sabanci_pharmacy.repository.CartRepository;
 import com.cs308_team_3.sabanci_pharmacy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CartRepository cartRepository;
 
     //Registration
+    @Transactional
     public User registerUser(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already in use");
@@ -31,7 +38,13 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setAddress(request.getAddress());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        Cart cart = new Cart();
+        cart.setUser(savedUser);
+        cartRepository.save(cart);
+
+        return savedUser;
     }
 
     public User loginUser(LoginRequest loginRequest) {

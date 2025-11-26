@@ -1,6 +1,6 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.cs308_team_3.sabanci_pharmacy.dto.Cart.AddToCartRequest;
+import com.cs308_team_3.sabanci_pharmacy.dto.Cart.CartRequest;
 import com.cs308_team_3.sabanci_pharmacy.entity.*;
 import com.cs308_team_3.sabanci_pharmacy.repository.*;
 import org.springframework.stereotype.Service;
@@ -18,25 +18,14 @@ public class CartService {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private OrderRepository orderRepository;
 
     public Cart getCart(Integer userId) {
         return cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("No cart found"));
     }
 
-    public Cart addToCart(AddToCartRequest request) {
-        Cart cart = cartRepository.findByUserId(request.getUserId())
-                .orElseGet(
-                        () -> {
-                            User user = userRepository.findById(request.getUserId())
-                                    .orElseThrow(() -> new RuntimeException("User not found"));
-                            Cart newCart = new Cart();
-                            newCart.setUser(user);
-                            return cartRepository.save(newCart);
-                        }
-                );
+    public Cart addToCart(CartRequest request) {
+        Cart cart = getCart(request.getUserId());
         Product product  = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -55,6 +44,31 @@ public class CartService {
 
         return cartRepository.save(cart);
     }
+
+    public Cart clearCart(Integer userId) {
+        Cart cart =  getCart(userId);
+        cart.getItems().clear();
+        return cartRepository.save(cart);
+    }
+
+    public Cart removeFromCart(CartRequest request) {
+        Cart cart = getCart(request.getUserId());
+
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        Optional<CartItem> item = cart.getItems().stream().filter(i -> i.getProduct().getId() == product.getId()).findFirst();
+        if (item.isPresent()) {
+            item.get().setQuantity(item.get().getQuantity() - request.getQuantity());
+            if  (item.get().getQuantity() == 0) {
+                cart.getItems().remove(item.get());
+
+            }
+        } else {
+            throw new RuntimeException("Item not found");
+        }
+        return cartRepository.save(cart);
+     }
 
     @Transactional
     public Order checkout(Integer userId) {
