@@ -1,0 +1,31 @@
+package com.cs308_team_3.sabanci_pharmacy.controller;
+
+import com.cs308_team_3.sabanci_pharmacy.dto.Cart.AddToCartRequest;
+import com.cs308_team_3.sabanci_pharmacy.entity.Cart;
+import com.cs308_team_3.sabanci_pharmacy.entity.Order;
+import com.cs308_team_3.sabanci_pharmacy.service.CartService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/cart")
+public class CartController {
+    @Autowired
+    private CartService cartService;
+
+    @PostMapping("/add")
+    public Cart addToCart(@RequestBody AddToCartRequest request) {
+        return cartService.addToCart(request);
+    }
+
+    @PostMapping("/{userId}")
+    public Cart getCart(@PathVariable Integer userId) {
+        return cartService.getCart(userId);
+    }
+
+    @PostMapping("/checkout/{userId}")
+    public Order checkout(@PathVariable Integer userId) {
+        return cartService.checkout(userId);
+    }
+
+}
