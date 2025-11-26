@@ -3,28 +3,28 @@ package com.cs308_team_3.sabanci_pharmacy.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-
 
 @Entity
-@Table(name = "order_items")
+@Table(name = "reviews")
 @Data
-public class OrderItems {
+public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer quantity;
-    private BigDecimal unitPrice;
+    private String comment;
+    private Integer rating;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
-
-    @ManyToOne
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
 }
