@@ -1,1 +1,23 @@
-<p>cart works!</p>
+<h2>Shopping Cart</h2>
+
+<div class="cart-container">
+
+  @for (item of cartItems; track item.productId) {
+    <div class="cart-item">
+      <p>{{ item.name }} - ${{ item.price }}</p>
+
+      <input
+        type="number"
+        [value]="item.quantity"
+        (change)="changeQuantity(item, +$event.target.value)"
+      />
+
+      <button (click)="removeItem(item)">Remove</button>
+    </div>
+  }
+
+  @if (cartItems.length === 0) {
+    <p>Your cart is empty.</p>
+  }
+
+</div>

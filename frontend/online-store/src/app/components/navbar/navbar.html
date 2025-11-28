@@ -17,8 +17,8 @@
     <li><a routerLink="/cart">Cart</a></li>
   </ul>
 
-  <div class="nav-right">
-    <a *ngIf="!isLoggedIn" routerLink="/login">Login</a>
+  <div class="nav-right desktop-only">
+    <a *ngIf="!isLoggedIn" routerLink="/login" (click)="toggleLogin()">Login</a>
     <a *ngIf="isLoggedIn" routerLink="/account">Account</a>
   </div>
 </nav>
