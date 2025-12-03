@@ -1,13 +1,11 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.cs308_team_3.sabanci_pharmacy.dto.User.AddressUpdateRequest;
-import com.cs308_team_3.sabanci_pharmacy.dto.User.LoginRequest;
-import com.cs308_team_3.sabanci_pharmacy.dto.User.PasswordUpdateRequest;
-import com.cs308_team_3.sabanci_pharmacy.dto.User.RegisterRequest;
+import com.cs308_team_3.sabanci_pharmacy.dto.User.*;
 import com.cs308_team_3.sabanci_pharmacy.entity.Cart;
 import com.cs308_team_3.sabanci_pharmacy.entity.User;
 import com.cs308_team_3.sabanci_pharmacy.repository.CartRepository;
 import com.cs308_team_3.sabanci_pharmacy.repository.UserRepository;
+import com.cs308_team_3.sabanci_pharmacy.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,10 +22,12 @@ public class UserService {
 
     @Autowired
     private CartRepository cartRepository;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     //Registration
     @Transactional
-    public User registerUser(RegisterRequest request) {
+    public AuthResponse registerUser(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already in use");
         }
@@ -44,17 +44,21 @@ public class UserService {
         cart.setUser(savedUser);
         cartRepository.save(cart);
 
-        return savedUser;
+        String token = jwtUtil.generateToken(savedUser.getEmail());
+
+        return new AuthResponse(token, savedUser.getName(), savedUser.getId());
     }
 
-    public User loginUser(LoginRequest loginRequest) {
+    public AuthResponse loginUser(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Passwords don't match");
         }
 
-        return user;
+        String token =  jwtUtil.generateToken(user.getEmail());
+
+        return new AuthResponse(token, user.getName(), user.getId());
     }
 
     public User changeAddress(AddressUpdateRequest request){
