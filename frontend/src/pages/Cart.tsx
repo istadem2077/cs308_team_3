@@ -61,7 +61,7 @@ export default function Cart() {
                                     <span className="w-8 text-center font-bold text-slate-800">{item.quantity}</span>
 
                                     <button
-                                        onClick={() => addToCart(item.product, 1)}
+                                        onClick={() => addToCart(item.product)}
                                         className="w-8 h-8 flex items-center justify-center rounded bg-white text-slate-600 shadow-sm hover:bg-teal-50 hover:text-teal-600 transition-colors"
                                     >
                                         <Plus size={16} />
