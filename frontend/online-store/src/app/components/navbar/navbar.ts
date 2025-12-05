@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, NavigationEnd, RouterModule } from '@angular/router'; // ✅ add NavigationEnd here
+import { Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-navbar',
@@ -9,22 +11,31 @@ import { CommonModule } from '@angular/common';
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css'],
 })
-export class NavbarComponent {
-  isLoggedIn = false; // Replace this with real auth logic
+export class NavbarComponent implements OnInit {
+  isLoggedIn = false;
 
-  constructor(private router: Router) {}
-
-  toggleLogin() {
-    this.isLoggedIn = !this.isLoggedIn;
-  }
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
-    // ✅ Close mobile menu when navigation happens
+    // 🔥 reactively update login state based on AuthService
+    this.authService.isLoggedIn$.subscribe(state => {
+      this.isLoggedIn = state;
+    });
+
+    // CLOSE MOBILE MENU ON ROUTING
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const toggle = document.getElementById('menu-toggle') as HTMLInputElement;
         if (toggle) toggle.checked = false;
       }
     });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/home']);
   }
 }

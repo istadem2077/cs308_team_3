@@ -1,12 +1,94 @@
-<div *ngIf="product" class="product-detail">
-  <img [src]="product.image" [alt]="product.name">
-  <div class="info">
-    <h2>{{ product.name }}</h2>
-    <p class="desc">{{ product.description }}</p>
-    <p><strong>Model:</strong> {{ product.model }}</p>
-    <p><strong>Price:</strong> ${{ product.price }}</p>
-    <p><strong>Quantity in Stock:</strong> {{ product.quantity }}</p>
+<div class="product-detail-page">
 
-    <button>Add to Cart</button>
-  </div>
+  <!-- Back Button -->
+  <button class="btn-back" (click)="router.navigate(['/products'])">
+    ← Back to Products
+  </button>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="status-message loading">
+      Loading product details...
+    </div>
+  }
+
+  <!-- Error -->
+  @else if (error) {
+    <div class="status-message error">
+      <h3>{{ error }}</h3>
+      <p>Please try again or return to the product list.</p>
+    </div>
+  }
+
+  <!-- Product Details -->
+  @else if (product) {
+
+    <div class="product-card">
+
+      <!-- Image -->
+      <div class="image-section">
+        <img
+          [src]="product.imageUrl"
+          alt="{{ product.name }}"
+          class="product-image"
+          onerror="this.onerror=null; this.src='https://placehold.co/500x400/fff7ed/92400E?text=No+Image';"
+        >
+      </div>
+
+      <!-- Info -->
+      <div class="info-section">
+
+        <h1 class="product-name">{{ product.name }}</h1>
+
+        <p class="category">
+          Category: <span>{{ product.category.name }}</span>
+        </p>
+
+        <p class="price">{{ product.price | currency }}</p>
+
+        <p class="quantity" [class.out]="product.quantity === 0">
+          {{ product.quantity > 0 ? product.quantity + ' available' : 'Out of stock' }}
+        </p>
+
+        <div class="description">
+          <h3>Description</h3>
+          <p>{{ product.description }}</p>
+        </div>
+
+        <!-- Cart Controls -->
+        <div class="cart-controls">
+
+          <div class="qty-box">
+            <label for="qty">Qty:</label>
+            <input
+              id="qty"
+              type="number"
+              [ngModel]="quantity"
+              (ngModelChange)="quantity = $event"
+              (input)="updateQuantity($event)"
+              min="1"
+              [max]="product.quantity"
+              [disabled]="product.quantity === 0"
+            >
+          </div>
+
+          <button
+            class="btn-add"
+            (click)="addToCart()"
+            [disabled]="product.quantity === 0 || quantity <= 0 || quantity > product.quantity"
+          >
+            Add to Cart
+          </button>
+
+        </div>
+
+        @if (addedToCartMessage) {
+          <p class="status-message success">{{ addedToCartMessage }}</p>
+        }
+
+      </div>
+
+    </div>
+  }
+
 </div>

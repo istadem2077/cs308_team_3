@@ -2,9 +2,9 @@
 
 <div class="cart-container">
 
-  @for (item of cartItems; track item.productId) {
+  @for (item of cartItems; track item.product.id) {
     <div class="cart-item">
-      <p>{{ item.name }} - ${{ item.price }}</p>
+      <p>{{ item.product.name }} - ${{ item.product.price }}</p>
 
       <input
         type="number"

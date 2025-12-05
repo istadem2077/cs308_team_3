@@ -18,7 +18,15 @@
   </ul>
 
   <div class="nav-right desktop-only">
-    <a *ngIf="!isLoggedIn" routerLink="/login" (click)="toggleLogin()">Login</a>
-    <a *ngIf="isLoggedIn" routerLink="/account">Account</a>
+
+    @if (!isLoggedIn) {
+      <a routerLink="/login">Login</a>
+    }
+
+    @if (isLoggedIn) {
+      <a routerLink="/account">Account</a>
+      <a (click)="logout()">Logout</a>
+    }
+
   </div>
 </nav>
