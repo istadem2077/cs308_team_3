@@ -23,31 +23,26 @@ export class OrderHistoryComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.fetchOrders();
+  const userId = this.authService.getUserId();
+
+  if (!userId) {
+    this.errorMessage = "Please log in to view your order history.";
+    return;
   }
 
-  fetchOrders(): void {
-    const userId = this.authService.getUserId(); // Get ID from AuthService
+  this.fetchOrders(userId);
+}
 
-    // If userId is null, we display the login prompt message
-    if (userId === null) {
-      this.errorMessage = "Please log in to view your order history.";
-      return;
-    }
-    
+  fetchOrders(userId: number): void {
     this.isLoading = true;
-    
-    // Call the correct API method from the OrderService
     this.orderService.getUserOrders(userId).subscribe({
-      next: (data) => {
-        this.orders = data;
+      next: (orders) => {
+        this.orders = orders;
         this.isLoading = false;
-        // console.log('Fetched Orders:', data); // Debugging
       },
-      error: (err) => {
-        this.errorMessage = 'Failed to load order history. Please try again.';
+      error: () => {
+        this.errorMessage = "Failed to load order history.";
         this.isLoading = false;
-        console.error('Order Fetch Error:', err);
       }
     });
   }

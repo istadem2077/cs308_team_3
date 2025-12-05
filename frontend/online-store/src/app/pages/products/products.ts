@@ -26,30 +26,35 @@ export class ProductsComponent implements OnInit {
 
   ngOnInit(): void {
     this.productService.getAllProducts().subscribe({
-      next: data => this.products = data,
-      error: () => console.error('Failed load products')
+      next: data => (this.products = data),
+      error: () => console.error('Failed to load products')
     });
   }
-  
+
   viewDetails(product: Product) {
     this.router.navigate(['/product-detail', product.id]);
   }
 
-  // ADD PRODUCT TO CART
+  // ADD PRODUCT TO CART (Guest + Logged In)
   addToCart(product: Product): void {
     const userId = this.auth.getUserId();
 
-    // 🚀 If NOT logged in — add to GUEST CART
+    // Guest Cart
     if (!userId) {
       this.guestCart.addItem(product.id, 1);
       alert(`${product.name} added to guest cart`);
       return;
     }
 
-    // 🚀 If logged in — API call
+    // Logged-in User Cart (API)
     this.cartService.addItemOrUpdate(userId, product.id, 1).subscribe({
-      next: () => alert(`${product.name} added to your cart`),
-      error: err => console.error('Failed adding to cart', err)
+      next: () => {
+        alert(`${product.name} added to your cart`);
+      },
+      error: err => {
+        console.error('Failed to add item to cart', err);
+        alert('Could not add item to cart.');
+      }
     });
   }
 }

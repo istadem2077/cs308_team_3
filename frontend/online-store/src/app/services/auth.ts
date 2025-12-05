@@ -4,8 +4,6 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { CartService } from './cart';
 import { GuestCartService, LocalCartItem } from '../services/guest-cart';
 
-// --- DTO Interfaces ---
-
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -37,8 +35,6 @@ export interface PasswordUpdateRequest {
   confirmPassword: string;
 }
 
-// --- Authentication Service ---
-
 const AUTH_API_URL = '/api/user';
 
 @Injectable({
@@ -46,7 +42,7 @@ const AUTH_API_URL = '/api/user';
 })
 export class AuthService {
 
-  // 🔥 Reactive login state shared across the entire app
+  // 🔥 Global login state shared everywhere (navbar, cart, profile)
   private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
   isLoggedIn$ = this.loggedIn.asObservable();
 
@@ -56,38 +52,34 @@ export class AuthService {
     private guestCartService: GuestCartService
   ) {}
 
-  // --- Helpers ---
-
+  // Helpers
   private hasToken(): boolean {
     return !!localStorage.getItem('authToken');
   }
 
   getUserId(): number | null {
-    const userId = localStorage.getItem('userId');
-    return userId ? parseInt(userId, 10) : null;
+    const raw = localStorage.getItem('userId');
+    return raw ? parseInt(raw, 10) : null;
   }
-
-  // --- Register ---
-
+  
+  // Register
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${AUTH_API_URL}/register`, data);
   }
 
-  // --- Login (includes the Guest Cart Merge logic) ---
-
+  // Login (with guest cart merge)
   login(data: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${AUTH_API_URL}/login`, data).pipe(
       tap(response => {
-        // Save auth info
+        // Store session
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userId', response.userId.toString());
 
-        // 🔥 Notify the app that login happened
+        // Notify application
         this.loggedIn.next(true);
 
-        // --- Merge guest cart into user cart ---
+        // Merge guest cart
         const guestItems = this.guestCartService.getCartItems();
-
         if (guestItems.length > 0) {
           this.mergeGuestCart(response.userId, guestItems);
         }
@@ -95,8 +87,7 @@ export class AuthService {
     );
   }
 
-  // --- Merge Guest Cart into User Cart ---
-
+  // Merge Guest Cart → User Cart
   private mergeGuestCart(userId: number, items: LocalCartItem[]): void {
     let pending = items.length;
 
@@ -106,8 +97,7 @@ export class AuthService {
           pending--;
           if (pending === 0) this.guestCartService.clearCart();
         },
-        error: err => {
-          console.error(`Failed merging product ${item.productId}`, err);
+        error: () => {
           pending--;
           if (pending === 0) this.guestCartService.clearCart();
         }
@@ -115,8 +105,7 @@ export class AuthService {
     });
   }
 
-  // --- Profile Management ---
-
+  // Profile Updates
   updateAddress(data: AddressUpdateRequest): Observable<any> {
     return this.http.post<any>(`${AUTH_API_URL}/mod-address`, data);
   }
@@ -125,11 +114,11 @@ export class AuthService {
     return this.http.post<any>(`${AUTH_API_URL}/passwd-upd`, data);
   }
 
-  // --- Logout ---
-
+  // Logout
   logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
-    this.loggedIn.next(false);   // 🔥 Logout event for navbar etc.
+
+    this.loggedIn.next(false); // 🔥 Logout event for UI
   }
 }

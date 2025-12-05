@@ -20,6 +20,9 @@ export const routes: Routes = [
     // Primary Landing Page
     { path: '', redirectTo: '/home', pathMatch: 'full' }, 
     { path: 'home', component: HomeComponent, title: 'Home' },
+    { path: 'profile', 
+        loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)},
+
 
     // Product/Catalog Routes
     { path: 'products', component: ProductsComponent, title: 'Products' },

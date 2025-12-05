@@ -24,7 +24,8 @@
     }
 
     @if (isLoggedIn) {
-      <a routerLink="/account">Account</a>
+      <a routerLink="/profile">My Profile</a>
+      <a routerLink="/history">Order History</a>
       <a (click)="logout()">Logout</a>
     }
 
