@@ -1,0 +1,81 @@
+<div class="order-detail-page">
+
+  <a routerLink="/history" class="back-link">
+    &larr; Back to Order History
+  </a>
+
+  <h2>Order Details</h2>
+
+  @if (isLoading) {
+    <div class="loading-block">
+      <p>Loading order details...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="error-block">
+      <strong>Error:</strong> {{ errorMessage }}
+    </div>
+  } @else if (order) {
+
+    <!-- ORDER SUMMARY CARD -->
+    <div class="order-card">
+      <h3 class="section-title">Order Summary</h3>
+
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Order ID:</span>
+          <span class="value">{{ order.orderId }}</span>
+        </div>
+
+        <div class="summary-item">
+          <span class="label">Order Date:</span>
+          <span class="value">{{ order.orderDate | date:'longDate' }}</span>
+        </div>
+
+        <div class="summary-item">
+          <span class="label">Status:</span>
+          <span class="value status">{{ order.status }}</span>
+        </div>
+
+        <div class="summary-item">
+          <span class="label">Shipping Address:</span>
+          <span class="value">{{ order.shippingAddress }}</span>
+        </div>
+
+        <div class="summary-item total">
+          <span class="label">Total Amount:</span>
+          <span class="value total-value">{{ order.totalAmount | currency }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER ITEMS TABLE -->
+    <div class="order-card">
+      <h3 class="section-title">
+        Items Ordered ({{ order.items.length }})
+      </h3>
+
+      <table class="order-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Qty</th>
+            <th>Line Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (item of order.items; track item.productId) {
+            <tr>
+              <td>{{ item.productName }}</td>
+              <td>{{ item.price | currency }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.price * item.quantity | currency }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+  }
+</div>
