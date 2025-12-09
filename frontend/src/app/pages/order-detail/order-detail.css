@@ -1,0 +1,107 @@
+.order-detail-page {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+h2 {
+  text-align: center;
+  color: #92400E;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+/* Back link */
+.back-link {
+  color: #92400E;
+  text-decoration: none;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Loading & Error blocks */
+.loading-block,
+.error-block {
+  background: #FFF7ED;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #F59E0B;
+  margin-bottom: 2rem;
+}
+
+/* Order Card */
+.order-card {
+  background: #FFF7ED;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.section-title {
+  margin-bottom: 1rem;
+  color: #92400E;
+  font-size: 1.3rem;
+}
+
+/* Summary Grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-weight: bold;
+  color: #92400E;
+}
+
+.value {
+  color: #333;
+  margin-top: 0.2rem;
+}
+
+.total {
+  grid-column: span 2;
+}
+
+.total-value {
+  font-size: 1.3rem;
+  color: #F59E0B;
+  font-weight: bold;
+}
+
+/* Table */
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-table th {
+  background: #FDEAD7;
+  padding: 10px;
+  text-align: left;
+  color: #92400E;
+  font-weight: bold;
+  border-bottom: 2px solid #F5D3A1;
+}
+
+.order-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.order-table tr:hover {
+  background: #FFF4E6;
+}

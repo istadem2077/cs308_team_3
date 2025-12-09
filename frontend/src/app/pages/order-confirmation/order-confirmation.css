@@ -1,0 +1,43 @@
+.order-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.order-container h2 {
+  color: #92400E;
+  margin-bottom: 1rem;
+}
+
+.order-container h3 {
+  margin-top: 1.5rem;
+  color: #92400E;
+}
+
+.order-summary p {
+  margin: 0.5rem 0;
+  color: #374151;
+}
+
+.item-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  background: #FFF7ED;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+}
+
+.name {
+  font-weight: 600;
+  color: #92400E;
+}
+
+.qty, .price {
+  color: #374151;
+}
