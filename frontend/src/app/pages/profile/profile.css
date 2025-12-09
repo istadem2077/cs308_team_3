@@ -1,0 +1,96 @@
+.profile-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #FFF7ED;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+h2 {
+  color: #92400E;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.login-warning {
+  text-align: center;
+  background: #FECACA;
+  padding: 1.5rem;
+  border-radius: 8px;
+  color: #B91C1C;
+  border: 1px solid #F87171;
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: #FEF3C7;
+  border-radius: 8px;
+}
+
+.label {
+  font-weight: 600;
+  color: #92400E;
+}
+
+.value {
+  color: #374151;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  padding: 0.8rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* Primary */
+.btn-primary {
+  background-color: #FCD34D;
+  color: #92400E;
+}
+.btn-primary:hover {
+  background-color: #92400E;
+  color: white;
+}
+
+/* Secondary */
+.btn-secondary {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+.btn-secondary:hover {
+  background-color: #FCD34D;
+  color: #92400E;
+}
+
+/* Danger */
+.btn-danger {
+  background-color: #FECACA;
+  color: #B91C1C;
+  border: 1px solid #F87171;
+}
+.btn-danger:hover {
+  background-color: #B91C1C;
+  color: white;
+}

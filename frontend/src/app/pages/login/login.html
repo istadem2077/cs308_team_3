@@ -1,0 +1,65 @@
+<div class="auth-container">
+  <div class="card">
+    <h2>Log In to PharmaStore</h2>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          id="email" 
+          type="email" 
+          formControlName="email" 
+          [class.is-invalid]="f['email'].invalid && f['email'].touched"
+        >
+        @if (f['email'].errors && f['email'].touched) {
+          <div class="error-text">
+            @if (f['email'].errors['required']) {
+              Email is required.
+            } @else if (f['email'].errors['email']) {
+              Enter a valid email address.
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          id="password" 
+          type="password" 
+          formControlName="password"
+          [class.is-invalid]="f['password'].invalid && f['password'].touched"
+        >
+        @if (f['password'].errors && f['password'].touched) {
+          <div class="error-text">
+            @if (f['password'].errors['required']) {
+              Password is required.
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="alert alert-error">{{ errorMessage }}</div>
+      }
+
+      <!-- Submit Button -->
+      <button type="submit" [disabled]="loginForm.invalid || isLoading" class="btn-primary">
+        @if (isLoading) {
+          Logging in...
+        } @else {
+          Log In
+        }
+      </button>
+
+    </form>
+    
+    <div class="switch-link">
+      <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+    </div>
+  </div>
+</div>

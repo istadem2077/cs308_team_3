@@ -1,0 +1,20 @@
+@if (order) {
+  <div class="order-container">
+    <h2>Order Confirmation</h2>
+
+    <div class="order-summary">
+      <p><strong>Order ID:</strong> {{ order.orderId }}</p>
+      <p><strong>Status:</strong> {{ order.status }}</p>
+      <p><strong>Total:</strong> {{ order.totalAmount | currency }}</p>
+    </div>
+
+    <h3>Items</h3>
+    @for (item of order.items; track item.productId) {
+      <div class="item-card">
+        <span class="name">{{ item.productName }}</span>
+        <span class="qty">Qty: {{ item.quantity }}</span>
+        <span class="price">{{ item.price | currency }}</span>
+      </div>
+    }
+  </div>
+}
