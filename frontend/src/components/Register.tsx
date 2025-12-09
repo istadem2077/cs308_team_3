@@ -5,9 +5,10 @@ import { authService, RegisterData, TURKISH_CITIES } from '../services/auth';
 interface RegisterProps {
   onRegisterSuccess: () => void;
   onSwitchToLogin: () => void;
+  onSkip: () => void;
 }
 
-export function Register({ onRegisterSuccess, onSwitchToLogin }: RegisterProps) {
+export function Register({ onRegisterSuccess, onSwitchToLogin, onSkip }: RegisterProps) {
   const [formData, setFormData] = useState<RegisterData>({
     name: '',
     email: '',
@@ -310,6 +311,15 @@ export function Register({ onRegisterSuccess, onSwitchToLogin }: RegisterProps) 
               Sign in here
             </button>
           </p>
+        </div>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={onSkip}
+            className="text-gray-600 hover:text-gray-900 text-sm underline"
+          >
+            Proceed without signing in
+          </button>
         </div>
       </div>
     </div>
