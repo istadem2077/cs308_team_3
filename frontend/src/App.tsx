@@ -8,6 +8,7 @@ import { Checkout } from './components/Checkout';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { MyAccount } from './components/MyAccount';
+import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { productsAPI } from './services/api';
 import { authService, User } from './services/auth';
 import { Loader2, ArrowUpDown } from 'lucide-react';
@@ -33,6 +34,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [showMyAccount, setShowMyAccount] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -168,6 +170,7 @@ export default function App() {
         user={user}
         onBack={() => setShowMyAccount(false)}
         onUserUpdate={handleUserUpdate}
+        onLogout={handleLogout}
       />
     );
   }
@@ -222,7 +225,7 @@ export default function App() {
         searchQuery={searchQuery}
         userName={user.name}
         onMyAccountClick={() => setShowMyAccount(true)}
-        onLogoutClick={handleLogout}
+        onLogoutClick={() => setShowLogoutConfirm(true)}
       />
 
       <Hero />
@@ -317,6 +320,13 @@ export default function App() {
           onAddToCart={addToCart}
         />
       )}
+
+      <LogoutConfirmation
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }
