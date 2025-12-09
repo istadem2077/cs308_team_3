@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
 import { CartItem } from '../App';
 import { ordersAPI, OrderData } from '../services/api';
+import { authService } from '../services/auth';
 
 interface CheckoutProps {
   cartItems: CartItem[];
@@ -29,6 +30,22 @@ export function Checkout({
   });
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const [orderId, setOrderId] = useState<string>('');
+
+  // Load user data on mount
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: `${user.address.addressLine}, ${user.address.province}, ${user.address.city} ${user.address.postcode}`,
+        dormitory: '',
+        roomNumber: '',
+        notes: '',
+      });
+    }
+  }, []);
 
   const hasPrescriptionItems = cartItems.some(
     item => item.requiresPrescription
