@@ -1,0 +1,33 @@
+<nav class="navbar">
+  <div class="nav-left">
+    <div class="logo">Sabanci Pharmacy</div>
+  </div>
+
+  <input type="checkbox" id="menu-toggle" />
+  <label for="menu-toggle" class="menu-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </label>
+
+  <ul class="nav-links">
+    <li><a routerLink="/home">Home</a></li>
+    <li><a routerLink="/categories">Categories</a></li>
+    <li><a routerLink="/products">Products</a></li>
+    <li><a routerLink="/cart">Cart</a></li>
+  </ul>
+
+  <div class="nav-right desktop-only">
+
+    @if (!isLoggedIn) {
+      <a routerLink="/login">Login</a>
+    }
+
+    @if (isLoggedIn) {
+      <a routerLink="/profile">My Profile</a>
+      <a routerLink="/history">Order History</a>
+      <a (click)="logout()">Logout</a>
+    }
+
+  </div>
+</nav>
