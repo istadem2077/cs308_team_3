@@ -9,6 +9,7 @@ import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { MyAccount } from './components/MyAccount';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
+import { LoginPrompt } from './components/LoginPrompt';
 import { productsAPI } from './services/api';
 import { authService, User } from './services/auth';
 import { Loader2, ArrowUpDown } from 'lucide-react';
@@ -32,9 +33,12 @@ type SortOption = 'none' | 'price-asc' | 'price-desc';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [showMyAccount, setShowMyAccount] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,29 +56,39 @@ export default function App() {
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
+      setIsGuestMode(false);
     }
   }, []);
 
   useEffect(() => {
-    if (user) {
-      const fetchProducts = async () => {
-        try {
-          const data = await productsAPI.getAll();
-          setProducts(data);
-          setLoading(false);
-        } catch (err) {
-          setError('Failed to fetch products');
-          setLoading(false);
-        }
-      };
+    // Load products (works for both guest and logged-in users)
+    const fetchProducts = async () => {
+      try {
+        const data = await productsAPI.getAll();
+        setProducts(data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch products');
+        setLoading(false);
+      }
+    };
 
+    if (user || isGuestMode) {
       fetchProducts();
     }
-  }, [user]);
+  }, [user, isGuestMode]);
 
   const handleLoginSuccess = () => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
+    setIsGuestMode(false);
+    setShowAuthModal(false);
+    setShowLoginPrompt(false);
+  };
+
+  const handleSkipLogin = () => {
+    setIsGuestMode(true);
+    setShowAuthModal(false);
   };
 
   const handleLogout = () => {
@@ -82,10 +96,33 @@ export default function App() {
     setUser(null);
     setCartItems([]);
     setShowMyAccount(false);
+    setShowLogoutConfirm(false);
   };
 
   const handleUserUpdate = (updatedUser: User) => {
     setUser(updatedUser);
+  };
+
+  const handleCheckoutClick = () => {
+    if (!user) {
+      // Show login prompt if guest tries to checkout
+      setShowLoginPrompt(true);
+    } else {
+      setIsCartOpen(false);
+      setIsCheckout(true);
+    }
+  };
+
+  const handleLoginPromptLogin = () => {
+    setShowLoginPrompt(false);
+    setAuthView('login');
+    setShowAuthModal(true);
+  };
+
+  const handleLoginPromptRegister = () => {
+    setShowLoginPrompt(false);
+    setAuthView('register');
+    setShowAuthModal(true);
   };
 
   const addToCart = (product: Product) => {
@@ -144,13 +181,14 @@ export default function App() {
     ...Array.from(new Set(products.map(p => p.category))),
   ];
 
-  // Show login/register if not authenticated
-  if (!user) {
+  // Show login/register modal if not authenticated and not in guest mode
+  if (!user && !isGuestMode && !showAuthModal) {
     if (authView === 'login') {
       return (
         <Login
           onLoginSuccess={handleLoginSuccess}
           onSwitchToRegister={() => setAuthView('register')}
+          onSkip={handleSkipLogin}
         />
       );
     } else {
@@ -158,13 +196,35 @@ export default function App() {
         <Register
           onRegisterSuccess={handleLoginSuccess}
           onSwitchToLogin={() => setAuthView('login')}
+          onSkip={handleSkipLogin}
         />
       );
     }
   }
 
-  // Show My Account page
-  if (showMyAccount) {
+  // Show auth modal if triggered from guest mode
+  if (showAuthModal) {
+    if (authView === 'login') {
+      return (
+        <Login
+          onLoginSuccess={handleLoginSuccess}
+          onSwitchToRegister={() => setAuthView('register')}
+          onSkip={() => setShowAuthModal(false)}
+        />
+      );
+    } else {
+      return (
+        <Register
+          onRegisterSuccess={handleLoginSuccess}
+          onSwitchToLogin={() => setAuthView('login')}
+          onSkip={() => setShowAuthModal(false)}
+        />
+      );
+    }
+  }
+
+  // Show My Account page (only for logged-in users)
+  if (showMyAccount && user) {
     return (
       <MyAccount
         user={user}
@@ -202,7 +262,7 @@ export default function App() {
     );
   }
 
-  if (isCheckout) {
+  if (isCheckout && user) {
     return (
       <Checkout
         cartItems={cartItems}
@@ -223,14 +283,45 @@ export default function App() {
         onCartClick={() => setIsCartOpen(true)}
         onSearchChange={setSearchQuery}
         searchQuery={searchQuery}
-        userName={user.name}
-        onMyAccountClick={() => setShowMyAccount(true)}
-        onLogoutClick={() => setShowLogoutConfirm(true)}
+        userName={user?.name}
+        onMyAccountClick={user ? () => setShowMyAccount(true) : undefined}
+        onLogoutClick={user ? () => setShowLogoutConfirm(true) : undefined}
       />
 
       <Hero />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Guest Mode Notice */}
+        {isGuestMode && !user && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <p className="text-blue-900">
+                You&apos;re browsing as a guest.{' '}
+                <button
+                  onClick={() => {
+                    setAuthView('login');
+                    setShowAuthModal(true);
+                  }}
+                  className="underline hover:text-blue-700"
+                >
+                  Log in
+                </button>{' '}
+                or{' '}
+                <button
+                  onClick={() => {
+                    setAuthView('register');
+                    setShowAuthModal(true);
+                  }}
+                  className="underline hover:text-blue-700"
+                >
+                  create an account
+                </button>{' '}
+                to complete purchases.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Category Filters */}
         <div className="mb-6">
           <div className="flex gap-2 overflow-x-auto pb-2">
@@ -307,10 +398,7 @@ export default function App() {
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeFromCart}
         totalPrice={totalPrice}
-        onCheckout={() => {
-          setIsCartOpen(false);
-          setIsCheckout(true);
-        }}
+        onCheckout={handleCheckoutClick}
       />
 
       {selectedProduct && (
@@ -321,11 +409,19 @@ export default function App() {
         />
       )}
 
-      <LogoutConfirmation
-        isOpen={showLogoutConfirm}
-        onClose={() => setShowLogoutConfirm(false)}
-        onCancel={() => setShowLogoutConfirm(false)}
-        onConfirm={handleLogout}
+      {user && (
+        <LogoutConfirmation
+          isOpen={showLogoutConfirm}
+          onCancel={() => setShowLogoutConfirm(false)}
+          onConfirm={handleLogout}
+        />
+      )}
+
+      <LoginPrompt
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        onLogin={handleLoginPromptLogin}
+        onRegister={handleLoginPromptRegister}
       />
     </div>
   );

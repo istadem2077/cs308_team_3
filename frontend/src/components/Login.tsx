@@ -5,9 +5,10 @@ import { authService, LoginCredentials } from '../services/auth';
 interface LoginProps {
   onLoginSuccess: () => void;
   onSwitchToRegister: () => void;
+  onSkip: () => void;
 }
 
-export function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
+export function Login({ onLoginSuccess, onSwitchToRegister, onSkip }: LoginProps) {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -108,6 +109,15 @@ export function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
               Register here
             </button>
           </p>
+        </div>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={onSkip}
+            className="text-gray-600 hover:text-gray-900 text-sm underline"
+          >
+            Proceed without signing in
+          </button>
         </div>
       </div>
     </div>
