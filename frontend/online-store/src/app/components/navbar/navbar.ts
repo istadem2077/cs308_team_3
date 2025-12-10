@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth';
   styleUrls: ['./navbar.css'],
 })
 export class NavbarComponent implements OnInit {
+  // Tracks whether the user is currently logged in
   isLoggedIn = false;
 
   constructor(
@@ -20,12 +21,14 @@ export class NavbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 🔥 reactively update login state based on AuthService
+    // Listen for login/logout changes from AuthService.
+    // Whenever the login state changes, update the navbar display.
     this.authService.isLoggedIn$.subscribe(state => {
       this.isLoggedIn = state;
     });
 
-    // CLOSE MOBILE MENU ON ROUTING
+    // Automatically close the mobile menu whenever the route changes.
+    // This prevents the menu from staying open after navigation.
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const toggle = document.getElementById('menu-toggle') as HTMLInputElement;
@@ -35,6 +38,7 @@ export class NavbarComponent implements OnInit {
   }
 
   logout() {
+    // Log the user out, then redirect them to the home page.
     this.authService.logout();
     this.router.navigate(['/home']);
   }

@@ -51,16 +51,12 @@ export class ProductService {
     }
     return this.http.get<Product>(`${PRODUCT_API_URL}/${id}`);
   }
-  /**
-   * Create product (real API only)
-   */
+  // Create product (real API only)
   createProduct(product: Omit<Product, 'id' | 'category'> & { categoryId: number }): Observable<Product> {
     return this.http.post<Product>(PRODUCT_API_URL, product);
   }
 
-  /**
-   * Delete product (real API only)
-   */
+  // Delete product (real API only)
   deleteProduct(id: number): Observable<void> {
     return this.http.delete<void>(`${PRODUCT_API_URL}/${id}`);
   }

@@ -58,9 +58,7 @@ export class ProductDetailComponent implements OnInit {
       });
   }
 
-  // -------------------------
   // ADD ITEM TO CART
-  // -------------------------
   addToCart(): void {
     if (!this.product) return;
 
@@ -74,9 +72,7 @@ export class ProductDetailComponent implements OnInit {
 
     const userId = this.auth.getUserId();
 
-    // -------------------------
     // Guest user → LocalStorage
-    // -------------------------
     if (!userId) {
       this.guestCart.addItem(this.product.id, this.quantity);
       this.addedToCartMessage = 'Added to cart!';
@@ -84,9 +80,7 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
 
-    // -------------------------
     // Logged-in user → Backend
-    // -------------------------
     this.cartService.addItemOrUpdate(userId, this.product.id, this.quantity)
       .pipe(
         catchError(err => {
