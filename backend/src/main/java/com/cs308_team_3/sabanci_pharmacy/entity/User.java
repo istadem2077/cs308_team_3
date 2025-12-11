@@ -16,7 +16,17 @@ public class User {
     private Integer id;
 
     @Column(nullable = false)
+    private Integer age;
+
+
+    @Column
     private String name;
+
+    @Column
+    private String gender;
+
+    @Column
+    private Integer phone_number;
 
     @Column(nullable = false, unique = true)
     private String email;
