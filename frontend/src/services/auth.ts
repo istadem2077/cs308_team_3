@@ -4,15 +4,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  phone: string;
-  address: {
-    city: string;
-    province: string;
-    postcode: string;
-    addressLine: string;
-  };
+  age?: number; // Optional as backend doesn't strictly require it in AuthResponse
+  gender?: 'male' | 'female' | 'other';
+  phone?: string;
+  address: string; // Changed to string to match backend "address" field
 }
 
 export interface LoginCredentials {
@@ -24,99 +19,88 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  phone: string;
-  address: {
-    city: string;
-    province: string;
-    postcode: string;
-    addressLine: string;
-  };
+  confirmPassword: string; // Added to match backend RegisterRequest
+  address: string;
 }
 
 export interface AuthResponse {
-  user: User;
   token: string;
+  name: string;
+  userId: number;
+  address: string;
 }
 
-const API_BASE_URL = 'https://your-api-endpoint.com/api';
+// Configuration
+const API_BASE_URL = 'http://localhost:8080/api/user'; // Adjust port if needed
 
-// Mock implementation - Replace with real API calls
 export const authService = {
   // Login user
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // Real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(credentials),
-    // });
-    // if (!response.ok) throw new Error('Login failed');
-    // return await response.json();
+  login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
 
-    // Mock implementation
-    console.log('Login attempt:', credentials.email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: '1',
-      name: 'Test User',
-      email: credentials.email,
-      age: 22,
-      gender: 'male',
-      phone: '+90 555 123 4567',
-      address: {
-        city: 'Istanbul',
-        province: 'Tuzla',
-        postcode: '34956',
-        addressLine: 'Sabanci University Campus, A Block, Room 301',
-      },
-    };
+      if (!response.ok) throw new Error('Login failed');
 
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(mockUser));
+      const data: AuthResponse = await response.json();
+      
+      // Map backend response to frontend User object
+      const user: User = {
+        id: data.userId.toString(),
+        name: data.name,
+        email: credentials.email,
+        address: data.address
+      };
 
-    return { user: mockUser, token };
+      // Persist session
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      return { user, token: data.token };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   },
 
   // Register new user
-  register: async (data: RegisterData): Promise<AuthResponse> => {
-    // Real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data),
-    // });
-    // if (!response.ok) throw new Error('Registration failed');
-    // return await response.json();
+  register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-    // Mock implementation
-    console.log('Registration attempt:', data.email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!response.ok) throw new Error('Registration failed');
 
-    const mockUser: User = {
-      id: Date.now().toString(),
-      name: data.name,
-      email: data.email,
-      age: data.age,
-      gender: data.gender,
-      phone: data.phone,
-      address: data.address,
-    };
+      const responseData: AuthResponse = await response.json();
 
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(mockUser));
+      const user: User = {
+        id: responseData.userId.toString(),
+        name: responseData.name,
+        email: data.email,
+        address: responseData.address
+      };
 
-    return { user: mockUser, token };
+      localStorage.setItem('authToken', responseData.token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      return { user, token: responseData.token };
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   },
 
   // Logout user
   logout: () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('cart'); // Clear local cart state if any
   },
 
   // Get current user from localStorage
@@ -135,47 +119,30 @@ export const authService = {
     return !!localStorage.getItem('authToken');
   },
 
-  // Update user profile
-  updateProfile: async (userId: string, updates: Partial<User>): Promise<User> => {
-    // Real implementation:
-    // const token = localStorage.getItem('authToken');
-    // const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-    //   method: 'PUT',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}`,
-    //   },
-    //   body: JSON.stringify(updates),
-    // });
-    // if (!response.ok) throw new Error('Update failed');
-    // return await response.json();
+  // Update user profile (Address specifically)
+  updateAddress: async (userId: number, newAddress: string): Promise<User> => {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE_URL}/mod-address`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id: userId, address: newAddress }),
+    });
 
-    // Mock implementation
-    console.log('Updating profile:', updates);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!response.ok) throw new Error('Update failed');
 
+    // The backend returns the full User entity
+    const updatedUserBackend = await response.json();
+    
+    // Update local storage
     const currentUser = authService.getCurrentUser();
-    if (!currentUser) throw new Error('Not authenticated');
-
-    const updatedUser = { ...currentUser, ...updates };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-
-    return updatedUser;
+    if (currentUser) {
+        const updatedUser = { ...currentUser, address: updatedUserBackend.address };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return updatedUser;
+    }
+    throw new Error("No local user found");
   },
 };
-
-// Turkish cities for address selection
-export const TURKISH_CITIES = [
-  'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya',
-  'Artvin', 'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu',
-  'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır',
-  'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun',
-  'Gümüşhane', 'Hakkâri', 'Hatay', 'Isparta', 'Mersin', 'Istanbul', 'İzmir',
-  'Kars', 'Kastamonu', 'Kayseri', 'Kırklareli', 'Kırşehir', 'Kocaeli', 'Konya',
-  'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin', 'Muğla', 'Muş',
-  'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun', 'Siirt', 'Sinop',
-  'Sivas', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak',
-  'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman', 'Kırıkkale',
-  'Batman', 'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük',
-  'Kilis', 'Osmaniye', 'Düzce',
-];
