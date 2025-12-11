@@ -45,51 +45,58 @@ export async function apiCall<T>(
   }
 }
 
+// --- Helper for Product Mapping ---
+const mapBackendProductToFrontend = (p: any): Product => ({
+    id: p.id.toString(),
+    name: p.name,
+    // Backend returns a Category object, frontend expects a string name
+    category: p.category ? p.category.name : 'Uncategorized',
+    price: p.price,
+    // Backend uses 'imageUrl', frontend uses 'image'
+    image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=400&fit=crop', 
+    description: p.description || '',
+    // Backend uses 'quantity', frontend uses 'stockCount' and 'inStock'
+    stockCount: p.quantity || 0,
+    inStock: (p.quantity || 0) > 0,
+    // Default values for fields missing in backend
+    popularity: 0, 
+    rating: 0, 
+    reviewCount: 0,
+    model: 'Standard',
+    serialNumber: `SN-${p.id}`,
+    warrantyStatus: 'Standard Warranty',
+    distributor: 'Sabanci Pharmacy'
+});
+
 // --- Products API ---
 export const productsAPI = {
   getAll: async (): Promise<Product[]> => {
-    return apiCall<Product[]>('/products');
+    const backendProducts = await apiCall<any[]>('/products');
+    return backendProducts.map(mapBackendProductToFrontend);
   },
 
   getById: async (id: string): Promise<Product> => {
-    return apiCall<Product>(`/products/${id}`);
+    const p = await apiCall<any>(`/products/${id}`);
+    return mapBackendProductToFrontend(p);
   },
 
   search: async (query: string): Promise<Product[]> => {
-    const allProducts = await apiCall<Product[]>('/products');
+    // Backend doesn't have a direct search endpoint shown, so we filter client-side 
+    // or you could implement a search endpoint in backend.
+    const allProducts = await productsAPI.getAll();
     return allProducts.filter(p => 
       p.name.toLowerCase().includes(query.toLowerCase())
     );
   },
 
   getByCategory: async (category: string): Promise<Product[]> => {
-    const allProducts = await apiCall<Product[]>('/products');
+    const allProducts = await productsAPI.getAll();
     if (category === 'All') return allProducts;
     return allProducts.filter(p => p.category === category);
   },
 };
 
 // --- Orders API ---
-export interface OrderData {
-  items: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-    price: number;
-  }>;
-  totalPrice: number;
-  deliveryAddress: {
-    name: string;
-    phone: string;
-    city: string;
-    province: string;
-    postcode: string;
-    addressLine: string;
-    notes: string;
-  };
-  // Removed prescriptionRequired
-}
-
 export interface OrderResponse {
   orderId: string;
   status: 'processing' | 'in-transit' | 'delivered';
@@ -105,8 +112,7 @@ export interface OrderResponse {
 }
 
 export const ordersAPI = {
-  create: async (orderData: any): Promise<any> => {
-    const userId = authService.getUserId();
+  create: async (userId: number): Promise<any> => {
     return apiCall<any>(`/cart/checkout/${userId}`, {
         method: 'POST'
     });
@@ -116,9 +122,26 @@ export const ordersAPI = {
     return apiCall<any>(`/orders/${orderId}`);
   },
 
-  getHistory: async (): Promise<any[]> => {
+  getHistory: async (): Promise<OrderResponse[]> => {
     const userId = authService.getUserId();
-    return apiCall<any[]>(`/orders/user/${userId}`);
+    if (!userId) return [];
+    
+    const orders = await apiCall<any[]>(`/orders/user/${userId}`);
+    
+    // Map backend OrderResponseDto to frontend OrderResponse
+    return orders.map(o => ({
+        orderId: o.orderId.toString(),
+        status: o.status ? o.status.toLowerCase() : 'processing',
+        estimatedDelivery: '3-5 Business Days', // Mocked as backend doesn't provide this
+        totalPrice: o.totalAmount,
+        date: o.orderDate,
+        items: o.items ? o.items.map((item: any) => ({
+            productId: item.productId?.toString() || '0',
+            productName: item.productName || 'Unknown Product',
+            quantity: item.quantity,
+            price: item.price
+        })) : []
+    }));
   },
 };
 
@@ -126,6 +149,8 @@ export const ordersAPI = {
 export const cartAPI = {
   addToCart: async (productId: string, quantity: number): Promise<void> => {
     const userId = authService.getUserId();
+    if(!userId) return;
+    
     await apiCall('/cart/add', {
       method: 'POST',
       body: JSON.stringify({
@@ -138,40 +163,61 @@ export const cartAPI = {
 
   removeFromCart: async (productId: string): Promise<void> => {
     const userId = authService.getUserId();
+    if(!userId) return;
+
     await apiCall('/cart/remove', {
       method: 'POST',
       body: JSON.stringify({
         userId: userId,
         productId: parseInt(productId),
-        quantity: 1
+        quantity: 1 // Default to removing 1 or specific logic
       }),
     });
   },
 
   clearCart: async (): Promise<void> => {
       const userId = authService.getUserId();
+      if(!userId) return;
       await apiCall(`/cart/${userId}`, { method: 'DELETE' });
   },
 
   load: async (): Promise<CartItem[]> => {
     const userId = authService.getUserId();
-    const cart = await apiCall<any>(`/cart/${userId}`);
-    
-    if (!cart || !cart.cartItems) return [];
-    
-    return cart.cartItems.map((item: any) => ({
-        id: item.product.id.toString(),
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.image,
-        category: item.product.category,
-        description: item.product.description,
-        inStock: item.product.stockCount > 0,
-        stockCount: item.product.stockCount,
-        rating: item.product.rating || 0,
-        reviewCount: item.product.reviewCount || 0
-    }));
+    if(!userId) return [];
+
+    try {
+        const cart = await apiCall<any>(`/cart/${userId}`);
+        
+        if (!cart || !cart.items) return []; // Check for 'items' or 'cartItems' depending on backend entity
+        
+        // Assuming backend Cart entity has a list named 'items' or 'cartItems'
+        const itemsList = cart.items || cart.cartItems || [];
+
+        return itemsList.map((item: any) => {
+            // Check if product is nested object or flattened
+            const prod = item.product; 
+            return {
+                id: prod.id.toString(),
+                name: prod.name,
+                price: prod.price,
+                quantity: item.quantity,
+                image: prod.imageUrl || 'https://via.placeholder.com/150',
+                category: prod.category ? prod.category.name : 'General',
+                description: prod.description,
+                inStock: (prod.quantity || 0) > 0,
+                stockCount: prod.quantity || 0,
+                rating: 0,
+                reviewCount: 0,
+                model: 'Standard',
+                serialNumber: 'N/A',
+                warrantyStatus: 'N/A',
+                distributor: 'N/A'
+            };
+        });
+    } catch (e) {
+        console.warn("Cart load failed or empty", e);
+        return [];
+    }
   },
 };
 
@@ -191,7 +237,16 @@ export const reviewsAPI = {
     },
 
     getByProduct: async (productId: string) => {
-        return apiCall(`/reviews/product/${productId}`);
+        const reviews = await apiCall<any[]>(`/reviews/product/${productId}`);
+        // Map backend ReviewResponseDto
+        return reviews.map(r => ({
+            id: r.id.toString(),
+            productId: r.productId.toString(),
+            userName: r.userName || 'Anonymous',
+            rating: r.rating,
+            comment: r.comment,
+            date: r.createdAt
+        }));
     }
 };
 
