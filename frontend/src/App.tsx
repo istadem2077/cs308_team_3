@@ -29,6 +29,10 @@ export interface Product {
   popularity: number; // 0-100 score based on sales/views
   rating: number; // 0-5 stars
   reviewCount: number; // number of reviews
+  model: string; // Product model
+  serialNumber: string; // Product serial number
+  warrantyStatus: string; // Warranty information (e.g., "1 year", "2 years", "No warranty")
+  distributor: string; // Distributor/manufacturer information
 }
 
 export interface Review {
