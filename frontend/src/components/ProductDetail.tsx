@@ -115,14 +115,15 @@ export function ProductDetail({
                     <div className="flex-1">
                       <p className="text-sm text-gray-600">Stock Quantity</p>
                       <p className={`${
-                        product.stockCount <= 10
+                        product.stockCount <= 5
                           ? 'text-red-600'
-                          : product.stockCount <= 30
-                          ? 'text-orange-600'
-                          : 'text-gray-900'
+                          : 'text-green-600'
                       }`}>
-                        {product.stockCount} units
-                        {product.stockCount <= 10 && ' - Low Stock!'}
+                        {product.stockCount <= 5 && product.stockCount > 0
+                          ? `Last ${product.stockCount} item${product.stockCount !== 1 ? 's' : ''}`
+                          : product.stockCount > 5
+                          ? 'High number in stock'
+                          : 'Out of stock'}
                       </p>
                     </div>
                   </div>

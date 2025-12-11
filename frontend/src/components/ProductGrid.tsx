@@ -99,17 +99,18 @@ export function ProductGrid({
                 <p className="text-blue-600">₺{product.price.toFixed(2)}</p>
                 <div
                   className={`flex items-center gap-1 text-sm ${
-                    product.stockCount <= 10
+                    product.stockCount <= 5
                       ? 'text-red-600'
-                      : product.stockCount <= 30
-                      ? 'text-orange-600'
-                      : 'text-gray-600'
+                      : 'text-green-600'
                   }`}
                 >
                   <Package className="w-4 h-4" />
                   <span>
-                    {product.stockCount} in stock
-                    {product.stockCount <= 10 && ' - Low!'}
+                    {product.stockCount <= 5 && product.stockCount > 0
+                      ? `Last ${product.stockCount} item${product.stockCount !== 1 ? 's' : ''}`
+                      : product.stockCount > 5
+                      ? 'High number in stock'
+                      : 'Out of stock'}
                   </span>
                 </div>
               </div>
