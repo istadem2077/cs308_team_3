@@ -81,23 +81,37 @@ export const productsAPI = {
 
 // Orders API
 export interface OrderData {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  dormitory: string;
-  roomNumber: string;
-  notes: string;
-  items: CartItem[];
+  items: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+  }>;
   totalPrice: number;
-  prescriptionFile?: File;
+  deliveryAddress: {
+    name: string;
+    phone: string;
+    city: string;
+    province: string;
+    postcode: string;
+    addressLine: string;
+    notes: string;
+  };
+  prescriptionRequired: boolean;
 }
 
 export interface OrderResponse {
   orderId: string;
-  status: 'pending' | 'confirmed' | 'delivered';
+  status: 'processing' | 'in-transit' | 'delivered';
   estimatedDelivery: string;
   totalPrice: number;
+  items: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+  }>;
+  date: string;
 }
 
 export const ordersAPI = {
@@ -126,6 +140,13 @@ export const ordersAPI = {
             status: 'confirmed',
             estimatedDelivery: '2-4 hours',
             totalPrice: orderData.totalPrice,
+            items: orderData.items.map(item => ({
+              productId: item.productId,
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            date: new Date().toISOString(),
           }),
         1000
       )
@@ -144,6 +165,21 @@ export const ordersAPI = {
             status: 'confirmed',
             estimatedDelivery: '2-4 hours',
             totalPrice: 450,
+            items: [
+              {
+                productId: '1',
+                productName: 'Product 1',
+                quantity: 2,
+                price: 200,
+              },
+              {
+                productId: '2',
+                productName: 'Product 2',
+                quantity: 1,
+                price: 50,
+              },
+            ],
+            date: new Date().toISOString(),
           }),
         500
       )

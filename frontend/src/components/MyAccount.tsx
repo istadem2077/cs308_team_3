@@ -2,17 +2,31 @@ import { useState } from 'react';
 import { ArrowLeft, User, Mail, Phone, MapPin, Edit2, Save, X, Package, LogOut } from 'lucide-react';
 import { User as UserType, authService, TURKISH_CITIES } from '../services/auth';
 import { Orders } from './Orders';
+import { OrderResponse } from '../services/api';
 
 interface MyAccountProps {
   user: UserType;
   onBack: () => void;
   onUserUpdate: (user: UserType) => void;
   onLogout: () => void;
+  orders: OrderResponse[];
+  onUpdateOrderStatus: (orderId: string, newStatus: 'processing' | 'in-transit' | 'delivered') => void;
+  onRateProduct: (productId: string, rating: number, userName: string) => void;
+  onAddComment: (productId: string, rating: number, comment: string, userName: string) => void;
 }
 
 type ActiveView = 'profile' | 'orders';
 
-export function MyAccount({ user, onBack, onUserUpdate, onLogout }: MyAccountProps) {
+export function MyAccount({ 
+  user, 
+  onBack, 
+  onUserUpdate, 
+  onLogout,
+  orders,
+  onUpdateOrderStatus,
+  onRateProduct,
+  onAddComment
+}: MyAccountProps) {
   const [activeView, setActiveView] = useState<ActiveView>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState<UserType>(user);
@@ -169,7 +183,12 @@ export function MyAccount({ user, onBack, onUserUpdate, onLogout }: MyAccountPro
           <div className="flex-1">
             {activeView === 'orders' ? (
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <Orders />
+                <Orders 
+                  orders={orders}
+                  onUpdateOrderStatus={onUpdateOrderStatus}
+                  onRateProduct={onRateProduct}
+                  onAddComment={onAddComment}
+                />
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm p-6">

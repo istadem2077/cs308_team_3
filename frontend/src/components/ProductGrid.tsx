@@ -91,7 +91,7 @@ export function ProductGrid({
                   {renderStars(product.rating)}
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.rating.toFixed(1)} ({product.reviewCount})
+                  {product.rating.toFixed(1)}
                 </span>
               </div>
 
@@ -99,17 +99,18 @@ export function ProductGrid({
                 <p className="text-blue-600">₺{product.price.toFixed(2)}</p>
                 <div
                   className={`flex items-center gap-1 text-sm ${
-                    product.stockCount <= 10
+                    product.stockCount <= 5
                       ? 'text-red-600'
-                      : product.stockCount <= 30
-                      ? 'text-orange-600'
-                      : 'text-gray-600'
+                      : 'text-green-600'
                   }`}
                 >
                   <Package className="w-4 h-4" />
                   <span>
-                    {product.stockCount} in stock
-                    {product.stockCount <= 10 && ' - Low!'}
+                    {product.stockCount <= 5 && product.stockCount > 0
+                      ? `Last ${product.stockCount} item${product.stockCount !== 1 ? 's' : ''}`
+                      : product.stockCount > 5
+                      ? 'High number in stock'
+                      : 'Out of stock'}
                   </span>
                 </div>
               </div>
@@ -122,15 +123,15 @@ export function ProductGrid({
                 e.stopPropagation();
                 onAddToCart(product);
               }}
-              disabled={!product.inStock}
+              disabled={!product.inStock || product.stockCount === 0}
               className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                product.inStock
+                product.inStock && product.stockCount > 0
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
               <ShoppingCart className="w-4 h-4" />
-              Add to Cart
+              {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
             {onCommentsClick && (
               <button
@@ -141,7 +142,7 @@ export function ProductGrid({
                 className="w-full py-2 rounded-lg flex items-center justify-center gap-2 transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
                 <MessageSquare className="w-4 h-4" />
-                Comments ({product.reviewCount})
+                Comments
               </button>
             )}
           </div>
