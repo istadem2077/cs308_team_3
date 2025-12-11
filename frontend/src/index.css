@@ -611,6 +611,10 @@
     display: inline;
   }
 
+  .table {
+    display: table;
+  }
+
   .h-1 {
     height: calc(var(--spacing) * 1);
   }
@@ -729,6 +733,10 @@
 
   .flex-shrink-0 {
     flex-shrink: 0;
+  }
+
+  .border-collapse {
+    border-collapse: collapse;
   }
 
   .-translate-y-1\/2 {
@@ -876,6 +884,11 @@
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
+  }
+
+  .border-t-2 {
+    border-top-style: var(--tw-border-style);
+    border-top-width: 2px;
   }
 
   .border-b {
@@ -1156,6 +1169,10 @@
 
   .text-left {
     text-align: left;
+  }
+
+  .text-right {
+    text-align: right;
   }
 
   .text-5xl {
