@@ -1,8 +1,10 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
 import com.cs308_team_3.sabanci_pharmacy.dto.User.*;
+import com.cs308_team_3.sabanci_pharmacy.entity.Address;
 import com.cs308_team_3.sabanci_pharmacy.entity.Cart;
 import com.cs308_team_3.sabanci_pharmacy.entity.User;
+import com.cs308_team_3.sabanci_pharmacy.repository.AddressRepository;
 import com.cs308_team_3.sabanci_pharmacy.repository.CartRepository;
 import com.cs308_team_3.sabanci_pharmacy.repository.UserRepository;
 import com.cs308_team_3.sabanci_pharmacy.util.JwtUtil;
@@ -11,11 +13,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AddressRepository addressRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -45,9 +52,24 @@ public class UserService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setAddress(request.getAddress());
 
         User savedUser = userRepository.save(user);
+
+        String fullAddressString = "";
+        if (request.getAddressLine() != null && !request.getAddressLine().isEmpty()) {
+            Address address = new Address();
+            address.setUser(savedUser);
+            address.setAddressLine(request.getAddressLine());
+            address.setCity(request.getCity());
+            address.setProvince(request.getProvince());
+            address.setZipCode(request.getZipCode());
+            address.setIsDefault(true); // First address is always default
+
+            addressRepository.save(address);
+
+            // Construct a string for the response
+            fullAddressString = address.getAddressLine();
+        }
 
         Cart cart = new Cart();
         cart.setUser(savedUser);
@@ -55,7 +77,7 @@ public class UserService {
 
         String token = jwtUtil.generateToken(savedUser.getEmail());
 
-        return new AuthResponse(token, savedUser.getName(), savedUser.getId(), user.getAddress());
+        return new AuthResponse(token, savedUser.getName(), savedUser.getId(), fullAddressString);
     }
 
     public AuthResponse loginUser(LoginRequest loginRequest) {
@@ -65,15 +87,18 @@ public class UserService {
             throw new RuntimeException("Passwords don't match");
         }
 
+        String defaultAddressStr = "";
+        List<Address> addresses = addressRepository.findByUserId(user.getId());
+        for (Address addr : addresses) {
+            if (Boolean.TRUE.equals(addr.getIsDefault())) {
+                defaultAddressStr = addr.getAddressLine();
+                break;
+            }
+        }
+
         String token =  jwtUtil.generateToken(user.getEmail());
 
-        return new AuthResponse(token, user.getName(), user.getId(), user.getAddress());
-    }
-
-    public User changeAddress(AddressUpdateRequest request){
-        User user = userRepository.findById(request.getId()).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setAddress(request.getAddress());
-        return userRepository.save(user);
+        return new AuthResponse(token, user.getName(), user.getId(), defaultAddressStr);
     }
 
     public User updatePassword(PasswordUpdateRequest request){

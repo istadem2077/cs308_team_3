@@ -22,11 +22,6 @@ public class UserController {
         return userService.loginUser(request);
     }
 
-    @PostMapping("/mod-address")
-    public User changeAddress(@RequestBody AddressUpdateRequest request){
-        return userService.changeAddress(request);
-    }
-
     @PostMapping("/passwd-upd")
     public User changePassword(@RequestBody PasswordUpdateRequest request){
         return userService.updatePassword(request);
