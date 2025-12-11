@@ -2,10 +2,10 @@
 <project version="4">
   <component name="RemoteTargetsManager">
     <targets>
-      <target name="WSL - Ubuntu" type="wsl" uuid="540510eb-6265-41b6-8922-6175ea67a489">
+      <target name="WSL - Ubuntu" type="wsl" uuid="0cd95ee7-153c-4622-a66c-ec62eb9df704">
         <config>
           <option name="distributionMsId" value="Ubuntu" />
-          <option name="projectRootOnTarget" value="{exitCode=0, timeout=false, cancelled=false, stdout=/tmp/tmp.0d1tRPLkka&#13;&#10;, stderr=}/sabanci_pharmacy" />
+          <option name="projectRootOnTarget" value="{exitCode=0, timeout=false, cancelled=false, stdout=/tmp/tmp.M5pAe0ZUD8&#13;&#10;, stderr=}/sabanci_pharmacy" />
         </config>
         <ContributedStateBase type="JavaLanguageRuntime">
           <config>

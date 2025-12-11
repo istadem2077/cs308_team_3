@@ -10,9 +10,11 @@ import { Register } from './components/Register';
 import { MyAccount } from './components/MyAccount';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
+import { ProductReviews } from './components/ProductReviews';
 import { productsAPI } from './services/api';
 import { authService, User } from './services/auth';
-import { Loader2, ArrowUpDown } from 'lucide-react';
+import { mockReviews } from './data/reviews';
+import { Loader2, ChevronDown } from 'lucide-react';
 
 export interface Product {
   id: string;
@@ -23,13 +25,26 @@ export interface Product {
   description: string;
   inStock: boolean;
   requiresPrescription: boolean;
+  stockCount: number;
+  popularity: number; // 0-100 score based on sales/views
+  rating: number; // 0-5 stars
+  reviewCount: number; // number of reviews
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 export interface CartItem extends Product {
   quantity: number;
 }
 
-type SortOption = 'none' | 'price-asc' | 'price-desc';
+type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -50,6 +65,8 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('none');
   const [isCheckout, setIsCheckout] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -128,6 +145,14 @@ export default function App() {
   const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
+      const currentQuantity = existing ? existing.quantity : 0;
+      
+      // Check if adding one more would exceed stock
+      if (currentQuantity >= product.stockCount) {
+        alert(`Sorry, only ${product.stockCount} items available in stock for ${product.name}`);
+        return prev;
+      }
+      
       if (existing) {
         return prev.map(item =>
           item.id === product.id
@@ -153,6 +178,52 @@ export default function App() {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
+  const updateProductStock = (purchasedItems: CartItem[]) => {
+    setProducts(prevProducts =>
+      prevProducts.map(product => {
+        const purchasedItem = purchasedItems.find(item => item.id === product.id);
+        if (purchasedItem) {
+          const newStock = product.stockCount - purchasedItem.quantity;
+          return {
+            ...product,
+            stockCount: Math.max(0, newStock),
+            inStock: newStock > 0,
+          };
+        }
+        return product;
+      })
+    );
+  };
+
+  const handleAddReview = (review: Omit<Review, 'id' | 'date'>) => {
+    const newReview: Review = {
+      ...review,
+      id: `review-${Date.now()}`,
+      date: new Date().toISOString(),
+    };
+    
+    setReviews(prev => [newReview, ...prev]);
+    
+    // Update product rating and review count
+    setProducts(prevProducts =>
+      prevProducts.map(product => {
+        if (product.id === review.productId) {
+          const productReviews = reviews.filter(r => r.productId === product.id);
+          const newReviewCount = productReviews.length + 1;
+          const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
+          const newRating = totalRating / newReviewCount;
+          
+          return {
+            ...product,
+            rating: Math.round(newRating * 10) / 10,
+            reviewCount: newReviewCount,
+          };
+        }
+        return product;
+      })
+    );
+  };
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -174,6 +245,8 @@ export default function App() {
     filteredProducts = [...filteredProducts].sort((a, b) => a.price - b.price);
   } else if (sortBy === 'price-desc') {
     filteredProducts = [...filteredProducts].sort((a, b) => b.price - a.price);
+  } else if (sortBy === 'popularity') {
+    filteredProducts = [...filteredProducts].sort((a, b) => b.popularity - a.popularity);
   }
 
   const categories = [
@@ -269,6 +342,7 @@ export default function App() {
         totalPrice={totalPrice}
         onBack={() => setIsCheckout(false)}
         onComplete={() => {
+          updateProductStock(cartItems);
           setCartItems([]);
           setIsCheckout(false);
         }}
@@ -341,42 +415,25 @@ export default function App() {
           </div>
         </div>
 
-        {/* Price Sort Filter */}
+        {/* Sort Filter */}
         <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="w-5 h-5 text-gray-600" />
-            <span className="text-gray-700">Sort by Price:</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSortBy('none')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  sortBy === 'none'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+          <div className="flex items-center gap-3">
+            <label htmlFor="sort-select" className="text-gray-700">
+              Sort by:
+            </label>
+            <div className="relative">
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as SortOption)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-gray-700 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
               >
-                Default
-              </button>
-              <button
-                onClick={() => setSortBy('price-asc')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  sortBy === 'price-asc'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Cheapest First
-              </button>
-              <button
-                onClick={() => setSortBy('price-desc')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  sortBy === 'price-desc'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Most Expensive First
-              </button>
+                <option value="none">Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="popularity">Popularity</option>
+              </select>
+              <ChevronDown className="w-5 h-5 text-gray-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
           <p className="text-gray-600">
@@ -388,6 +445,7 @@ export default function App() {
           products={filteredProducts}
           onProductClick={setSelectedProduct}
           onAddToCart={addToCart}
+          onCommentsClick={setSelectedProductForReviews}
         />
       </main>
 
@@ -423,6 +481,17 @@ export default function App() {
         onLogin={handleLoginPromptLogin}
         onRegister={handleLoginPromptRegister}
       />
+
+      {selectedProductForReviews && (
+        <ProductReviews
+          isOpen={true}
+          onClose={() => setSelectedProductForReviews(null)}
+          product={selectedProductForReviews}
+          reviews={reviews.filter(r => r.productId === selectedProductForReviews.id)}
+          onAddReview={handleAddReview}
+          userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
+        />
+      )}
     </div>
   );
 }
