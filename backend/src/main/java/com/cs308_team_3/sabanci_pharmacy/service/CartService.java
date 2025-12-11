@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.Optional;
 
@@ -19,6 +20,11 @@ public class CartService {
     private ProductRepository productRepository;
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private PdfService pdfService;
+    @Autowired
+    private EmailService emailService;
 
     public Cart getCart(Integer userId) {
         return cartRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("No cart found"));
@@ -101,6 +107,15 @@ public class CartService {
         System.out.println("Processing payment for $" + total);
 
         Order savedOrder = orderRepository.save(order);
+
+        try {
+            ByteArrayInputStream pdfStream = pdfService.generateInvoice(savedOrder);
+
+            emailService.sendInvoiceEmail(savedOrder, pdfStream);
+
+        } catch (Exception e) {
+            System.err.println("Order completed but email failed: " + e.getMessage());
+        }
 
         cart.getItems().clear();
         cartRepository.save(cart);
