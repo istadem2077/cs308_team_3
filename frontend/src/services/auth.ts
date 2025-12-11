@@ -1,13 +1,13 @@
-// Authentication Service
+import { apiCall } from './api';
 
 export interface User {
-  id: string;
+  id: string; // Backend uses Integer, but frontend handles IDs as strings usually
   name: string;
   email: string;
-  age?: number; // Optional as backend doesn't strictly require it in AuthResponse
-  gender?: 'male' | 'female' | 'other';
-  phone?: string;
-  address: string; // Changed to string to match backend "address" field
+  // age: number; // MISSING IN BACKEND
+  // gender: 'male' | 'female' | 'other'; // MISSING IN BACKEND
+  // phone: string; // MISSING IN BACKEND
+  address: string; // Backend uses a single string for address
 }
 
 export interface LoginCredentials {
@@ -19,91 +19,92 @@ export interface RegisterData {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string; // Added to match backend RegisterRequest
-  address: string;
+  age: number;
+  gender: 'male' | 'female' | 'other';
+  phone: string;
+  address: {
+    city: string;
+    province: string;
+    postcode: string;
+    addressLine: string;
+  };
 }
 
 export interface AuthResponse {
   token: string;
-  name: string;
-  userId: number;
-  address: string;
+  // Backend AuthResponse might differ, adjust based on actual JSON
+  userId?: number; 
+  name?: string;
+  email?: string;
 }
 
-// Configuration
-const API_BASE_URL = 'http://localhost:8080/api/user'; // Adjust port if needed
+// Helper to format frontend address object to backend string
+const formatAddress = (addr: RegisterData['address']) => {
+  return `${addr.addressLine}, ${addr.postcode}, ${addr.province}, ${addr.city}`;
+};
 
 export const authService = {
-  // Login user
-  login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    const data = await apiCall<any>('/user/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
 
-      if (!response.ok) throw new Error('Login failed');
+    // Assuming backend returns { token: "...", name: "..." }
+    // If backend only returns token, you might need to decode JWT or fetch profile
+    const user: User = {
+      id: data.userId || '0', // Backend needs to return ID or we extract from token
+      name: data.name || '',
+      email: credentials.email,
+      address: '', // Login response usually doesn't have address unless added
+    };
 
-      const data: AuthResponse = await response.json();
-      
-      // Map backend response to frontend User object
-      const user: User = {
-        id: data.userId.toString(),
-        name: data.name,
-        email: credentials.email,
-        address: data.address
-      };
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(user));
+    if (data.userId) localStorage.setItem('userId', data.userId.toString());
 
-      // Persist session
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      return { user, token: data.token };
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+    return { token: data.token, ...user };
   },
 
-  // Register new user
-  register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+  register: async (data: RegisterData): Promise<AuthResponse> => {
+    // Note: confirmPassword is required by backend DTO
+    const backendPayload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      confirmPassword: data.password, 
+      address: formatAddress(data.address),
+      // Backend ignores age, gender, phone currently
+    };
 
-      if (!response.ok) throw new Error('Registration failed');
+    const response = await apiCall<any>('/user/register', {
+      method: 'POST',
+      body: JSON.stringify(backendPayload),
+    });
 
-      const responseData: AuthResponse = await response.json();
+    // Auto-login after register if backend returns token
+    const user: User = {
+      id: response.userId || '0',
+      name: data.name,
+      email: data.email,
+      address: backendPayload.address,
+    };
 
-      const user: User = {
-        id: responseData.userId.toString(),
-        name: responseData.name,
-        email: data.email,
-        address: responseData.address
-      };
-
-      localStorage.setItem('authToken', responseData.token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      return { user, token: responseData.token };
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+    if (response.token) {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('user', JSON.stringify(user));
+        if (response.userId) localStorage.setItem('userId', response.userId.toString());
     }
+
+    return { token: response.token, ...user };
   },
 
-  // Logout user
   logout: () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('cart'); // Clear local cart state if any
+    localStorage.removeItem('userId');
   },
 
-  // Get current user from localStorage
   getCurrentUser: (): User | null => {
     const userStr = localStorage.getItem('user');
     if (!userStr) return null;
@@ -113,36 +114,28 @@ export const authService = {
       return null;
     }
   },
+  
+  getUserId: (): number => {
+      const id = localStorage.getItem('userId');
+      return id ? parseInt(id) : 0;
+  },
 
-  // Check if user is authenticated
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('authToken');
   },
-
-  // Update user profile (Address specifically)
-  updateAddress: async (userId: number, newAddress: string): Promise<User> => {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${API_BASE_URL}/mod-address`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ id: userId, address: newAddress }),
-    });
-
-    if (!response.ok) throw new Error('Update failed');
-
-    // The backend returns the full User entity
-    const updatedUserBackend = await response.json();
-    
-    // Update local storage
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-        const updatedUser = { ...currentUser, address: updatedUserBackend.address };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        return updatedUser;
-    }
-    throw new Error("No local user found");
-  },
 };
+
+export const TURKISH_CITIES = [
+  'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya',
+  'Artvin', 'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu',
+  'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır',
+  'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun',
+  'Gümüşhane', 'Hakkâri', 'Hatay', 'Isparta', 'Mersin', 'Istanbul', 'İzmir',
+  'Kars', 'Kastamonu', 'Kayseri', 'Kırklareli', 'Kırşehir', 'Kocaeli', 'Konya',
+  'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin', 'Muğla', 'Muş',
+  'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun', 'Siirt', 'Sinop',
+  'Sivas', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak',
+  'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman', 'Kırıkkale',
+  'Batman', 'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük',
+  'Kilis', 'Osmaniye', 'Düzce',
+];
