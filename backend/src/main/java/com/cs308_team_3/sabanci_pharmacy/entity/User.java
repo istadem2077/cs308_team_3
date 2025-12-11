@@ -3,6 +3,9 @@ package com.cs308_team_3.sabanci_pharmacy.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Table(name = "users")
@@ -19,5 +22,6 @@ public class User {
     private String email;
 
     private String password;
-    private String address;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
 }

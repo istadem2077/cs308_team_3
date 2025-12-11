@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.cs308_team_3'
-version = '0.0.1-SNAPSHOT'
+version = '0.5.0-ALPHA'
 description = 'sabanci_pharmacy'
 
 java {

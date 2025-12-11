@@ -1,4 +1,9 @@
 package com.cs308_team_3.sabanci_pharmacy.repository;
 
-public class AddressRepository {
+import com.cs308_team_3.sabanci_pharmacy.entity.Address;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface AddressRepository extends JpaRepository<Address, Integer> {
+    List<Address> findByUserId(Integer userId);
 }

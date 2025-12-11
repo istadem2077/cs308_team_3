@@ -1,4 +1,4 @@
-package com.cs308_team_3.sabanci_pharmacy.dto.User.User;
+package com.cs308_team_3.sabanci_pharmacy.dto.User;
 
 import lombok.Data;
 
