@@ -91,7 +91,7 @@ export function ProductGrid({
                   {renderStars(product.rating)}
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.rating.toFixed(1)} ({product.reviewCount})
+                  {product.rating.toFixed(1)}
                 </span>
               </div>
 
@@ -142,7 +142,7 @@ export function ProductGrid({
                 className="w-full py-2 rounded-lg flex items-center justify-center gap-2 transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
                 <MessageSquare className="w-4 h-4" />
-                Comments ({product.reviewCount})
+                Comments
               </button>
             )}
           </div>

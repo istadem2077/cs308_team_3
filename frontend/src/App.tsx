@@ -15,6 +15,7 @@ import { productsAPI } from './services/api';
 import { authService, User } from './services/auth';
 import { mockReviews } from './data/reviews';
 import { Loader2, ChevronDown } from 'lucide-react';
+import { OrderResponse } from './services/api';
 
 export interface Product {
   id: string;
@@ -71,6 +72,7 @@ export default function App() {
   const [isCheckout, setIsCheckout] = useState(false);
   const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -228,6 +230,105 @@ export default function App() {
     );
   };
 
+  const handleOrderComplete = (order: OrderResponse) => {
+    // Add order with "processing" status
+    const newOrder = {
+      ...order,
+      status: 'processing' as const,
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    updateProductStock(cartItems);
+    setCartItems([]);
+    setIsCheckout(false);
+  };
+
+  const handleUpdateOrderStatus = (orderId: string, newStatus: 'processing' | 'in-transit' | 'delivered') => {
+    setOrders(prev =>
+      prev.map(order =>
+        order.orderId === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  };
+
+  const handleRateProduct = (productId: string, rating: number, userName: string) => {
+    // Add review with just rating (no comment)
+    const newReview: Review = {
+      id: `review-${Date.now()}`,
+      productId,
+      userName,
+      rating,
+      comment: '',
+      date: new Date().toISOString(),
+    };
+    
+    setReviews(prev => [newReview, ...prev]);
+    
+    // Update product rating
+    const productReviews = reviews.filter(r => r.productId === productId);
+    const allReviews = [...productReviews, newReview];
+    const newReviewCount = allReviews.length;
+    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+    const newRating = totalRating / newReviewCount;
+    
+    setProducts(prevProducts =>
+      prevProducts.map(product =>
+        product.id === productId
+          ? {
+              ...product,
+              rating: Math.round(newRating * 10) / 10,
+              reviewCount: newReviewCount,
+            }
+          : product
+      )
+    );
+  };
+
+  const handleAddCommentToRating = (productId: string, rating: number, comment: string, userName: string) => {
+    // Find existing review without comment and update it, or create new one
+    const existingReview = reviews.find(
+      r => r.productId === productId && r.userName === userName && r.comment === ''
+    );
+
+    if (existingReview) {
+      // Update existing review with comment
+      setReviews(prev =>
+        prev.map(r =>
+          r.id === existingReview.id ? { ...r, comment, date: new Date().toISOString() } : r
+        )
+      );
+    } else {
+      // Create new review with comment
+      const newReview: Review = {
+        id: `review-${Date.now()}`,
+        productId,
+        userName,
+        rating,
+        comment,
+        date: new Date().toISOString(),
+      };
+      
+      setReviews(prev => [newReview, ...prev]);
+      
+      // Update product rating and count
+      const productReviews = reviews.filter(r => r.productId === productId);
+      const newReviewCount = productReviews.length + 1;
+      const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + rating;
+      const newRating = totalRating / newReviewCount;
+      
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? {
+                ...product,
+                rating: Math.round(newRating * 10) / 10,
+                reviewCount: newReviewCount,
+              }
+            : product
+        )
+      );
+    }
+  };
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -236,9 +337,10 @@ export default function App() {
 
   // Filter and sort products
   let filteredProducts = products.filter(product => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+    const matchesSearch = 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -308,6 +410,10 @@ export default function App() {
         onBack={() => setShowMyAccount(false)}
         onUserUpdate={handleUserUpdate}
         onLogout={handleLogout}
+        orders={orders}
+        onUpdateOrderStatus={handleUpdateOrderStatus}
+        onRateProduct={handleRateProduct}
+        onAddComment={handleAddCommentToRating}
       />
     );
   }
@@ -345,11 +451,7 @@ export default function App() {
         cartItems={cartItems}
         totalPrice={totalPrice}
         onBack={() => setIsCheckout(false)}
-        onComplete={() => {
-          updateProductStock(cartItems);
-          setCartItems([]);
-          setIsCheckout(false);
-        }}
+        onComplete={handleOrderComplete}
       />
     );
   }
