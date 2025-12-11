@@ -1,5 +1,5 @@
 import { Product } from '../App';
-import { ShoppingCart, FileText } from 'lucide-react';
+import { ShoppingCart, FileText, Package } from 'lucide-react';
 
 interface ProductGridProps {
   products: Product[];
@@ -54,7 +54,24 @@ export function ProductGrid({
               <p className="text-gray-600 text-sm mb-2 capitalize">
                 {product.category}
               </p>
-              <p className="text-blue-600 mb-3">₺{product.price.toFixed(2)}</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-blue-600">₺{product.price.toFixed(2)}</p>
+                <div
+                  className={`flex items-center gap-1 text-sm ${
+                    product.stockCount <= 10
+                      ? 'text-red-600'
+                      : product.stockCount <= 30
+                      ? 'text-orange-600'
+                      : 'text-gray-600'
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>
+                    {product.stockCount} in stock
+                    {product.stockCount <= 10 && ' - Low!'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 

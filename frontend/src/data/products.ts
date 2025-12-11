@@ -10,6 +10,7 @@ export const products: Product[] = [
     description: 'Effective pain relief and fever reduction. Take 1-2 tablets every 4-6 hours as needed.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 150,
   },
   {
     id: '2',
@@ -20,6 +21,7 @@ export const products: Product[] = [
     description: 'Anti-inflammatory pain reliever. Effective for headaches, muscle pain, and fever.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 120,
   },
   {
     id: '3',
@@ -30,6 +32,7 @@ export const products: Product[] = [
     description: 'Supports bone health and immune system. Take one tablet daily with food.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 200,
   },
   {
     id: '4',
@@ -40,6 +43,7 @@ export const products: Product[] = [
     description: 'Complete daily vitamin and mineral supplement for overall health.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 85,
   },
   {
     id: '5',
@@ -50,6 +54,7 @@ export const products: Product[] = [
     description: 'Prescription antibiotic for bacterial infections. Requires valid prescription.',
     inStock: true,
     requiresPrescription: true,
+    stockCount: 45,
   },
   {
     id: '6',
@@ -60,6 +65,7 @@ export const products: Product[] = [
     description: 'Fast-acting allergy relief. Non-drowsy formula for seasonal allergies.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 175,
   },
   {
     id: '7',
@@ -70,6 +76,7 @@ export const products: Product[] = [
     description: 'Soothes cough and throat irritation. Suitable for adults and children over 12.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 90,
   },
   {
     id: '8',
@@ -80,6 +87,7 @@ export const products: Product[] = [
     description: '70% alcohol hand sanitizer. Kills 99.9% of germs. Moisturizing formula.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 300,
   },
   {
     id: '9',
@@ -90,6 +98,7 @@ export const products: Product[] = [
     description: 'Disposable 3-layer protective face masks. Pack of 50.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 250,
   },
   {
     id: '10',
@@ -100,6 +109,7 @@ export const products: Product[] = [
     description: 'Digital blood pressure monitor with large display and memory function.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 35,
   },
   {
     id: '11',
@@ -110,6 +120,7 @@ export const products: Product[] = [
     description: 'Fast and accurate digital thermometer. 60-second reading time.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 140,
   },
   {
     id: '12',
@@ -120,6 +131,7 @@ export const products: Product[] = [
     description: 'High-quality omega-3 supplement for heart and brain health.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 110,
   },
   {
     id: '13',
@@ -130,6 +142,7 @@ export const products: Product[] = [
     description: 'Complete first aid kit with bandages, antiseptics, and emergency supplies.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 60,
   },
   {
     id: '14',
@@ -140,6 +153,7 @@ export const products: Product[] = [
     description: 'Fast relief from heartburn and acid indigestion. Mint flavor.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 180,
   },
   {
     id: '15',
@@ -150,6 +164,7 @@ export const products: Product[] = [
     description: 'Advanced probiotic formula for digestive and immune health.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 95,
   },
   {
     id: '16',
@@ -160,5 +175,6 @@ export const products: Product[] = [
     description: 'Low-dose aspirin for pain relief and cardiovascular support.',
     inStock: true,
     requiresPrescription: false,
+    stockCount: 220,
   },
 ];

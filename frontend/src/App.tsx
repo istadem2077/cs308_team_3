@@ -23,6 +23,7 @@ export interface Product {
   description: string;
   inStock: boolean;
   requiresPrescription: boolean;
+  stockCount: number;
 }
 
 export interface CartItem extends Product {
@@ -128,6 +129,14 @@ export default function App() {
   const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
+      const currentQuantity = existing ? existing.quantity : 0;
+      
+      // Check if adding one more would exceed stock
+      if (currentQuantity >= product.stockCount) {
+        alert(`Sorry, only ${product.stockCount} items available in stock for ${product.name}`);
+        return prev;
+      }
+      
       if (existing) {
         return prev.map(item =>
           item.id === product.id
@@ -151,6 +160,23 @@ export default function App() {
 
   const removeFromCart = (id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateProductStock = (purchasedItems: CartItem[]) => {
+    setProducts(prevProducts =>
+      prevProducts.map(product => {
+        const purchasedItem = purchasedItems.find(item => item.id === product.id);
+        if (purchasedItem) {
+          const newStock = product.stockCount - purchasedItem.quantity;
+          return {
+            ...product,
+            stockCount: Math.max(0, newStock),
+            inStock: newStock > 0,
+          };
+        }
+        return product;
+      })
+    );
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -269,6 +295,7 @@ export default function App() {
         totalPrice={totalPrice}
         onBack={() => setIsCheckout(false)}
         onComplete={() => {
+          updateProductStock(cartItems);
           setCartItems([]);
           setIsCheckout(false);
         }}
