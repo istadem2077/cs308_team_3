@@ -122,15 +122,15 @@ export function ProductGrid({
                 e.stopPropagation();
                 onAddToCart(product);
               }}
-              disabled={!product.inStock}
+              disabled={!product.inStock || product.stockCount === 0}
               className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                product.inStock
+                product.inStock && product.stockCount > 0
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
               <ShoppingCart className="w-4 h-4" />
-              Add to Cart
+              {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
             {onCommentsClick && (
               <button

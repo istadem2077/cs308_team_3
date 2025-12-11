@@ -1,4 +1,4 @@
-import { X, ShoppingCart, FileText, CheckCircle } from 'lucide-react';
+import { X, ShoppingCart, FileText, CheckCircle, Package, Shield, Truck } from 'lucide-react';
 import { Product } from '../App';
 
 interface ProductDetailProps {
@@ -74,6 +74,60 @@ export function ProductDetail({
                   <p className="text-gray-600">{product.description}</p>
                 </div>
 
+                {/* Product Specifications */}
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <h3 className="mb-2">Product Information</h3>
+                  
+                  <div className="flex items-start gap-2">
+                    <Package className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Model</p>
+                      <p className="text-gray-900">{product.model}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Serial Number</p>
+                      <p className="text-gray-900">{product.serialNumber}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Warranty</p>
+                      <p className="text-gray-900">{product.warrantyStatus}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Truck className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Distributor</p>
+                      <p className="text-gray-900">{product.distributor}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Package className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Stock Quantity</p>
+                      <p className={`${
+                        product.stockCount <= 10
+                          ? 'text-red-600'
+                          : product.stockCount <= 30
+                          ? 'text-orange-600'
+                          : 'text-gray-900'
+                      }`}>
+                        {product.stockCount} units
+                        {product.stockCount <= 10 && ' - Low Stock!'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {product.requiresPrescription && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                     <h4 className="text-orange-800 mb-1">Prescription Required</h4>
@@ -89,15 +143,15 @@ export function ProductDetail({
                     onAddToCart(product);
                     onClose();
                   }}
-                  disabled={!product.inStock}
+                  disabled={!product.inStock || product.stockCount === 0}
                   className={`w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                    product.inStock
+                    product.inStock && product.stockCount > 0
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Add to Cart
+                  {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </button>
               </div>
             </div>
