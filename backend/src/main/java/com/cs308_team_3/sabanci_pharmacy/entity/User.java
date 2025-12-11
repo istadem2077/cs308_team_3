@@ -18,6 +18,13 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String gender;
+    @Column
+    private Integer age;
+    @Column
+    private Integer phone_number;
+
     @Column(nullable = false, unique = true)
     private String email;
 
