@@ -1,18 +1,13 @@
-// Authentication Service
+import { apiCall } from './api';
 
 export interface User {
-  id: string;
+  id: string; // Backend uses Integer, but frontend handles IDs as strings usually
   name: string;
   email: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  phone: string;
-  address: {
-    city: string;
-    province: string;
-    postcode: string;
-    addressLine: string;
-  };
+  // age: number; // MISSING IN BACKEND
+  // gender: 'male' | 'female' | 'other'; // MISSING IN BACKEND
+  // phone: string; // MISSING IN BACKEND
+  address: string; // Backend uses a single string for address
 }
 
 export interface LoginCredentials {
@@ -36,90 +31,80 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
-  user: User;
   token: string;
+  // Backend AuthResponse might differ, adjust based on actual JSON
+  userId?: number; 
+  name?: string;
+  email?: string;
 }
 
-const API_BASE_URL = 'https://your-api-endpoint.com/api';
+// Helper to format frontend address object to backend string
+const formatAddress = (addr: RegisterData['address']) => {
+  return `${addr.addressLine}, ${addr.postcode}, ${addr.province}, ${addr.city}`;
+};
 
-// Mock implementation - Replace with real API calls
 export const authService = {
-  // Login user
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // Real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(credentials),
-    // });
-    // if (!response.ok) throw new Error('Login failed');
-    // return await response.json();
+    const data = await apiCall<any>('/user/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
 
-    // Mock implementation
-    console.log('Login attempt:', credentials.email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: '1',
-      name: 'Test User',
+    // Assuming backend returns { token: "...", name: "..." }
+    // If backend only returns token, you might need to decode JWT or fetch profile
+    const user: User = {
+      id: data.userId || '0', // Backend needs to return ID or we extract from token
+      name: data.name || '',
       email: credentials.email,
-      age: 22,
-      gender: 'male',
-      phone: '+90 555 123 4567',
-      address: {
-        city: 'Istanbul',
-        province: 'Tuzla',
-        postcode: '34956',
-        addressLine: 'Sabanci University Campus, A Block, Room 301',
-      },
+      address: '', // Login response usually doesn't have address unless added
     };
 
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(user));
+    if (data.userId) localStorage.setItem('userId', data.userId.toString());
 
-    return { user: mockUser, token };
+    return { token: data.token, ...user };
   },
 
-  // Register new user
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    // Real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data),
-    // });
-    // if (!response.ok) throw new Error('Registration failed');
-    // return await response.json();
-
-    // Mock implementation
-    console.log('Registration attempt:', data.email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockUser: User = {
-      id: Date.now().toString(),
+    // Note: confirmPassword is required by backend DTO
+    const backendPayload = {
       name: data.name,
       email: data.email,
-      age: data.age,
-      gender: data.gender,
-      phone: data.phone,
-      address: data.address,
+      password: data.password,
+      confirmPassword: data.password, 
+      address: formatAddress(data.address),
+      // Backend ignores age, gender, phone currently
     };
 
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(mockUser));
+    const response = await apiCall<any>('/user/register', {
+      method: 'POST',
+      body: JSON.stringify(backendPayload),
+    });
 
-    return { user: mockUser, token };
+    // Auto-login after register if backend returns token
+    const user: User = {
+      id: response.userId || '0',
+      name: data.name,
+      email: data.email,
+      address: backendPayload.address,
+    };
+
+    if (response.token) {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('user', JSON.stringify(user));
+        if (response.userId) localStorage.setItem('userId', response.userId.toString());
+    }
+
+    return { token: response.token, ...user };
   },
 
-  // Logout user
   logout: () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
   },
 
-  // Get current user from localStorage
   getCurrentUser: (): User | null => {
     const userStr = localStorage.getItem('user');
     if (!userStr) return null;
@@ -129,42 +114,17 @@ export const authService = {
       return null;
     }
   },
+  
+  getUserId: (): number => {
+      const id = localStorage.getItem('userId');
+      return id ? parseInt(id) : 0;
+  },
 
-  // Check if user is authenticated
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('authToken');
   },
-
-  // Update user profile
-  updateProfile: async (userId: string, updates: Partial<User>): Promise<User> => {
-    // Real implementation:
-    // const token = localStorage.getItem('authToken');
-    // const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-    //   method: 'PUT',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}`,
-    //   },
-    //   body: JSON.stringify(updates),
-    // });
-    // if (!response.ok) throw new Error('Update failed');
-    // return await response.json();
-
-    // Mock implementation
-    console.log('Updating profile:', updates);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const currentUser = authService.getCurrentUser();
-    if (!currentUser) throw new Error('Not authenticated');
-
-    const updatedUser = { ...currentUser, ...updates };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-
-    return updatedUser;
-  },
 };
 
-// Turkish cities for address selection
 export const TURKISH_CITIES = [
   'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya',
   'Artvin', 'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu',
