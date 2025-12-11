@@ -1,383 +1,286 @@
 import { useState } from 'react';
-import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CreditCard, MapPin, Check, Loader2 } from 'lucide-react';
 import { CartItem } from '../App';
-import { ordersAPI, OrderData } from '../services/api';
+import { ordersAPI, OrderResponse } from '../services/api';
 
 interface CheckoutProps {
   cartItems: CartItem[];
   totalPrice: number;
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (order: OrderResponse) => void;
 }
 
-export function Checkout({
-  cartItems,
-  totalPrice,
-  onBack,
-  onComplete,
-}: CheckoutProps) {
-  const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+type CheckoutStep = 'shipping' | 'payment';
+
+export function Checkout({ cartItems, totalPrice, onBack, onComplete }: CheckoutProps) {
+  const [step, setStep] = useState<CheckoutStep>('shipping');
+  const [loading, setLoading] = useState(false);
+  
+  const [shippingDetails, setShippingDetails] = useState({
+    fullName: '',
     phone: '',
     address: '',
-    dormitory: '',
-    roomNumber: '',
-    notes: '',
+    city: '',
+    zipCode: '',
+    notes: ''
   });
-  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
-  const [orderId, setOrderId] = useState<string>('');
 
-  const hasPrescriptionItems = cartItems.some(
-    item => item.requiresPrescription
-  );
+  const [paymentDetails, setPaymentDetails] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    name: ''
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step === 1) {
-      setStep(2);
-    } else if (step === 2 && hasPrescriptionItems) {
-      setStep(3);
-    } else {
-      setStep(4);
-      // Submit order to API
-      setIsSubmitting(true);
-      try {
-        const orderData: OrderData = {
-          ...formData,
-          items: cartItems,
-          totalPrice,
-          prescriptionFile: prescriptionFile || undefined,
-        };
-        
-        const response = await ordersAPI.create(orderData);
-        setOrderId(response.orderId);
-        setStep(4);
-      } catch (error) {
-        console.error('Order submission failed:', error);
-        alert('Failed to place order. Please try again.');
-      } finally {
-        setIsSubmitting(false);
+  const handlePlaceOrder = async () => {
+    setLoading(true);
+    
+    // Construct order data (for display/frontend usage mostly, 
+    // backend creates order from server-side cart)
+    const orderData = {
+      items: cartItems.map(item => ({
+        productId: item.id,
+        productName: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalPrice,
+      deliveryAddress: {
+        name: shippingDetails.fullName,
+        phone: shippingDetails.phone,
+        city: shippingDetails.city,
+        province: '', // simplified
+        postcode: shippingDetails.zipCode,
+        addressLine: shippingDetails.address,
+        notes: shippingDetails.notes
       }
+    };
+
+    try {
+      const order = await ordersAPI.create(orderData);
+      onComplete(order);
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (step === 4) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </div>
-          <h2 className="mb-2">Order Placed Successfully!</h2>
-          <p className="text-gray-600 mb-6">
-            Your order will be delivered to your dormitory within 2-4 hours.
-          </p>
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <p className="text-gray-600 text-sm mb-1">Order Total</p>
-            <p className="text-blue-600">₺{totalPrice.toFixed(2)}</p>
-          </div>
-          <button
-            onClick={onComplete}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Cart
-          </button>
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Shopping
+      </button>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span
-              className={`text-sm ${
-                step >= 1 ? 'text-blue-600' : 'text-gray-400'
-              }`}
-            >
-              Delivery Info
-            </span>
-            <span
-              className={`text-sm ${
-                step >= 2 ? 'text-blue-600' : 'text-gray-400'
-              }`}
-            >
-              Review Order
-            </span>
-            {hasPrescriptionItems && (
-              <span
-                className={`text-sm ${
-                  step >= 3 ? 'text-blue-600' : 'text-gray-400'
-                }`}
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-6">
+          {/* Steps Indicator */}
+          <div className="flex items-center justify-between mb-8">
+            {['Shipping', 'Payment'].map((s, i) => {
+                // Determine if this step is active or completed
+                const currentIdx = step === 'shipping' ? 0 : 1;
+                const isActive = i === currentIdx;
+                const isCompleted = i < currentIdx;
+                
+                return (
+                  <div key={s} className="flex flex-col items-center flex-1 relative">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-2 transition-colors ${
+                      isActive ? 'bg-blue-600 text-white' : 
+                      isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {isCompleted ? <Check className="w-4 h-4" /> : i + 1}
+                    </div>
+                    <span className={`text-sm ${isActive ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+                      {s}
+                    </span>
+                    {i < 1 && (
+                      <div className={`absolute top-4 left-[60%] w-[80%] h-0.5 ${
+                        isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                      }`} />
+                    )}
+                  </div>
+                );
+            })}
+          </div>
+
+          {step === 'shipping' && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                Shipping Details
+              </h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.fullName}
+                    onChange={e => setShippingDetails({...shippingDetails, fullName: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input 
+                    type="tel"
+                    value={shippingDetails.phone}
+                    onChange={e => setShippingDetails({...shippingDetails, phone: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.address}
+                    onChange={e => setShippingDetails({...shippingDetails, address: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.city}
+                    onChange={e => setShippingDetails({...shippingDetails, city: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.zipCode}
+                    onChange={e => setShippingDetails({...shippingDetails, zipCode: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Notes (Optional)</label>
+                  <textarea 
+                    value={shippingDetails.notes}
+                    onChange={e => setShippingDetails({...shippingDetails, notes: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => setStep('payment')}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mt-4"
               >
-                Upload Prescription
-              </span>
-            )}
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-600 transition-all duration-300"
-              style={{
-                width: `${
-                  (step / (hasPrescriptionItems ? 3 : 2)) * 100
-                }%`,
-              }}
-            />
-          </div>
+                Continue to Payment
+              </button>
+            </div>
+          )}
+
+          {step === 'payment' && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+                Payment Method
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                  <input 
+                    type="text"
+                    placeholder="0000 0000 0000 0000"
+                    value={paymentDetails.cardNumber}
+                    onChange={e => setPaymentDetails({...paymentDetails, cardNumber: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                    <input 
+                      type="text"
+                      placeholder="MM/YY"
+                      value={paymentDetails.expiry}
+                      onChange={e => setPaymentDetails({...paymentDetails, expiry: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                    <input 
+                      type="text"
+                      placeholder="123"
+                      value={paymentDetails.cvc}
+                      onChange={e => setPaymentDetails({...paymentDetails, cvc: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                  <input 
+                    type="text"
+                    value={paymentDetails.name}
+                    onChange={e => setPaymentDetails({...paymentDetails, name: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={() => setStep('shipping')}
+                  className="w-1/3 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={loading}
+                  className="w-2/3 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay ₺${totalPrice.toFixed(2)}`
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              {step === 1 && (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <h2 className="mb-4">Delivery Information</h2>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={e =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={e =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        required
-                        value={formData.phone}
-                        onChange={e =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-700 mb-2">
-                        Dormitory
-                      </label>
-                      <select
-                        required
-                        value={formData.dormitory}
-                        onChange={e =>
-                          setFormData({ ...formData, dormitory: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select dormitory</option>
-                        <option value="A Block">A Block</option>
-                        <option value="B Block">B Block</option>
-                        <option value="C Block">C Block</option>
-                        <option value="D Block">D Block</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-2">
-                        Room Number
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.roomNumber}
-                        onChange={e =>
-                          setFormData({ ...formData, roomNumber: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">
-                      Delivery Notes (Optional)
-                    </label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={e =>
-                        setFormData({ ...formData, notes: e.target.value })
-                      }
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Continue to Review
-                  </button>
-                </form>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-4">
-                  <h2 className="mb-4">Review Your Order</h2>
-
-                  <div className="space-y-3">
-                    {cartItems.map(item => (
-                      <div
-                        key={item.id}
-                        className="flex gap-4 border-b pb-3"
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                        <div className="flex-1">
-                          <h3>{item.name}</h3>
-                          <p className="text-gray-600 text-sm">
-                            Quantity: {item.quantity}
-                          </p>
-                        </div>
-                        <p className="text-blue-600">
-                          ₺{(item.price * item.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                    <h3 className="mb-2">Delivery Address</h3>
-                    <p className="text-gray-600 text-sm">{formData.name}</p>
-                    <p className="text-gray-600 text-sm">
-                      {formData.dormitory}, Room {formData.roomNumber}
-                    </p>
-                    <p className="text-gray-600 text-sm">{formData.phone}</p>
-                  </div>
-
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    {hasPrescriptionItems
-                      ? 'Continue to Upload Prescription'
-                      : 'Place Order'}
-                  </button>
+        {/* Order Summary */}
+        <div className="h-fit bg-gray-50 p-6 rounded-lg border">
+          <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
+          <div className="space-y-4 max-h-60 overflow-y-auto mb-4">
+            {cartItems.map(item => (
+              <div key={item.id} className="flex justify-between gap-4 text-sm">
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-gray-500">Qty: {item.quantity}</p>
                 </div>
-              )}
-
-              {step === 3 && hasPrescriptionItems && (
-                <div className="space-y-4">
-                  <h2 className="mb-4">Upload Prescription</h2>
-
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
-                    <p className="text-orange-800">
-                      Your order contains items that require a prescription.
-                      Please upload a valid prescription to continue.
-                    </p>
-                  </div>
-
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">
-                      Click to upload or drag and drop
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      PDF, JPG, PNG up to 10MB
-                    </p>
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      id="prescription-upload"
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setPrescriptionFile(file);
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor="prescription-upload"
-                      className="inline-block mt-4 px-6 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      Select File
-                    </label>
-                  </div>
-
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Place Order
-                  </button>
-                </div>
-              )}
-            </div>
+                <p>₺{(item.price * item.quantity).toFixed(2)}</p>
+              </div>
+            ))}
           </div>
-
-          <div>
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
-              <h3 className="mb-4">Order Summary</h3>
-
-              <div className="space-y-3 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span>₺{totalPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Delivery</span>
-                  <span className="text-green-600">Free</span>
-                </div>
-                <div className="border-t pt-3 flex justify-between">
-                  <span>Total</span>
-                  <span className="text-blue-600">₺{totalPrice.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="text-sm text-gray-600 space-y-2">
-                <p className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  Same-day campus delivery
-                </p>
-                <p className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  Secure payment
-                </p>
-              </div>
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span>₺{totalPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Shipping</span>
+              <span className="text-green-600">Free</span>
+            </div>
+            <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
+              <span>Total</span>
+              <span>₺{totalPrice.toFixed(2)}</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/java,node,jetbrains+all,gradle
 # Edit at https://www.toptal.com/developers/gitignore?templates=java,node,jetbrains+all,gradle
-
+*:Zone.Identifier
 ### Java ###
 # Compiled class file
 *.class

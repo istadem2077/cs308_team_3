@@ -69,10 +69,19 @@ export function Cart({
                         </button>
                         <span className="w-8 text-center">{item.quantity}</span>
                         <button
-                          onClick={() =>
-                            onUpdateQuantity(item.id, item.quantity + 1)
-                          }
-                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                          onClick={() => {
+                            if (item.quantity >= item.stockCount) {
+                              alert(`Only ${item.stockCount} items available in stock`);
+                            } else {
+                              onUpdateQuantity(item.id, item.quantity + 1);
+                            }
+                          }}
+                          disabled={item.quantity >= item.stockCount}
+                          className={`p-1 rounded transition-colors ${
+                            item.quantity >= item.stockCount
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'hover:bg-gray-200'
+                          }`}
                         >
                           <Plus className="w-4 h-4" />
                         </button>
