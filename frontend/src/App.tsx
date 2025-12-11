@@ -236,9 +236,10 @@ export default function App() {
 
   // Filter and sort products
   let filteredProducts = products.filter(product => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+    const matchesSearch = 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
