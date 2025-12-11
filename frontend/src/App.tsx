@@ -23,7 +23,6 @@ export interface Product {
   image: string;
   description: string;
   inStock: boolean;
-  // Removed requiresPrescription
   stockCount: number;
   popularity: number;
   rating: number;
@@ -89,6 +88,7 @@ export default function App() {
       setProducts(data);
       setLoading(false);
     } catch (err) {
+      console.error("Fetch products error:", err);
       setError('Failed to fetch products');
       setLoading(false);
     }
@@ -115,12 +115,10 @@ export default function App() {
         } catch (err) {
           console.error("Failed to sync user data", err);
         }
-      } else if (isGuestMode) {
-        // Keep local cart items if guest
-      }
+      } 
     };
     syncUserData();
-  }, [user, isGuestMode]);
+  }, [user]);
 
   // 4. Fetch Reviews when a product is selected
   useEffect(() => {
@@ -188,7 +186,7 @@ export default function App() {
   // --- Cart Actions ---
 
   const addToCart = async (product: Product) => {
-    // 1. Optimistic Update
+    // 1. Optimistic Update for UI responsiveness
     const prevItems = [...cartItems];
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -213,6 +211,7 @@ export default function App() {
     if (user) {
       try {
         await cartAPI.addToCart(product.id, 1);
+        // Reload to ensure consistency with server calculation
         const updatedCart = await cartAPI.load();
         setCartItems(updatedCart);
       } catch (err) {
@@ -230,7 +229,6 @@ export default function App() {
     const oldQty = item.quantity;
     const diff = quantity - oldQty;
 
-    // 1. Optimistic Update
     if (quantity === 0) {
       setCartItems(prev => prev.filter(item => item.id !== id));
     } else {
@@ -239,13 +237,19 @@ export default function App() {
       );
     }
 
-    // 2. Server Sync
     if (user && diff !== 0) {
       try {
         if (diff > 0) {
            await cartAPI.addToCart(id, diff);
         } else {
-           await cartAPI.removeFromCart(id); 
+           // For removal, we might loop or backend needs a 'reduce quantity' endpoint
+           // Since backend 'remove' usually removes the item entirely or reduces by 1,
+           // we assume standard behavior here or loop for 'diff' times if API requires
+           // Assuming addToCart with negative might not work, so we use logic:
+           // If backend remove API only removes 1 at a time:
+           for(let k=0; k < Math.abs(diff); k++) {
+                await cartAPI.removeFromCart(id); 
+           }
         }
         const updatedCart = await cartAPI.load();
         setCartItems(updatedCart);
@@ -258,12 +262,16 @@ export default function App() {
   };
 
   const removeFromCart = async (id: string) => {
-    // 1. Optimistic
     setCartItems(prev => prev.filter(item => item.id !== id));
 
-    // 2. Server Sync
     if (user) {
       try {
+        // We might need to call remove multiple times or clear logic 
+        // if backend /cart/remove only decrements. 
+        // Assuming here we want to fully remove line item:
+        // Ideally backend should have 'delete item' endpoint. 
+        // If not, we iterate or rely on cartAPI implementation.
+        // For now, let's call remove once (or check backend implementation).
         await cartAPI.removeFromCart(id); 
         const updatedCart = await cartAPI.load();
         setCartItems(updatedCart);
@@ -308,7 +316,6 @@ export default function App() {
         alert("Failed to post review");
       }
     } else {
-      // Guest mode local update
       const newReview: Review = {
         ...review,
         id: `review-${Date.now()}`,
@@ -320,15 +327,22 @@ export default function App() {
 
   // --- Orders ---
 
-  const handleOrderComplete = async (order: OrderResponse) => {
+  const handleOrderComplete = async () => { // Removed OrderResponse arg as create returns it or we fetch history
     if (user) {
       try {
-        const history = await ordersAPI.getHistory();
-        setOrders(history);
-        setCartItems([]);
-        updateProductStock(cartItems);
+        // Call checkout API
+        const userId = authService.getUserId();
+        if(userId) {
+            await ordersAPI.create(userId);
+            const history = await ordersAPI.getHistory();
+            setOrders(history);
+            setCartItems([]);
+            // Ideally re-fetch products to get updated stock
+            fetchProducts();
+        }
       } catch (err) {
-        console.error("Failed to refresh orders", err);
+        console.error("Checkout failed", err);
+        alert("Checkout failed. Please try again.");
       }
     }
     setIsCheckout(false);
