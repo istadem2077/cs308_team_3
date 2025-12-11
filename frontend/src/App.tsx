@@ -12,7 +12,7 @@ import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
 import { productsAPI } from './services/api';
 import { authService, User } from './services/auth';
-import { Loader2, ArrowUpDown } from 'lucide-react';
+import { Loader2, ChevronDown } from 'lucide-react';
 
 export interface Product {
   id: string;
@@ -24,13 +24,14 @@ export interface Product {
   inStock: boolean;
   requiresPrescription: boolean;
   stockCount: number;
+  popularity: number; // 0-100 score based on sales/views
 }
 
 export interface CartItem extends Product {
   quantity: number;
 }
 
-type SortOption = 'none' | 'price-asc' | 'price-desc';
+type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -200,6 +201,8 @@ export default function App() {
     filteredProducts = [...filteredProducts].sort((a, b) => a.price - b.price);
   } else if (sortBy === 'price-desc') {
     filteredProducts = [...filteredProducts].sort((a, b) => b.price - a.price);
+  } else if (sortBy === 'popularity') {
+    filteredProducts = [...filteredProducts].sort((a, b) => b.popularity - a.popularity);
   }
 
   const categories = [
@@ -368,42 +371,25 @@ export default function App() {
           </div>
         </div>
 
-        {/* Price Sort Filter */}
+        {/* Sort Filter */}
         <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="w-5 h-5 text-gray-600" />
-            <span className="text-gray-700">Sort by Price:</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSortBy('none')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  sortBy === 'none'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+          <div className="flex items-center gap-3">
+            <label htmlFor="sort-select" className="text-gray-700">
+              Sort by:
+            </label>
+            <div className="relative">
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as SortOption)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-gray-700 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
               >
-                Default
-              </button>
-              <button
-                onClick={() => setSortBy('price-asc')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  sortBy === 'price-asc'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Cheapest First
-              </button>
-              <button
-                onClick={() => setSortBy('price-desc')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  sortBy === 'price-desc'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Most Expensive First
-              </button>
+                <option value="none">Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="popularity">Popularity</option>
+              </select>
+              <ChevronDown className="w-5 h-5 text-gray-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
           <p className="text-gray-600">

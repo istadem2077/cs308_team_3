@@ -11,6 +11,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 150,
+    popularity: 95,
   },
   {
     id: '2',
@@ -22,6 +23,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 120,
+    popularity: 88,
   },
   {
     id: '3',
@@ -33,6 +35,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 200,
+    popularity: 92,
   },
   {
     id: '4',
@@ -44,6 +47,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 85,
+    popularity: 85,
   },
   {
     id: '5',
@@ -55,6 +59,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: true,
     stockCount: 45,
+    popularity: 65,
   },
   {
     id: '6',
@@ -66,6 +71,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 175,
+    popularity: 78,
   },
   {
     id: '7',
@@ -77,6 +83,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 90,
+    popularity: 72,
   },
   {
     id: '8',
@@ -88,6 +95,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 300,
+    popularity: 90,
   },
   {
     id: '9',
@@ -99,6 +107,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 250,
+    popularity: 87,
   },
   {
     id: '10',
@@ -110,6 +119,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 35,
+    popularity: 70,
   },
   {
     id: '11',
@@ -121,6 +131,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 140,
+    popularity: 82,
   },
   {
     id: '12',
@@ -132,6 +143,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 110,
+    popularity: 80,
   },
   {
     id: '13',
@@ -143,6 +155,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 60,
+    popularity: 75,
   },
   {
     id: '14',
@@ -154,6 +167,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 180,
+    popularity: 68,
   },
   {
     id: '15',
@@ -165,6 +179,7 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 95,
+    popularity: 76,
   },
   {
     id: '16',
@@ -176,5 +191,6 @@ export const products: Product[] = [
     inStock: true,
     requiresPrescription: false,
     stockCount: 220,
+    popularity: 84,
   },
 ];
