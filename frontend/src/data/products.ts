@@ -12,6 +12,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 150,
     popularity: 95,
+    rating: 4.8,
+    reviewCount: 234,
   },
   {
     id: '2',
@@ -24,6 +26,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 120,
     popularity: 88,
+    rating: 4.6,
+    reviewCount: 189,
   },
   {
     id: '3',
@@ -36,6 +40,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 200,
     popularity: 92,
+    rating: 4.7,
+    reviewCount: 312,
   },
   {
     id: '4',
@@ -48,6 +54,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 85,
     popularity: 85,
+    rating: 4.5,
+    reviewCount: 156,
   },
   {
     id: '5',
@@ -60,6 +68,8 @@ export const products: Product[] = [
     requiresPrescription: true,
     stockCount: 45,
     popularity: 65,
+    rating: 4.3,
+    reviewCount: 78,
   },
   {
     id: '6',
@@ -72,6 +82,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 175,
     popularity: 78,
+    rating: 4.4,
+    reviewCount: 145,
   },
   {
     id: '7',
@@ -84,6 +96,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 90,
     popularity: 72,
+    rating: 4.2,
+    reviewCount: 98,
   },
   {
     id: '8',
@@ -96,6 +110,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 300,
     popularity: 90,
+    rating: 4.7,
+    reviewCount: 267,
   },
   {
     id: '9',
@@ -108,6 +124,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 250,
     popularity: 87,
+    rating: 4.5,
+    reviewCount: 203,
   },
   {
     id: '10',
@@ -120,6 +138,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 35,
     popularity: 70,
+    rating: 4.6,
+    reviewCount: 124,
   },
   {
     id: '11',
@@ -132,6 +152,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 140,
     popularity: 82,
+    rating: 4.4,
+    reviewCount: 178,
   },
   {
     id: '12',
@@ -144,6 +166,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 110,
     popularity: 80,
+    rating: 4.5,
+    reviewCount: 167,
   },
   {
     id: '13',
@@ -156,6 +180,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 60,
     popularity: 75,
+    rating: 4.7,
+    reviewCount: 142,
   },
   {
     id: '14',
@@ -168,6 +194,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 180,
     popularity: 68,
+    rating: 4.3,
+    reviewCount: 112,
   },
   {
     id: '15',
@@ -180,6 +208,8 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 95,
     popularity: 76,
+    rating: 4.4,
+    reviewCount: 134,
   },
   {
     id: '16',
@@ -192,5 +222,7 @@ export const products: Product[] = [
     requiresPrescription: false,
     stockCount: 220,
     popularity: 84,
+    rating: 4.6,
+    reviewCount: 198,
   },
 ];

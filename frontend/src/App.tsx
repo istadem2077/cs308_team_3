@@ -10,8 +10,10 @@ import { Register } from './components/Register';
 import { MyAccount } from './components/MyAccount';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
+import { ProductReviews } from './components/ProductReviews';
 import { productsAPI } from './services/api';
 import { authService, User } from './services/auth';
+import { mockReviews } from './data/reviews';
 import { Loader2, ChevronDown } from 'lucide-react';
 
 export interface Product {
@@ -25,6 +27,17 @@ export interface Product {
   requiresPrescription: boolean;
   stockCount: number;
   popularity: number; // 0-100 score based on sales/views
+  rating: number; // 0-5 stars
+  reviewCount: number; // number of reviews
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 export interface CartItem extends Product {
@@ -52,6 +65,8 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('none');
   const [isCheckout, setIsCheckout] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
+  const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -173,6 +188,35 @@ export default function App() {
             ...product,
             stockCount: Math.max(0, newStock),
             inStock: newStock > 0,
+          };
+        }
+        return product;
+      })
+    );
+  };
+
+  const handleAddReview = (review: Omit<Review, 'id' | 'date'>) => {
+    const newReview: Review = {
+      ...review,
+      id: `review-${Date.now()}`,
+      date: new Date().toISOString(),
+    };
+    
+    setReviews(prev => [newReview, ...prev]);
+    
+    // Update product rating and review count
+    setProducts(prevProducts =>
+      prevProducts.map(product => {
+        if (product.id === review.productId) {
+          const productReviews = reviews.filter(r => r.productId === product.id);
+          const newReviewCount = productReviews.length + 1;
+          const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
+          const newRating = totalRating / newReviewCount;
+          
+          return {
+            ...product,
+            rating: Math.round(newRating * 10) / 10,
+            reviewCount: newReviewCount,
           };
         }
         return product;
@@ -401,6 +445,7 @@ export default function App() {
           products={filteredProducts}
           onProductClick={setSelectedProduct}
           onAddToCart={addToCart}
+          onCommentsClick={setSelectedProductForReviews}
         />
       </main>
 
@@ -436,6 +481,17 @@ export default function App() {
         onLogin={handleLoginPromptLogin}
         onRegister={handleLoginPromptRegister}
       />
+
+      {selectedProductForReviews && (
+        <ProductReviews
+          isOpen={true}
+          onClose={() => setSelectedProductForReviews(null)}
+          product={selectedProductForReviews}
+          reviews={reviews.filter(r => r.productId === selectedProductForReviews.id)}
+          onAddReview={handleAddReview}
+          userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
+        />
+      )}
     </div>
   );
 }
