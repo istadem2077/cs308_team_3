@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { X, Star, Send } from 'lucide-react';
+import { X, Star } from 'lucide-react';
 import { Product, Review } from '../App';
 
 interface ProductReviewsProps {
@@ -16,54 +15,22 @@ export function ProductReviews({
   onClose,
   product,
   reviews,
-  onAddReview,
-  userName,
 }: ProductReviewsProps) {
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
-  const [hoveredStar, setHoveredStar] = useState(0);
-
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!comment.trim()) return;
-
-    onAddReview({
-      productId: product.id,
-      userName: userName || 'Guest User',
-      rating,
-      comment: comment.trim(),
-    });
-
-    setRating(5);
-    setComment('');
-  };
-
-  const renderStars = (currentRating: number, interactive = false) => {
+  const renderStars = (currentRating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-      const isFilled = interactive
-        ? i <= (hoveredStar || rating)
-        : i <= currentRating;
+      const isFilled = i <= currentRating;
       stars.push(
-        <button
+        <Star
           key={i}
-          type={interactive ? 'button' : undefined}
-          onClick={interactive ? () => setRating(i) : undefined}
-          onMouseEnter={interactive ? () => setHoveredStar(i) : undefined}
-          onMouseLeave={interactive ? () => setHoveredStar(0) : undefined}
-          className={interactive ? 'cursor-pointer' : ''}
-          disabled={!interactive}
-        >
-          <Star
-            className={`w-5 h-5 ${
-              isFilled
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
-            }`}
-          />
-        </button>
+          className={`w-5 h-5 ${
+            isFilled
+              ? 'fill-yellow-400 text-yellow-400'
+              : 'text-gray-300'
+          }`}
+        />
       );
     }
     return stars;
@@ -121,20 +88,23 @@ export function ProductReviews({
             <div className="flex-1 min-w-0">
               {reviews.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  <p>No reviews yet. Be the first to leave a review!</p>
+                  <p>No reviews yet.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {reviews.map(review => (
                     <div key={review.id} className="pb-4 border-b last:border-b-0">
-                      {/* Stars and Date */}
+                      {/* User Name */}
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-0.5">
-                          {renderStars(review.rating)}
-                        </div>
+                        <p className="text-gray-900">{review.userName}</p>
                         <span className="text-sm text-gray-500">
                           {formatDate(review.date)}
                         </span>
+                      </div>
+                      
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5 mb-2">
+                        {renderStars(review.rating)}
                       </div>
                       
                       {/* Comment */}
@@ -145,48 +115,6 @@ export function ProductReviews({
               )}
             </div>
           </div>
-        </div>
-
-        {/* Add Review Form */}
-        <div className="p-6 border-t bg-gray-50">
-          <form onSubmit={handleSubmit}>
-            <h3 className="mb-3">Leave a Review</h3>
-            
-            {/* Rating Selection */}
-            <div className="mb-4">
-              <label className="block text-sm mb-2 text-gray-700">
-                Your Rating
-              </label>
-              <div className="flex items-center gap-1">
-                {renderStars(rating, true)}
-              </div>
-            </div>
-
-            {/* Comment Input */}
-            <div className="mb-4">
-              <label htmlFor="comment" className="block text-sm mb-2 text-gray-700">
-                Your Comment
-              </label>
-              <textarea
-                id="comment"
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-                placeholder="Share your thoughts about this product..."
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <Send className="w-4 h-4" />
-              Submit Review
-            </button>
-          </form>
         </div>
       </div>
     </>

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, CheckCircle, MapPin, Lock, CreditCard, Calendar, User as UserIcon, Shield, FileText } from 'lucide-react';
 import { CartItem } from '../App';
-import { ordersAPI, OrderData } from '../services/api';
+import { OrderResponse, OrderData, ordersAPI } from '../services/api';
 import { authService, User } from '../services/auth';
 
 interface CheckoutProps {
   cartItems: CartItem[];
   totalPrice: number;
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (order: OrderResponse) => void;
 }
 
 export function Checkout({
@@ -73,6 +73,7 @@ export function Checkout({
       const orderData: OrderData = {
         items: cartItems.map(item => ({
           productId: item.id,
+          productName: item.name,
           quantity: item.quantity,
           price: item.price,
         })),
@@ -521,7 +522,22 @@ export function Checkout({
       </div>
 
       <button
-        onClick={onComplete}
+        onClick={() => {
+          const order: OrderResponse = {
+            orderId,
+            status: 'confirmed',
+            estimatedDelivery: '2-3 business days',
+            totalPrice,
+            items: cartItems.map(item => ({
+              productId: item.id,
+              productName: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            date: new Date().toISOString(),
+          };
+          onComplete(order);
+        }}
         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
       >
         Continue Shopping
