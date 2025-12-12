@@ -8,4 +8,7 @@ import java.util.List;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category,Integer> {
+    Category getCategoryByName(String name);
+
+    Category getCategoryById(int id);
 }

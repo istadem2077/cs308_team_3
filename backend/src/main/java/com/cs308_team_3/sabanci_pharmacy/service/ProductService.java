@@ -1,6 +1,8 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
+import com.cs308_team_3.sabanci_pharmacy.entity.Category;
 import com.cs308_team_3.sabanci_pharmacy.entity.Product;
+import com.cs308_team_3.sabanci_pharmacy.repository.CategoryRepository;
 import com.cs308_team_3.sabanci_pharmacy.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

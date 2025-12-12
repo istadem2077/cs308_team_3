@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -33,9 +34,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 1. THIS LINE IS CRITICAL.
+                // It tells Spring Security to use the configuration from your CorsConfig bean.
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products").permitAll()
+                        .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products", "/api/reviews/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

@@ -10,4 +10,5 @@ public class AddressDto {
     private String province;
     private String zipCode;
     private Boolean isDefault;
+    private Integer phone;
 }
