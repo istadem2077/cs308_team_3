@@ -13,8 +13,9 @@
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
-./backend/src/main/resources/application.properties
+#./backend/src/main/resources/application.properties
 # Package Files #
+frontend/package-lock.json
 *.jar
 *.war
 *.nar

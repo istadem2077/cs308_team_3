@@ -45,6 +45,7 @@ public class OrderService {
         List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {
             OrderItemDto itemDto = new OrderItemDto();
             itemDto.setProductName(item.getProduct().getName());
+            itemDto.setProductId(item.getProduct().getId());
             itemDto.setQuantity(item.getQuantity());
             itemDto.setUnitPrice(item.getUnitPrice());
             // Calculate Subtotal

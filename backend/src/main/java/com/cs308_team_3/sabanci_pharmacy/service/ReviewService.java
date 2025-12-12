@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,20 +35,27 @@ public class ReviewService {
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Review review = new Review();
-        review.setProduct(product);
-        review.setUser(user);
-        review.setRating(requestDto.getRating());
-        review.setComment(requestDto.getComment());
-        review.setStatus("PENDING");
+        Review review = reviewRepository.findByUserIdAndProductId(user.getId(), product.getId())
+                .orElse(new Review());
 
+        if (review.getId() == null) {
+            review.setProduct(product);
+            review.setUser(user);
+            review.setStatus(!requestDto.getComment().isEmpty() ? "PENDING": "APPROVED");
+        } else {
+            review.setStatus(!requestDto.getComment().isEmpty() ? "PENDING": "APPROVED");
+        }
+
+        review.setRating(requestDto.getRating());
+        review.setComment(!requestDto.getComment().isEmpty()? requestDto.getComment() : "");
+        review.setStatus(!requestDto.getComment().isEmpty() ? "PENDING" : "APPROVED");
         Review savedReview = reviewRepository.save(review);
 
         return mapToResponseDto(savedReview);
     }
 
     public List<ReviewResponseDto> getReviewsByProduct(Integer productId) {
-        List<Review> reviews = reviewRepository.findByProductId(productId);
+        Optional<Review> reviews = reviewRepository.findByProductId(productId);
         return reviews.stream().map(this::mapToResponseDto).collect(Collectors.toList());
     }
 
@@ -58,6 +66,7 @@ public class ReviewService {
         response.setRating(review.getRating());
         response.setComment(review.getComment());
         response.setCreatedAt(review.getCreatedAt());
+        response.setStatus(review.getStatus());
 
         if (review.getUser() != null) {
             response.setUserName(review.getUser().getName());

@@ -60,8 +60,8 @@ export const productsAPI = {
         inStock: (p.quantity || 0) > 0,
         stockCount: p.quantity || 0,
         requiresPrescription: false,
-        popularity: 80, // Default value
-        rating: 4.5, // Default or fetch from reviews
+        popularity: p.total_orders || 0,
+        rating: p.averageRating, // Default or fetch from reviews
         reviewCount: 0,
         model: 'Standard',
         serialNumber: `SN-${p.id}`,
@@ -166,7 +166,7 @@ export const ordersAPI = {
     // 4. Return formatted response
     return {
         orderId: order.id.toString(),
-        status: order.status, // Backend status is PENDING
+        status: mapStatus(order.status), // Backend status is PENDING
         estimatedDelivery: '2 Days',
         totalPrice: orderData.totalPrice,
         items: orderData.items,
@@ -181,7 +181,13 @@ export const ordersAPI = {
           status: mapStatus(order.status), // <--- FIX: Use real status
           estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '2 Days',
           totalPrice: order.totalAmount,
-          items: order.items,
+          items: order.items.map((item: any) => ({
+              productId: item.productId || '0', // Backend DTO doesn't send ID currently
+              name: item.productName,           // Map productName to name
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice             // <--- CRITICAL FIX (was undefined before)
+          })),
           date: order.orderDate
       };
   },
@@ -193,10 +199,16 @@ export const ordersAPI = {
     const orders = await apiCall<any[]>(`/orders/user/${userId}`);
     return orders.map(order => ({
         orderId: order.orderId.toString(),
-        status: order.status,
+        status: mapStatus(order.status),
         estimatedDelivery: 'Delivered',
         totalPrice: order.totalAmount,
-        items: order.items,
+        items: order.items.map((item: any) => ({
+            productId: item.productId || '0',
+            name: item.productName,
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice             // <--- CRITICAL FIX
+        })),
         date: order.orderDate
     }));
   },
@@ -229,13 +241,15 @@ export const reviewsAPI = {
         const userId = localStorage.getItem('userId');
         if(!userId) throw new Error("Must be logged in");
 
+
+        const safeComment = comment === 0 ? "0" : String(comment || "");
         return apiCall('/reviews', {
             method: 'POST',
             body: JSON.stringify({
                 productId: parseInt(productId),
                 userId: parseInt(userId),
                 rating,
-                comment
+                comment: safeComment
             })
         });
     },
