@@ -39,6 +39,7 @@ public class ReviewService {
         review.setUser(user);
         review.setRating(requestDto.getRating());
         review.setComment(requestDto.getComment());
+        review.setStatus("PENDING");
 
         Review savedReview = reviewRepository.save(review);
 

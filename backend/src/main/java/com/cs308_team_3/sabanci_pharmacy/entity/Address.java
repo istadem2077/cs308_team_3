@@ -27,6 +27,9 @@ public class Address {
     @Column(name = "is_default")
     private Boolean isDefault = false;
 
+    @Column
+    private Integer phone;
+
     // Many addresses belong to one user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
