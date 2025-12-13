@@ -66,6 +66,7 @@ public class UserService {
             address.setCity(request.getCity());
             address.setProvince(request.getProvince());
             address.setZipCode(request.getZipCode());
+            address.setPhone(request.getPhone());
             address.setIsDefault(true); // First address is always default
 
             addressRepository.save(address);

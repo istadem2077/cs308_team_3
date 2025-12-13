@@ -31,6 +31,6 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @Formula("(SELECT COALESCE(AVG(CAST(r.rating AS FLOAT)), 0.0) FROM reviews r WHERE r.product_id = id AND r.status = 'APPROVED')")
+    @Formula("(SELECT COALESCE(AVG(CAST(r.rating AS FLOAT)), 0.0) FROM reviews r WHERE r.product_id = id)")
     private Double averageRating;
 }
