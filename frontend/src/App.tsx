@@ -60,8 +60,12 @@ export default function App() {
   const [showMyAccount, setShowMyAccount] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+    const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+        // 1. Try to load saved cart from storage on initial load
+        const savedCart = localStorage.getItem('cartItems');
+        return savedCart ? JSON.parse(savedCart) : [];
+    });
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +78,10 @@ export default function App() {
   const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
+
+    useEffect(() => {
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }, [cartItems]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -141,8 +149,19 @@ export default function App() {
       }
   }, [selectedProductForReviews]);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = async () => {
     const currentUser = authService.getCurrentUser();
+
+      if (currentUser && cartItems.length > 0) {
+          try {
+              // Use the userId from the authenticated user
+              await ordersAPI.syncCart(currentUser.id, cartItems);
+              console.log("Cart synced to database successfully");
+          } catch (err) {
+              console.error("Error syncing cart:", err);
+          }
+      }
+
     setUser(currentUser);
     setIsGuestMode(false);
     setShowAuthModal(false);

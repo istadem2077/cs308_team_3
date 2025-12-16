@@ -173,6 +173,23 @@ export const ordersAPI = {
         date: order.createdAt || new Date().toISOString(),
     };
   },
+    syncCart: async (userId: string, items: CartItem[]) => {
+        // Loop through local items and send them to the server
+        for (const item of items) {
+            try {
+                await apiCall('/cart/add', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        productId: parseInt(item.id),
+                        quantity: item.quantity
+                    })
+                });
+            } catch (error) {
+                console.error(`Failed to sync item ${item.name}`, error);
+            }
+        }
+    },
 
   getById: async (orderId: string): Promise<OrderResponse> => {
       const order = await apiCall<any>(`/orders/${orderId}`);

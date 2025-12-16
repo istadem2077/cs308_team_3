@@ -3,6 +3,7 @@ package com.cs308_team_3.sabanci_pharmacy.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class User {
     @Column
     private Integer age;
     @Column
-    private Integer phone_number;
+    private BigInteger phone_number;
 
     @Column(nullable = false, unique = true)
     private String email;

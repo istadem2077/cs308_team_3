@@ -77,6 +77,14 @@ export function ProductDetail({
                 {/* Product Specifications */}
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <h3 className="mb-2">Product Information</h3>
+
+                    <div className="flex items-start gap-2">
+                        <FileText className="w-5 h-5 text-gray-600 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-600">ID</p>
+                            <p className="text-gray-900">{product.id}</p>
+                        </div>
+                    </div>
                   
                   <div className="flex items-start gap-2">
                     <Package className="w-5 h-5 text-gray-600 mt-0.5" />
@@ -90,7 +98,7 @@ export function ProductDetail({
                     <FileText className="w-5 h-5 text-gray-600 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm text-gray-600">Serial Number</p>
-                      <p className="text-gray-900">{product.serialNumber}</p>
+                      <p className="text-gray-900">{product.serialNumber+34985}</p>
                     </div>
                   </div>
 

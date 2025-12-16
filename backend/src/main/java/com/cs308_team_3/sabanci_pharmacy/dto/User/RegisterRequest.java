@@ -2,6 +2,8 @@ package com.cs308_team_3.sabanci_pharmacy.dto.User;
 
 import lombok.Data;
 
+import java.math.BigInteger;
+
 @Data
 public class RegisterRequest {
     private String name;
@@ -10,7 +12,7 @@ public class RegisterRequest {
     private String confirmPassword;
 
     private String gender;
-    private Integer phone;
+    private BigInteger phone;
     private Integer age;
 
     private String addressLine;
