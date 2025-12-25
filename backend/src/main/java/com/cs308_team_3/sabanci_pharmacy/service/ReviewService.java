@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ReviewService {
+
     @Autowired
     private ReviewRepository reviewRepository;
 
@@ -26,6 +27,7 @@ public class ReviewService {
 
     @Autowired
     private UserRepository userRepository;
+
 
     public ReviewResponseDto createReview(ReviewRequestDto requestDto) {
         Product product = productRepository.findById(requestDto.getProductId())
@@ -66,4 +68,8 @@ public class ReviewService {
 
         return response;
     }
+
+    public List<ReviewResponseDto> getPendingReviews() {
+        List<Review> reviews = reviewRepository.findByStatus("PENDING");
+        return reviews.stream().map(this::mapToResponseDto).collect(Collectors.toList());
 }
