@@ -72,4 +72,19 @@ public class ReviewService {
     public List<ReviewResponseDto> getPendingReviews() {
         List<Review> reviews = reviewRepository.findByStatus("PENDING");
         return reviews.stream().map(this::mapToResponseDto).collect(Collectors.toList());
+    }
+
+    // 4. Update review status (Approve or Disapprove)
+    public void updateReviewStatus(Integer reviewId, String newStatus) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
+
+        // Validate input to ensure only correct statuses are used
+        if (!newStatus.equals("APPROVED") && !newStatus.equals("DISAPPROVED")) {
+            throw new RuntimeException("Invalid status. Use APPROVED or DISAPPROVED.");
+        }
+
+        review.setStatus(newStatus);
+        reviewRepository.save(review);
+    }
 }
