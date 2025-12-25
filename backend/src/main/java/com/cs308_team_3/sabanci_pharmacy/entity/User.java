@@ -22,6 +22,12 @@ public class User {
     private String email;
 
     private String password;
+
+    // ADD THIS FIELD
+    @Column(nullable = false)
+    private String role = "USER"; // Default value
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
+
 }
