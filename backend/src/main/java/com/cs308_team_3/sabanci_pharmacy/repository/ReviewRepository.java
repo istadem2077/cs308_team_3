@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review,Integer>{
     List<Review> findByProductId(Integer productId);
+    List<Review> findByStatus(String status);
 }
