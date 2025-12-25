@@ -37,7 +37,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products").permitAll()
 
-                        // ADD THIS LINE: Protect the pending reviews endpoint
+                        //PRODUCT_MANAGER ONLY Endpoints (Task 2 & 3)
+                        .requestMatchers("/api/reviews/pending", "/api/reviews/*/status").hasAuthority("PRODUCT_MANAGER")
+
+                        //Protect the pending reviews endpoint
                         .requestMatchers("/api/reviews/pending").hasAuthority("PRODUCT_MANAGER")
 
                         .anyRequest().authenticated()
