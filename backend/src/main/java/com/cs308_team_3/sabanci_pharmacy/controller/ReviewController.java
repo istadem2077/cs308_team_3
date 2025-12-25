@@ -17,6 +17,13 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
+    // GET /api/reviews/pending
+    @GetMapping("/pending")
+    public ResponseEntity<List<ReviewResponseDto>> getPendingReviews() {
+        List<ReviewResponseDto> pendingReviews = reviewService.getPendingReviews();
+        return ResponseEntity.ok(pendingReviews);
+    }
+
     // POST /api/reviews
     @PostMapping
     public ResponseEntity<ReviewResponseDto> addReview(@Valid @RequestBody ReviewRequestDto reviewRequest) {
