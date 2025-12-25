@@ -19,6 +19,9 @@ public class Review {
     @Column(name = "rating", nullable = false)
     private Integer rating;
 
+    @Column(name = "status", nullable = false)
+    private String status = "PENDING"; // Default to PENDING for new reviews
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
