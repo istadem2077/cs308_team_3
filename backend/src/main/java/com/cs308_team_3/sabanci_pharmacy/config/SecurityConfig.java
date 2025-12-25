@@ -36,6 +36,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products").permitAll()
+
+                        // ADD THIS LINE: Protect the pending reviews endpoint
+                        .requestMatchers("/api/reviews/pending").hasAuthority("PRODUCT_MANAGER")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
