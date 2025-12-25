@@ -53,6 +53,8 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
+        user.setRole("USER"); // Force new registrations to be normal users
+
         User savedUser = userRepository.save(user);
 
         String fullAddressString = "";
