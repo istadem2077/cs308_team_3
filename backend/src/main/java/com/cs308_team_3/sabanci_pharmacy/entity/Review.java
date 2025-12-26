@@ -19,8 +19,8 @@ public class Review {
     @Column(name = "rating", nullable = false)
     private Integer rating;
 
-    @Column(columnDefinition = "varchar(255) default 'PENDING'")
-    private String status;
+    @Column(name = "status", nullable = false)
+    private String status = "PENDING"; // Default to PENDING for new reviews
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

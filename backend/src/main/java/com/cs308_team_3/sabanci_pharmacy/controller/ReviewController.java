@@ -17,6 +17,13 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
+    // GET /api/reviews/pending
+    @GetMapping("/pending")
+    public ResponseEntity<List<ReviewResponseDto>> getPendingReviews() {
+        List<ReviewResponseDto> pendingReviews = reviewService.getPendingReviews();
+        return ResponseEntity.ok(pendingReviews);
+    }
+
     // POST /api/reviews
     @PostMapping
     public ResponseEntity<ReviewResponseDto> addReview(@Valid @RequestBody ReviewRequestDto reviewRequest) {
@@ -29,5 +36,12 @@ public class ReviewController {
     public ResponseEntity<List<ReviewResponseDto>> getProductReviews(@PathVariable Integer productId) {
         List<ReviewResponseDto> reviews = reviewService.getReviewsByProduct(productId);
         return ResponseEntity.ok(reviews);
+    }
+
+    // PUT /api/reviews/{reviewId}/status?status=APPROVED
+    @PutMapping("/{reviewId}/status")
+    public ResponseEntity<String> updateReviewStatus(@PathVariable Integer reviewId, @RequestParam String status) {
+        reviewService.updateReviewStatus(reviewId, status);
+        return ResponseEntity.ok("Review status updated to " + status);
     }
 }

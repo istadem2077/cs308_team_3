@@ -39,7 +39,14 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products", "/api/reviews/**").permitAll()
+                        .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products").permitAll()
+
+                        //PRODUCT_MANAGER ONLY Endpoints (Task 2 & 3)
+                        .requestMatchers("/api/reviews/pending", "/api/reviews/*/status").hasAuthority("PRODUCT_MANAGER")
+
+                        //Protect the pending reviews endpoint
+                        .requestMatchers("/api/reviews/pending").hasAuthority("PRODUCT_MANAGER")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
