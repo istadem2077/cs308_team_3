@@ -1,4 +1,4 @@
-import { X, ShoppingCart, Package, Star, ShieldCheck, Truck } from 'lucide-react';
+import { X, ShoppingCart, FileText, CheckCircle, Package, Shield, Truck } from 'lucide-react';
 import { Product } from '../App';
 
 interface ProductDetailProps {
@@ -7,143 +7,166 @@ interface ProductDetailProps {
   onAddToCart: (product: Product) => void;
 }
 
-export function ProductDetail({ product, onClose, onAddToCart }: ProductDetailProps) {
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <Star
-        key={i}
-        className={`w-5 h-5 ${
-          i < Math.floor(rating)
-            ? 'fill-yellow-400 text-yellow-400'
-            : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
+export function ProductDetail({
+  product,
+  onClose,
+  onAddToCart,
+}: ProductDetailProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+    <>
+      <div
+        className="fixed inset-0 bg-black/50 z-50"
         onClick={onClose}
       />
-      
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto z-10">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors z-20"
-        >
-          <X className="w-6 h-6 text-gray-600" />
-        </button>
-
-        <div className="grid md:grid-cols-2 gap-8 p-8">
-          {/* Image Section */}
-          <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-lg overflow-hidden border border-gray-100">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-contain"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg flex flex-col items-center justify-center text-center">
-                <ShieldCheck className="w-6 h-6 text-blue-600 mb-2" />
-                <span className="text-sm font-medium text-blue-900">100% Authentic</span>
-                <span className="text-xs text-blue-700">Direct from Manufacturer</span>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg flex flex-col items-center justify-center text-center">
-                <Truck className="w-6 h-6 text-green-600 mb-2" />
-                <span className="text-sm font-medium text-green-900">Fast Delivery</span>
-                <span className="text-xs text-green-700">Available on Campus</span>
-              </div>
-            </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+            <h2>Product Details</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Details Section */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-medium capitalize">
-                  {product.category}
-                </span>
-                {product.stockCount <= 5 && product.stockCount > 0 && (
-                  <span className="bg-red-100 text-red-800 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                    Low Stock
-                  </span>
-                )}
-              </div>
-              
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h2>
-              
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1">
-                  {renderStars(product.rating)}
+          <div className="p-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <div className="relative">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full rounded-lg"
+                  />
+                  {product.requiresPrescription && (
+                    <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-2 rounded-lg flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Prescription Required
+                    </div>
+                  )}
                 </div>
-                <span className="text-sm text-gray-500">
-                  {product.reviewCount} reviews
-                </span>
               </div>
 
-              <div className="flex items-end gap-3 mb-6">
-                <span className="text-4xl font-bold text-blue-600">
-                  ₺{product.price.toFixed(2)}
-                </span>
-              </div>
-            </div>
+              <div className="space-y-4">
+                <div>
+                  <h2 className="mb-2">{product.name}</h2>
+                  <p className="text-gray-600 capitalize">{product.category}</p>
+                </div>
 
-            <div className="prose prose-sm text-gray-600 max-w-none">
-              <p>{product.description}</p>
-            </div>
+                <div className="flex items-center gap-2">
+                  {product.inStock ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="text-green-600">In Stock</span>
+                    </>
+                  ) : (
+                    <span className="text-red-600">Out of Stock</span>
+                  )}
+                </div>
 
-            <div className="border-t border-b py-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Model</span>
-                <span className="font-medium text-gray-900">{product.model}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Serial Number</span>
-                <span className="font-medium text-gray-900">{product.serialNumber}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Distributor</span>
-                <span className="font-medium text-gray-900">{product.distributor}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Warranty</span>
-                <span className="font-medium text-gray-900">{product.warrantyStatus}</span>
-              </div>
-            </div>
+                <div className="border-t border-b py-4">
+                  <p className="text-blue-600">₺{product.price.toFixed(2)}</p>
+                </div>
 
-            <div className="space-y-4">
-               {/* Simplified Add to Cart Action - No Prescription Logic */}
-              <button
-                onClick={() => {
-                   onAddToCart(product);
-                   onClose();
-                }}
-                disabled={!product.inStock}
-                className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-lg transition-all transform active:scale-[0.98] ${
-                  product.inStock
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                <ShoppingCart className="w-6 h-6" />
-                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Package className="w-4 h-4" />
-                {product.inStock 
-                   ? `In Stock (${product.stockCount} available)` 
-                   : 'Currently unavailable'}
+                <div>
+                  <h3 className="mb-2">Description</h3>
+                  <p className="text-gray-600">{product.description}</p>
+                </div>
+
+                {/* Product Specifications */}
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <h3 className="mb-2">Product Information</h3>
+
+                    <div className="flex items-start gap-2">
+                        <FileText className="w-5 h-5 text-gray-600 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-600">ID</p>
+                            <p className="text-gray-900">{product.id}</p>
+                        </div>
+                    </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <Package className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Model</p>
+                      <p className="text-gray-900">{product.model}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Serial Number</p>
+                      <p className="text-gray-900">{product.serialNumber+34985}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Warranty</p>
+                      <p className="text-gray-900">{product.warrantyStatus}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Truck className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Distributor</p>
+                      <p className="text-gray-900">{product.distributor}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Package className="w-5 h-5 text-gray-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Stock Quantity</p>
+                      <p className={`${
+                        product.stockCount <= 5
+                          ? 'text-red-600'
+                          : 'text-green-600'
+                      }`}>
+                        {product.stockCount <= 5 && product.stockCount > 0
+                          ? `Last ${product.stockCount} item${product.stockCount !== 1 ? 's' : ''}`
+                          : product.stockCount > 5
+                          ? 'High number in stock'
+                          : 'Out of stock'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {product.requiresPrescription && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h4 className="text-orange-800 mb-1">Prescription Required</h4>
+                    <p className="text-orange-700 text-sm">
+                      This medication requires a valid prescription. Please upload
+                      your prescription during checkout.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    onAddToCart(product);
+                    onClose();
+                  }}
+                  disabled={!product.inStock || product.stockCount === 0}
+                  className={`w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    product.inStock && product.stockCount > 0
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

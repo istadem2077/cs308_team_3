@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Optional;
 
 @Service
@@ -101,6 +102,7 @@ public class CartService {
             Product product  = productRepository.findById(item.getProduct().getId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
             product.setQuantity(product.getQuantity() - item.getQuantity());
+            product.setTotal_orders(product.getTotal_orders()+item.getQuantity());
             productRepository.save(product);
         }
 
@@ -110,8 +112,8 @@ public class CartService {
 
         try {
             ByteArrayInputStream pdfStream = pdfService.generateInvoice(savedOrder);
-
-            emailService.sendInvoiceEmail(savedOrder, pdfStream);
+            byte[] pdfBytes = pdfStream.readAllBytes();
+            emailService.sendInvoiceEmail(savedOrder, pdfBytes);
 
         } catch (Exception e) {
             System.err.println("Order completed but email failed: " + e.getMessage());

@@ -4,6 +4,7 @@ import com.cs308_team_3.sabanci_pharmacy.entity.Order;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,11 +17,13 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private JavaMailSender javaMailSender;
 
-    public void sendInvoiceEmail(Order order, ByteArrayInputStream pdfStream) {
+    public void sendInvoiceEmail(Order order, byte[] pdfStream) {
         try {
             // 1. Create a MIME message
-            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessage message = javaMailSender.createMimeMessage();
 
             // 2. Use helper for multipart (attachments)
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -33,11 +36,10 @@ public class EmailService {
 
             // 3. Attach the PDF
             // Wrap the stream in InputStreamResource
-            InputStreamResource pdfAttachment = new InputStreamResource(pdfStream);
-            helper.addAttachment("invoice_" + order.getId() + ".pdf", pdfAttachment);
+            helper.addAttachment("invoice.pdf", new ByteArrayResource(pdfStream));
 
             // 4. Send
-            mailSender.send(message);
+            javaMailSender.send(message);
             System.out.println("Email sent successfully to " + order.getUser().getEmail());
 
         } catch (MessagingException e) {

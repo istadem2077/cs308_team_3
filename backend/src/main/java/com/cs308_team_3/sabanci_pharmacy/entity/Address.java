@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.math.BigInteger;
+
 @Entity
 @Table(name = "addresses")
 @Data
@@ -26,6 +28,9 @@ public class Address {
 
     @Column(name = "is_default")
     private Boolean isDefault = false;
+
+    @Column
+    private BigInteger phone;
 
     // Many addresses belong to one user
     @ManyToOne(fetch = FetchType.LAZY)

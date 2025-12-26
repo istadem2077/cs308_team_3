@@ -1,10 +1,30 @@
-import { apiCall } from './api';
+// Authentication Service
 
+// Matches Backend DTO: AddressDto.java
+export interface Address {
+  id?: number;
+  addressLine: string;
+  city: string;
+  province: string;
+  zipCode: string;
+  isDefault?: boolean;
+  phone?: number;
+}
+
+// Matches frontend expectations + Backend data
 export interface User {
-  id: string; 
+  id: string;
   name: string;
   email: string;
-  address: string;
+  age: number;
+  gender: 'male' | 'female' | 'other';
+  phone: string;
+  address: {
+    city: string;
+    province: string;
+    postcode: string;
+    addressLine: string;
+  };
 }
 
 export interface LoginCredentials {
@@ -27,67 +47,98 @@ export interface RegisterData {
   };
 }
 
+// Matches Backend DTO: AuthResponse.java
 export interface AuthResponse {
+  user: User;
   token: string;
-  userId: number; 
-  name: string;
-  address: string;
 }
 
-// Helper to format frontend address object to backend string
-const formatAddress = (addr: RegisterData['address']) => {
-  return `${addr.addressLine}, ${addr.city}, ${addr.province} ${addr.postcode}`;
-};
+const API_BASE_URL = 'http://localhost:8080/api';
 
 export const authService = {
+  // Login user
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const data = await apiCall<AuthResponse>('/user/login', {
+    const response = await fetch(`${API_BASE_URL}/user/login`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
     });
 
+    if (!response.ok) throw new Error('Login failed');
+    
+    // Backend returns { token, name, userId, address (string) }
+    const data = await response.json();
+    
+    // We construct a User object compatible with the frontend
     const user: User = {
       id: data.userId.toString(),
       name: data.name,
       email: credentials.email,
-      address: data.address || '',
+      age: 0, // Not returned in login response, would need profile fetch
+      gender: 'other', 
+      phone: '',
+      address: {
+        city: '',
+        province: '',
+        postcode: '',
+        addressLine: data.address || '',
+      }
     };
 
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('userId', data.userId.toString());
+    localStorage.setItem('userId', data.userId.toString()); // Save ID separately for API calls
 
-    return data;
+    return { user, token: data.token };
   },
 
+  // Register new user
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    const backendPayload = {
+    // Backend expects flattened address fields and integer phone
+    // See RegisterRequest.java
+    const payload = {
       name: data.name,
       email: data.email,
       password: data.password,
-      // Backend User entity stores address as a single string
-      address: formatAddress(data.address),
+      confirmPassword: data.password, // Backend requires this field
+      age: data.age,
+      gender: data.gender,
+      phone: parseInt(data.phone.replace(/\D/g, '')) || 0, // Strip non-digits
+      
+      // Flattened address
+      addressLine: data.address.addressLine,
+      city: data.address.city,
+      province: data.address.province,
+      zipCode: data.address.postcode
     };
 
-    const response = await apiCall<AuthResponse>('/user/register', {
+    const response = await fetch(`${API_BASE_URL}/user/register`, {
       method: 'POST',
-      body: JSON.stringify(backendPayload),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
 
+    if (!response.ok) throw new Error('Registration failed');
+    
+    const responseData = await response.json();
+
+    // Map response to frontend User
     const user: User = {
-      id: response.userId.toString(),
-      name: response.name,
+      id: responseData.userId.toString(),
+      name: data.name,
       email: data.email,
-      address: response.address || backendPayload.address,
+      age: data.age,
+      gender: data.gender,
+      phone: data.phone,
+      address: data.address,
     };
 
-    if (response.token) {
-        localStorage.setItem('authToken', response.token);
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('userId', response.userId.toString());
-    }
+    const token = responseData.token;
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('userId', responseData.userId.toString());
 
-    return response;
+    return { user, token };
   },
 
   logout: () => {
@@ -105,14 +156,21 @@ export const authService = {
       return null;
     }
   },
-  
-  getUserId: (): number | null => {
-      const id = localStorage.getItem('userId');
-      return id ? parseInt(id) : null;
-  },
 
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('authToken');
+  },
+  
+  // Update user profile - Placeholder as backend doesn't show a direct "update profile" endpoint 
+  // other than password update or address update.
+  updateProfile: async (userId: string, updates: Partial<User>): Promise<User> => {
+    // For now, just update local storage to reflect changes in UI
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) throw new Error('Not authenticated');
+
+    const updatedUser = { ...currentUser, ...updates };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    return updatedUser;
   },
 };
 
