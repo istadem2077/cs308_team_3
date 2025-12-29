@@ -1,0 +1,46 @@
+<div class="update-container">
+  <div class="card">
+    <h2>Update Address</h2>
+    
+    <form [formGroup]="addressForm" (ngSubmit)="onSubmit()">
+
+      <div class="form-group">
+        <label for="address">Address</label>
+        <textarea 
+          id="address" 
+          formControlName="address" 
+          rows="4"
+          [class.is-invalid]="f['address'].invalid && f['address'].touched"
+        ></textarea>
+        @if (f['address'].errors && f['address'].touched) {
+          <div class="error-text">
+            @if (f['address'].errors['required']) {
+              Address is required.
+            }
+          </div>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <div class="alert alert-error">{{ errorMessage }}</div>
+      }
+
+      @if (successMessage) {
+        <div class="alert alert-success">{{ successMessage }}</div>
+      }
+
+      <div class="button-group">
+        <button type="submit" [disabled]="addressForm.invalid || isLoading" class="btn-primary">
+          @if (isLoading) {
+            Updating...
+          } @else {
+            Update Address
+          }
+        </button>
+        <button type="button" (click)="cancel()" class="btn-secondary">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+

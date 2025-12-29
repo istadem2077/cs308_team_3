@@ -22,6 +22,10 @@ export const routes: Routes = [
     { path: 'home', component: HomeComponent, title: 'Home' },
     { path: 'profile', 
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)},
+    { path: 'update-address', 
+        loadComponent: () => import('./pages/update-address/update-address').then(m => m.UpdateAddressComponent)},
+    { path: 'update-password', 
+        loadComponent: () => import('./pages/update-password/update-password').then(m => m.UpdatePasswordComponent)},
 
 
     // Product/Catalog Routes

@@ -9,11 +9,12 @@
     </div>
 
     <h3>Items</h3>
-    @for (item of order.items; track item.productId) {
+    @for (item of order.items; track item.productName) {
       <div class="item-card">
         <span class="name">{{ item.productName }}</span>
         <span class="qty">Qty: {{ item.quantity }}</span>
-        <span class="price">{{ item.price | currency }}</span>
+        <span class="price">{{ item.unitPrice | currency }}</span>
+        <span class="subtotal">Subtotal: {{ item.subTotal | currency }}</span>
       </div>
     }
   </div>

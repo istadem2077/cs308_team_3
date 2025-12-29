@@ -40,6 +40,11 @@ public class OrderService {
         dto.setOrderId(order.getId());
         dto.setOrderDate(order.getCreatedAt());
         dto.setStatus(order.getStatus());
+        
+        // Set shipping address from user
+        if (order.getUser() != null && order.getUser().getAddress() != null) {
+            dto.setShippingAddress(order.getUser().getAddress());
+        }
 
         // Map Items
         List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {

@@ -36,10 +36,12 @@
           <span class="value status">{{ order.status }}</span>
         </div>
 
-        <div class="summary-item">
-          <span class="label">Shipping Address:</span>
-          <span class="value">{{ order.shippingAddress }}</span>
-        </div>
+        @if (order.shippingAddress) {
+          <div class="summary-item">
+            <span class="label">Shipping Address:</span>
+            <span class="value">{{ order.shippingAddress }}</span>
+          </div>
+        }
 
         <div class="summary-item total">
           <span class="label">Total Amount:</span>
@@ -65,12 +67,12 @@
         </thead>
 
         <tbody>
-          @for (item of order.items; track item.productId) {
+          @for (item of order.items; track item.productName) {
             <tr>
               <td>{{ item.productName }}</td>
-              <td>{{ item.price | currency }}</td>
+              <td>{{ item.unitPrice | currency }}</td>
               <td>{{ item.quantity }}</td>
-              <td>{{ item.price * item.quantity | currency }}</td>
+              <td>{{ item.subTotal | currency }}</td>
             </tr>
           }
         </tbody>

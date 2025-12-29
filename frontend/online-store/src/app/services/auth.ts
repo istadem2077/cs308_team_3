@@ -64,7 +64,19 @@ export class AuthService {
   
   // Register
   register(data: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${AUTH_API_URL}/register`, data);
+    return this.http.post<AuthResponse>(`${AUTH_API_URL}/register`, data).pipe(
+      tap(response => {
+        // Store session after registration
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('userId', response.userId.toString());
+        localStorage.setItem('name', response.name);
+        localStorage.setItem('email', data.email);
+        localStorage.setItem('address', data.address);
+
+        // Notify application
+        this.loggedIn.next(true);
+      })
+    );
   }
 
   // Login (with guest cart merge)
@@ -74,6 +86,9 @@ export class AuthService {
         // Store session
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userId', response.userId.toString());
+        localStorage.setItem('name', response.name);
+        localStorage.setItem('email', data.email); // Store email from login request
+        // Note: Address is not available in login response, will be loaded from backend if needed
 
         // Notify application
         this.loggedIn.next(true);
@@ -118,6 +133,9 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
+    localStorage.removeItem('name');
+    localStorage.removeItem('email');
+    localStorage.removeItem('address');
 
     this.loggedIn.next(false); // 🔥 Logout event for UI
   }
