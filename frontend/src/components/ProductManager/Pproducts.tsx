@@ -12,6 +12,7 @@ import {
   X,
   Save,
   ShoppingBag,
+  Warehouse,
 } from 'lucide-react';
 import { Product } from '../../services/api';
 
@@ -170,9 +171,16 @@ export function Pproducts({
               <FolderTree className="w-5 h-5" />
               <span>Categories</span>
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg">
+            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg mb-2">
               <ShoppingBag className="w-5 h-5" />
               <span>Products</span>
+            </button>
+            <button
+              onClick={() => onNavigate('stock')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <Warehouse className="w-5 h-5" />
+              <span>Stock Management</span>
             </button>
           </div>
         </nav>

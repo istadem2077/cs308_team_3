@@ -3,6 +3,7 @@ import { Product } from '../services/api';
 import { Pdashboard } from './ProductManager/Pdashboard';
 import { Pcategories } from './ProductManager/Pcategories';
 import { Pproducts } from './ProductManager/Pproducts';
+import { Pstock } from './ProductManager/Pstock';
 
 interface ProductManagerProps {
   products: Product[];
@@ -19,10 +20,10 @@ export function ProductManager({
   onUpdateProduct,
   onDeleteProduct,
 }: ProductManagerProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'categories' | 'products'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'categories' | 'products' | 'stock'>('dashboard');
 
   const handleNavigate = (tab: string) => {
-    setActiveTab(tab as 'dashboard' | 'categories' | 'products');
+    setActiveTab(tab as 'dashboard' | 'categories' | 'products' | 'stock');
   };
 
   if (activeTab === 'dashboard') {
@@ -42,6 +43,17 @@ export function ProductManager({
         onAddProduct={onAddProduct}
         onUpdateProduct={onUpdateProduct}
         onDeleteProduct={onDeleteProduct}
+      />
+    );
+  }
+
+  if (activeTab === 'stock') {
+    return (
+      <Pstock
+        products={products}
+        onBack={onBack}
+        onNavigate={handleNavigate}
+        onUpdateProduct={onUpdateProduct}
       />
     );
   }
