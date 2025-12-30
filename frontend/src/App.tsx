@@ -1,53 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
+import { Loader2, ChevronDown } from 'lucide-react';
+import { Product, CartItem, Review, OrderResponse, productsAPI } from './services/api';
 import { ProductGrid } from './components/ProductGrid';
 import { Cart } from './components/Cart';
 import { ProductDetail } from './components/ProductDetail';
+import { Auth } from './components/Auth';
 import { Checkout } from './components/Checkout';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
 import { MyAccount } from './components/MyAccount';
+import { ProductManager } from './components/ProductManager';
+import { CustomerChat } from './components/CustomerChat';
+import { Header } from './components/Header';
+import { Hero } from './components/Hero';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
 import { ProductReviews } from './components/ProductReviews';
-import { productsAPI } from './services/api';
+import { Wishlist } from './components/Wishlist';
 import { authService, User } from './services/auth';
-import { mockReviews } from './data/reviews';
-import { Loader2, ChevronDown } from 'lucide-react';
-import { OrderResponse } from './services/api';
-
-export interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  image: string;
-  description: string;
-  inStock: boolean;
-  requiresPrescription: boolean;
-  stockCount: number;
-  popularity: number; // 0-100 score based on sales/views
-  rating: number; // 0-5 stars
-  reviewCount: number; // number of reviews
-  model: string; // Product model
-  serialNumber: string; // Product serial number
-  warrantyStatus: string; // Warranty information (e.g., "1 year", "2 years", "No warranty")
-  distributor: string; // Distributor/manufacturer information
-}
-
-export interface Review {
-  id: string;
-  productId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-export interface CartItem extends Product {
-  quantity: number;
-}
+import { mockProducts, mockReviews } from './services/api';
+import './styles/globals.css';
 
 type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';
 
@@ -61,10 +31,12 @@ export default function App() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -73,6 +45,7 @@ export default function App() {
   const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [showProductManager, setShowProductManager] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -329,6 +302,32 @@ export default function App() {
     }
   };
 
+  // Wishlist functions
+  const handleAddToWishlist = (product: Product) => {
+    // Require login for wishlist
+    if (!user) {
+      alert('Please log in to add items to your wishlist');
+      setAuthView('login');
+      setShowAuthModal(true);
+      return;
+    }
+
+    setWishlistItems(prev => {
+      const exists = prev.find(item => item.id === product.id);
+      if (exists) {
+        // Remove from wishlist
+        return prev.filter(item => item.id !== product.id);
+      } else {
+        // Add to wishlist
+        return [...prev, product];
+      }
+    });
+  };
+
+  const handleRemoveFromWishlist = (productId: string) => {
+    setWishlistItems(prev => prev.filter(item => item.id !== productId));
+  };
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -364,15 +363,16 @@ export default function App() {
   if (!user && !isGuestMode && !showAuthModal) {
     if (authView === 'login') {
       return (
-        <Login
+        <Auth
           onLoginSuccess={handleLoginSuccess}
           onSwitchToRegister={() => setAuthView('register')}
           onSkip={handleSkipLogin}
+          onProductManager={() => setShowProductManager(true)}
         />
       );
     } else {
       return (
-        <Register
+        <Auth
           onRegisterSuccess={handleLoginSuccess}
           onSwitchToLogin={() => setAuthView('login')}
           onSkip={handleSkipLogin}
@@ -385,15 +385,16 @@ export default function App() {
   if (showAuthModal) {
     if (authView === 'login') {
       return (
-        <Login
+        <Auth
           onLoginSuccess={handleLoginSuccess}
           onSwitchToRegister={() => setAuthView('register')}
           onSkip={() => setShowAuthModal(false)}
+          onProductManager={() => setShowProductManager(true)}
         />
       );
     } else {
       return (
-        <Register
+        <Auth
           onRegisterSuccess={handleLoginSuccess}
           onSwitchToLogin={() => setAuthView('login')}
           onSkip={() => setShowAuthModal(false)}
@@ -414,6 +415,33 @@ export default function App() {
         onUpdateOrderStatus={handleUpdateOrderStatus}
         onRateProduct={handleRateProduct}
         onAddComment={handleAddCommentToRating}
+      />
+    );
+  }
+
+  // Show Product Manager
+  if (showProductManager) {
+    return (
+      <ProductManager
+        products={products}
+        onBack={() => setShowProductManager(false)}
+        onAddProduct={(product) => {
+          const newProduct: Product = {
+            ...product,
+            id: `prod-${Date.now()}`,
+          };
+          setProducts(prev => [newProduct, ...prev]);
+        }}
+        onUpdateProduct={(id, updatedProduct) => {
+          setProducts(prev =>
+            prev.map(p => (p.id === id ? updatedProduct : p))
+          );
+        }}
+        onDeleteProduct={(id) => {
+          setProducts(prev => prev.filter(p => p.id !== id));
+          // Also remove from cart if present
+          setCartItems(prev => prev.filter(item => item.id !== id));
+        }}
       />
     );
   }
@@ -456,11 +484,33 @@ export default function App() {
     );
   }
 
+  // Show Wishlist page
+  if (showWishlist) {
+    return (
+      <>
+        <Wishlist
+          wishlistItems={wishlistItems}
+          onRemoveFromWishlist={handleRemoveFromWishlist}
+          onAddToCart={addToCart}
+          onBack={() => setShowWishlist(false)}
+        />
+        {/* Customer Support Chat Widget */}
+        <CustomerChat
+          userName={user?.name}
+          userEmail={user?.email}
+          isLoggedIn={!!user}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         cartItemCount={totalItems}
+        wishlistItemCount={wishlistItems.length}
         onCartClick={() => setIsCartOpen(true)}
+        onWishlistClick={() => setShowWishlist(true)}
         onSearchChange={setSearchQuery}
         searchQuery={searchQuery}
         userName={user?.name}
@@ -552,6 +602,8 @@ export default function App() {
           onProductClick={setSelectedProduct}
           onAddToCart={addToCart}
           onCommentsClick={setSelectedProductForReviews}
+          onAddToWishlist={handleAddToWishlist}
+          wishlistItems={wishlistItems}
         />
       </main>
 
@@ -570,6 +622,8 @@ export default function App() {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onAddToCart={addToCart}
+          onAddToWishlist={handleAddToWishlist}
+          isInWishlist={wishlistItems.some(item => item.id === selectedProduct.id)}
         />
       )}
 
@@ -598,6 +652,13 @@ export default function App() {
           userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
         />
       )}
+
+      {/* Customer Support Chat Widget */}
+      <CustomerChat
+        userName={user?.name}
+        userEmail={user?.email}
+        isLoggedIn={!!user}
+      />
     </div>
   );
 }

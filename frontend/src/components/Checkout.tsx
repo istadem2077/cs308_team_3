@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Upload, CheckCircle, MapPin, Lock, CreditCard, Calendar, User as UserIcon, Shield, FileText } from 'lucide-react';
-import { CartItem } from '../App';
-import { OrderResponse, OrderData, ordersAPI } from '../services/api';
-import { authService, User } from '../services/auth';
+import { useState } from 'react';
+import { CartItem, OrderData, OrderResponse, ordersAPI } from '../services/api';
+import { ArrowLeft, CreditCard, ShoppingBag, Truck, CheckCircle, AlertCircle, Upload, Lock, User as UserIcon, Calendar, Shield, MapPin } from 'lucide-react';
+import { CustomerChat } from './CustomerChat';
+import { authService } from '../services/auth';
 
 interface CheckoutProps {
   cartItems: CartItem[];
@@ -19,7 +19,7 @@ export function Checkout({
 }: CheckoutProps) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState(authService.getCurrentUser());
   const [notes, setNotes] = useState('');
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const [orderId, setOrderId] = useState<string>('');
@@ -31,16 +31,8 @@ export function Checkout({
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
 
-  // Load user data on mount
-  useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
-  }, []);
-
   const hasPrescriptionItems = cartItems.some(
-    item => item.requiresPrescription
+    item => item.isPrescriptionRequired
   );
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -533,6 +525,8 @@ export function Checkout({
               productName: item.name,
               quantity: item.quantity,
               price: item.price,
+              originalPrice: item.price, // For demo: same as price, but in real scenario could be higher
+              discount: 0, // For demo: no discount, but in real scenario could have discount
             })),
             date: new Date().toISOString(),
           };
@@ -601,6 +595,13 @@ export function Checkout({
           {step === 4 && renderStep4()}
         </div>
       </div>
+
+      {/* Customer Support Chat Widget */}
+      <CustomerChat
+        userName={user?.name}
+        userEmail={user?.email}
+        isLoggedIn={!!user}
+      />
     </div>
   );
 }

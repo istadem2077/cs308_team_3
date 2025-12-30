@@ -1,4 +1,4 @@
-import { Product } from '../App';
+import { Product } from '../services/api';
 
 export const products: Product[] = [
   {

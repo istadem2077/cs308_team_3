@@ -1,16 +1,20 @@
-import { X, ShoppingCart, FileText, CheckCircle, Package, Shield, Truck } from 'lucide-react';
-import { Product } from '../App';
+import { X, ShoppingCart, FileText, CheckCircle, Package, Shield, Truck, Heart } from 'lucide-react';
+import { Product } from '../services/api';
 
 interface ProductDetailProps {
   product: Product;
   onClose: () => void;
   onAddToCart: (product: Product) => void;
+  onAddToWishlist?: (product: Product) => void;
+  isInWishlist?: boolean;
 }
 
 export function ProductDetail({
   product,
   onClose,
   onAddToCart,
+  onAddToWishlist,
+  isInWishlist,
 }: ProductDetailProps) {
   return (
     <>
@@ -154,6 +158,18 @@ export function ProductDetail({
                   <ShoppingCart className="w-5 h-5" />
                   {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </button>
+
+                {onAddToWishlist && (
+                  <button
+                    onClick={() => onAddToWishlist(product)}
+                    className={`w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                      isInWishlist ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-300 text-gray-500 hover:bg-gray-400'
+                    }`}
+                  >
+                    <Heart className="w-5 h-5" />
+                    {isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  </button>
+                )}
               </div>
             </div>
           </div>

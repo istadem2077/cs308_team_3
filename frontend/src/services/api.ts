@@ -1,8 +1,39 @@
-import { Product, CartItem } from '../App';
-
 // Configuration - Replace these with your actual API endpoints
 const API_BASE_URL = 'https://your-api-endpoint.com/api';
 const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+
+// Type definitions
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  stockCount: number;
+  inStock: boolean;
+  rating: number;
+  reviewCount: number;
+  isPrescriptionRequired?: boolean;
+  popularity: number;
+}
+
+export interface CartItem extends Product {
+  quantity: number;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+// Mock data exports
+export { products as mockProducts } from '../data/products';
+export { mockReviews } from '../data/reviews';
 
 // Helper function for API calls
 async function apiCall<T>(
@@ -102,7 +133,7 @@ export interface OrderData {
 
 export interface OrderResponse {
   orderId: string;
-  status: 'processing' | 'in-transit' | 'delivered';
+  status: 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded';
   estimatedDelivery: string;
   totalPrice: number;
   items: Array<{
@@ -110,6 +141,8 @@ export interface OrderResponse {
     productName: string;
     quantity: number;
     price: number;
+    originalPrice?: number;
+    discount?: number;
   }>;
   date: string;
 }
@@ -137,7 +170,7 @@ export const ordersAPI = {
         () =>
           resolve({
             orderId,
-            status: 'confirmed',
+            status: 'processing',
             estimatedDelivery: '2-4 hours',
             totalPrice: orderData.totalPrice,
             items: orderData.items.map(item => ({
@@ -162,7 +195,7 @@ export const ordersAPI = {
         () =>
           resolve({
             orderId,
-            status: 'confirmed',
+            status: 'processing',
             estimatedDelivery: '2-4 hours',
             totalPrice: 450,
             items: [

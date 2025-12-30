@@ -1,11 +1,13 @@
-import { Product } from '../App';
-import { ShoppingCart, FileText, Package, Star, MessageSquare } from 'lucide-react';
+import { Product } from '../services/api';
+import { ShoppingCart, FileText, Package, Star, MessageSquare, Heart } from 'lucide-react';
 
 interface ProductGridProps {
   products: Product[];
   onProductClick: (product: Product) => void;
   onAddToCart: (product: Product) => void;
   onCommentsClick?: (product: Product) => void;
+  onAddToWishlist?: (product: Product) => void;
+  wishlistItems?: Product[];
 }
 
 export function ProductGrid({
@@ -13,6 +15,8 @@ export function ProductGrid({
   onProductClick,
   onAddToCart,
   onCommentsClick,
+  onAddToWishlist,
+  wishlistItems,
 }: ProductGridProps) {
   const renderStars = (rating: number) => {
     const stars = [];
@@ -143,6 +147,22 @@ export function ProductGrid({
               >
                 <MessageSquare className="w-4 h-4" />
                 Comments
+              </button>
+            )}
+            {onAddToWishlist && (
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  onAddToWishlist(product);
+                }}
+                className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                  wishlistItems?.some(item => item.id === product.id)
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Heart className="w-4 h-4" />
+                {wishlistItems?.some(item => item.id === product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
               </button>
             )}
           </div>

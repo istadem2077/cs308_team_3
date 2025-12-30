@@ -1,8 +1,10 @@
-import { ShoppingCart, Search, Pill, User, LogOut } from 'lucide-react';
+import { ShoppingCart, Search, Pill, User, LogOut, Heart } from 'lucide-react';
 
 interface HeaderProps {
   cartItemCount: number;
+  wishlistItemCount?: number;
   onCartClick: () => void;
+  onWishlistClick?: () => void;
   onSearchChange: (query: string) => void;
   searchQuery: string;
   userName?: string;
@@ -12,7 +14,9 @@ interface HeaderProps {
 
 export function Header({
   cartItemCount,
+  wishlistItemCount,
   onCartClick,
+  onWishlistClick,
   onSearchChange,
   searchQuery,
   userName,
@@ -68,6 +72,20 @@ export function Header({
                 </span>
               )}
             </button>
+
+            {onWishlistClick && (
+              <button
+                onClick={onWishlistClick}
+                className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Heart className="w-6 h-6 text-gray-700" />
+                {wishlistItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {wishlistItemCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {onLogoutClick && (
               <button
