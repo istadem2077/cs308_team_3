@@ -8,11 +8,12 @@ import {
   FolderTree,
   ShoppingBag,
   Warehouse,
+  Truck,
   Plus,
   Minus,
   TrendingUp,
   AlertTriangle,
-  Truck,
+  MessageSquare,
 } from 'lucide-react';
 import { Product } from '../../services/api';
 
@@ -112,10 +113,17 @@ export function Pstock({ products, onBack, onNavigate, onUpdateProduct }: Pstock
             </button>
             <button
               onClick={() => onNavigate('orders')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
             >
               <Truck className="w-5 h-5" />
               <span>Deliveries & Orders</span>
+            </button>
+            <button
+              onClick={() => onNavigate('reviews')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>Comments & Reviews</span>
             </button>
           </div>
         </nav>

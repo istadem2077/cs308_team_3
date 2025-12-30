@@ -4,17 +4,22 @@ import {
   User,
   LayoutDashboard,
   Package,
+  LogOut,
+  FolderTree,
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  Save,
+  ShoppingBag,
   Warehouse,
   Truck,
-  LogOut,
-  AlertTriangle,
-  CheckCircle,
-  Star,
-  TrendingUp,
-  Calendar,
   MessageSquare,
-  FolderTree,
-  ShoppingBag,
+  AlertTriangle,
+  TrendingUp,
+  Star,
+  Calendar,
+  CheckCircle,
 } from 'lucide-react';
 import { Product } from '../../services/api';
 
@@ -178,6 +183,13 @@ export function Pdashboard({ products, onBack, onNavigate }: PdashboardProps) {
             >
               <Truck className="w-5 h-5" />
               <span>Deliveries & Orders</span>
+            </button>
+            <button
+              onClick={() => onNavigate('reviews')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>Comments & Reviews</span>
             </button>
           </div>
         </nav>
