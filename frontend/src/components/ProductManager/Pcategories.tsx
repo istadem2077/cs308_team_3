@@ -13,6 +13,7 @@ import {
   Save,
   TrendingUp,
   Layers,
+  ShoppingBag,
 } from 'lucide-react';
 import { Product } from '../../services/api';
 
@@ -110,9 +111,16 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
               <LayoutDashboard className="w-5 h-5" />
               <span>Dashboard</span>
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg">
+            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg mb-2">
               <FolderTree className="w-5 h-5" />
               <span>Categories</span>
+            </button>
+            <button
+              onClick={() => onNavigate('products')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span>Products</span>
             </button>
           </div>
         </nav>

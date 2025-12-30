@@ -14,6 +14,7 @@ import {
   Calendar,
   MessageSquare,
   FolderTree,
+  ShoppingBag,
 } from 'lucide-react';
 import { Product } from '../../services/api';
 
@@ -152,10 +153,17 @@ export function Pdashboard({ products, onBack, onNavigate }: PdashboardProps) {
             </button>
             <button
               onClick={() => onNavigate('categories')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
             >
               <FolderTree className="w-5 h-5" />
               <span>Categories</span>
+            </button>
+            <button
+              onClick={() => onNavigate('products')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              <span>Products</span>
             </button>
           </div>
         </nav>

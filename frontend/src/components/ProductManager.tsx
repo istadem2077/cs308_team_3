@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Product } from '../services/api';
 import { Pdashboard } from './ProductManager/Pdashboard';
 import { Pcategories } from './ProductManager/Pcategories';
+import { Pproducts } from './ProductManager/Pproducts';
 
 interface ProductManagerProps {
   products: Product[];
@@ -18,10 +19,10 @@ export function ProductManager({
   onUpdateProduct,
   onDeleteProduct,
 }: ProductManagerProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'categories'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'categories' | 'products'>('dashboard');
 
   const handleNavigate = (tab: string) => {
-    setActiveTab(tab as 'dashboard' | 'categories');
+    setActiveTab(tab as 'dashboard' | 'categories' | 'products');
   };
 
   if (activeTab === 'dashboard') {
@@ -30,6 +31,19 @@ export function ProductManager({
 
   if (activeTab === 'categories') {
     return <Pcategories products={products} onBack={onBack} onNavigate={handleNavigate} />;
+  }
+
+  if (activeTab === 'products') {
+    return (
+      <Pproducts
+        products={products}
+        onBack={onBack}
+        onNavigate={handleNavigate}
+        onAddProduct={onAddProduct}
+        onUpdateProduct={onUpdateProduct}
+        onDeleteProduct={onDeleteProduct}
+      />
+    );
   }
 
   return null;
