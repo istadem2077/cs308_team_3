@@ -172,6 +172,13 @@ export function Pdashboard({ products, onBack, onNavigate }: PdashboardProps) {
               <Warehouse className="w-5 h-5" />
               <span>Stock Management</span>
             </button>
+            <button
+              onClick={() => onNavigate('orders')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <Truck className="w-5 h-5" />
+              <span>Deliveries & Orders</span>
+            </button>
           </div>
         </nav>
 

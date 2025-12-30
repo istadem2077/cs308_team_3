@@ -15,6 +15,7 @@ import {
   Layers,
   ShoppingBag,
   Warehouse,
+  Truck,
 } from 'lucide-react';
 import { Product } from '../../services/api';
 
@@ -125,10 +126,17 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
             </button>
             <button
               onClick={() => onNavigate('stock')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
             >
               <Warehouse className="w-5 h-5" />
               <span>Stock Management</span>
+            </button>
+            <button
+              onClick={() => onNavigate('orders')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <Truck className="w-5 h-5" />
+              <span>Deliveries & Orders</span>
             </button>
           </div>
         </nav>
