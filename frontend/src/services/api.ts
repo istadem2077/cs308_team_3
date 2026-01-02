@@ -283,6 +283,20 @@ export const reviewsAPI = {
             date: r.createdAt,
             status: r.status || 'APPROVED' // Default to APPROVED if missing for older data
         }));
+    },
+
+    getByUser: async (userId: string) => {
+        // Calls the new backend endpoint
+        const reviews = await apiCall<any[]>(`/reviews/user/${userId}`);
+        return reviews.map(r => ({
+            id: r.id.toString(),
+            productId: r.productId.toString(),
+            userName: r.userName,
+            rating: r.rating,
+            comment: r.comment,
+            date: r.createdAt,
+            status: r.status || 'APPROVED'
+        }));
     }
 }
 
