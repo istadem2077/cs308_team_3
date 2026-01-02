@@ -10,6 +10,7 @@ import {
   TrendingDown,
   AlertCircle,
   RotateCcw,
+  Bell,
 } from 'lucide-react';
 import {
   BarChart,
@@ -105,6 +106,13 @@ export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
             >
               <RotateCcw className="w-5 h-5" />
               <span>Refund Management</span>
+            </button>
+            <button
+              onClick={() => onNavigate('notifications')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <Bell className="w-5 h-5" />
+              <span>Notifications</span>
             </button>
           </div>
         </nav>

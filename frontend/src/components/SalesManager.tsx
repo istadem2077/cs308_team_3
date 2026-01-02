@@ -4,16 +4,17 @@ import { PricingDiscount } from './SalesManager/PricingDiscount';
 import { InvoiceManagement } from './SalesManager/InvoiceManagement';
 import { RevenueProfit } from './SalesManager/RevenueProfit';
 import { RefundManagement } from './SalesManager/RefundManagement';
+import { NotificationManagement } from './SalesManager/NotificationManagement';
 
 interface SalesManagerProps {
   onBack: () => void;
 }
 
 export function SalesManager({ onBack }: SalesManagerProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pricing' | 'invoices' | 'revenue' | 'refunds'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'pricing' | 'invoices' | 'revenue' | 'refunds' | 'notifications'>('dashboard');
 
   const handleNavigate = (tab: string) => {
-    setActiveTab(tab as 'dashboard' | 'pricing' | 'invoices' | 'revenue' | 'refunds');
+    setActiveTab(tab as 'dashboard' | 'pricing' | 'invoices' | 'revenue' | 'refunds' | 'notifications');
   };
 
   if (activeTab === 'dashboard') {
@@ -34,6 +35,10 @@ export function SalesManager({ onBack }: SalesManagerProps) {
 
   if (activeTab === 'refunds') {
     return <RefundManagement onBack={onBack} onNavigate={handleNavigate} />;
+  }
+
+  if (activeTab === 'notifications') {
+    return <NotificationManagement onBack={onBack} onNavigate={handleNavigate} />;
   }
 
   return null;
