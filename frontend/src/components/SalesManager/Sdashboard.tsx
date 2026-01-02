@@ -8,6 +8,9 @@ import {
   TrendingDown,
   FileText,
   DollarSign,
+  CheckCircle,
+  AlertCircle,
+  Bell,
 } from 'lucide-react';
 import {
   LineChart,
@@ -42,6 +45,38 @@ export function Sdashboard({ onBack, onNavigate }: SdashboardProps) {
     { month: 'Oct', revenue: 25000, cost: 12500, profit: 12500 },
     { month: 'Nov', revenue: 27000, cost: 13500, profit: 13500 },
     { month: 'Dec', revenue: 30000, cost: 15000, profit: 15000 },
+  ];
+
+  // Recent invoices data
+  const recentInvoices = [
+    { id: 'INV-001', description: 'Aspirin 500mg, Vitamin C', amount: 45.99 },
+    { id: 'INV-002', description: 'Hand Sanitizer', amount: 19.98 },
+    { id: 'INV-003', description: 'Face Masks, Thermometer', amount: 85.5 },
+  ];
+
+  // Recent notifications data
+  const recentNotifications = [
+    {
+      id: 1,
+      type: 'success',
+      icon: CheckCircle,
+      message: 'Discount of 15% applied to 5 products. Users notified via email.',
+      timestamp: '2024-12-16 10:30 AM',
+    },
+    {
+      id: 2,
+      type: 'warning',
+      icon: AlertCircle,
+      message: 'Low stock alert: Aspirin 500mg has only 10 units remaining.',
+      timestamp: '2024-12-15 03:45 PM',
+    },
+    {
+      id: 3,
+      type: 'info',
+      icon: Bell,
+      message: 'New invoice INV-004 generated for CUST-234.',
+      timestamp: '2024-12-15 11:20 AM',
+    },
   ];
 
   return (
@@ -225,6 +260,64 @@ export function Sdashboard({ onBack, onNavigate }: SdashboardProps) {
                   />
                 </LineChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Recent Invoices and Notifications */}
+          <div className="grid grid-cols-2 gap-6 mt-8">
+            {/* Recent Invoices */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="mb-6">
+                <h3 className="text-gray-900">Recent Invoices</h3>
+              </div>
+
+              <div className="space-y-4">
+                {recentInvoices.map(invoice => (
+                  <div
+                    key={invoice.id}
+                    className="flex items-start justify-between pb-4 border-b border-gray-100 last:border-b-0 last:pb-0"
+                  >
+                    <div>
+                      <p className="text-gray-900 mb-1">{invoice.id}</p>
+                      <p className="text-sm text-gray-500">{invoice.description}</p>
+                    </div>
+                    <p className="text-green-600">${invoice.amount.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Notifications */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="mb-6">
+                <h3 className="text-gray-900">Recent Notifications</h3>
+              </div>
+
+              <div className="space-y-4">
+                {recentNotifications.map(notification => {
+                  const Icon = notification.icon;
+                  return (
+                    <div
+                      key={notification.id}
+                      className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-b-0 last:pb-0"
+                    >
+                      <Icon
+                        className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                          notification.type === 'success'
+                            ? 'text-green-500'
+                            : notification.type === 'warning'
+                            ? 'text-orange-500'
+                            : 'text-blue-500'
+                        }`}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900 mb-1">{notification.message}</p>
+                        <p className="text-xs text-gray-400">{notification.timestamp}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </main>
