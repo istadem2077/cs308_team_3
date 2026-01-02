@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, ChevronDown } from 'lucide-react';
-import { Product, CartItem, Review, OrderResponse, productsAPI } from './services/api';
+import { Product, Review, productsAPI, CartItem, OrderResponse } from './services/api';
 import { ProductGrid } from './components/ProductGrid';
 import { Cart } from './components/Cart';
 import { ProductDetail } from './components/ProductDetail';
@@ -8,6 +8,7 @@ import { Auth } from './components/Auth';
 import { Checkout } from './components/Checkout';
 import { MyAccount } from './components/MyAccount';
 import { ProductManager } from './components/ProductManager';
+import { SalesManager } from './components/SalesManager';
 import { CustomerChat } from './components/CustomerChat';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -46,6 +47,7 @@ export default function App() {
   const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [showProductManager, setShowProductManager] = useState(false);
+  const [showSalesManager, setShowSalesManager] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -368,6 +370,7 @@ export default function App() {
           onSwitchToRegister={() => setAuthView('register')}
           onSkip={handleSkipLogin}
           onProductManager={() => setShowProductManager(true)}
+          onSalesManager={() => setShowSalesManager(true)}
         />
       );
     } else {
@@ -390,6 +393,7 @@ export default function App() {
           onSwitchToRegister={() => setAuthView('register')}
           onSkip={() => setShowAuthModal(false)}
           onProductManager={() => setShowProductManager(true)}
+          onSalesManager={() => setShowSalesManager(true)}
         />
       );
     } else {
@@ -442,6 +446,15 @@ export default function App() {
           // Also remove from cart if present
           setCartItems(prev => prev.filter(item => item.id !== id));
         }}
+      />
+    );
+  }
+
+  // Show Sales Manager
+  if (showSalesManager) {
+    return (
+      <SalesManager
+        onBack={() => setShowSalesManager(false)}
       />
     );
   }

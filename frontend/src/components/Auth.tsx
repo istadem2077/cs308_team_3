@@ -8,6 +8,7 @@ interface AuthProps {
   onSwitchToLogin?: () => void;
   onSkip?: () => void;
   onProductManager?: () => void;
+  onSalesManager?: () => void;
 }
 
 export function Auth({
@@ -17,25 +18,26 @@ export function Auth({
   onSwitchToLogin,
   onSkip,
   onProductManager,
+  onSalesManager,
 }: AuthProps) {
   // If we have onRegisterSuccess, show Register component
-  if (onRegisterSuccess && onSwitchToLogin) {
+  if (onRegisterSuccess) {
     return (
       <Register
         onRegisterSuccess={onRegisterSuccess}
-        onSwitchToLogin={onSwitchToLogin}
-        onSkip={onSkip || (() => {})}
+        onSwitchToLogin={onSwitchToLogin || (() => {})}
       />
     );
   }
 
-  // Otherwise show Login component
+  // Default to Login component
   return (
     <Login
       onLoginSuccess={onLoginSuccess || (() => {})}
       onSwitchToRegister={onSwitchToRegister || (() => {})}
       onSkip={onSkip || (() => {})}
       onProductManager={onProductManager}
+      onSalesManager={onSalesManager}
     />
   );
 }

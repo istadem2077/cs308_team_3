@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pill, Mail, Lock, Loader2, Settings } from 'lucide-react';
+import { Pill, Mail, Lock, Loader2, Settings, TrendingUp } from 'lucide-react';
 import { authService, LoginCredentials } from '../services/auth';
 
 interface LoginProps {
@@ -7,9 +7,10 @@ interface LoginProps {
   onSwitchToRegister: () => void;
   onSkip: () => void;
   onProductManager?: () => void;
+  onSalesManager?: () => void;
 }
 
-export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductManager }: LoginProps) {
+export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductManager, onSalesManager }: LoginProps) {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -34,8 +35,8 @@ export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductMan
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4 relative">
-      {/* Management Access Button - Fixed Position */}
-      <div className="fixed bottom-6 left-6 z-50">
+      {/* Management Access Buttons - Fixed Position */}
+      <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -45,6 +46,16 @@ export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductMan
         >
           <Settings className="w-5 h-5" />
           <span className="whitespace-nowrap">Proceed as Product Manager</span>
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onSalesManager?.();
+          }}
+          className="flex items-center justify-center gap-2 py-3 px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 shadow-lg"
+        >
+          <TrendingUp className="w-5 h-5" />
+          <span className="whitespace-nowrap">Proceed as Sales Manager</span>
         </button>
       </div>
       
