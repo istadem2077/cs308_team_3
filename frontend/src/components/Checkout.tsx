@@ -1,8 +1,14 @@
 import { useState } from 'react';
+<<<<<<< HEAD
 import { CartItem, OrderData, OrderResponse, ordersAPI } from '../services/api';
 import { ArrowLeft, CreditCard, ShoppingBag, Truck, CheckCircle, AlertCircle, Upload, Lock, User as UserIcon, Calendar, Shield, MapPin } from 'lucide-react';
 import { CustomerChat } from './CustomerChat';
 import { authService } from '../services/auth';
+=======
+import { ArrowLeft, CreditCard, MapPin, Check, Loader2 } from 'lucide-react';
+import { CartItem } from '../App';
+import { ordersAPI, OrderResponse } from '../services/api';
+>>>>>>> master
 
 interface CheckoutProps {
   cartItems: CartItem[];
@@ -11,6 +17,7 @@ interface CheckoutProps {
   onComplete: (order: OrderResponse) => void;
 }
 
+<<<<<<< HEAD
 export function Checkout({
   cartItems,
   totalPrice,
@@ -24,13 +31,24 @@ export function Checkout({
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const [orderId, setOrderId] = useState<string>('');
   const [orderDate, setOrderDate] = useState<string>('');
-  
-  // Payment information
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardName, setCardName] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
+=======
+type CheckoutStep = 'shipping' | 'payment';
 
+export function Checkout({ cartItems, totalPrice, onBack, onComplete }: CheckoutProps) {
+  const [step, setStep] = useState<CheckoutStep>('shipping');
+  const [loading, setLoading] = useState(false);
+>>>>>>> master
+  
+  const [shippingDetails, setShippingDetails] = useState({
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    zipCode: '',
+    notes: ''
+  });
+
+<<<<<<< HEAD
   const hasPrescriptionItems = cartItems.some(
     item => item.isPrescriptionRequired
   );
@@ -60,182 +78,268 @@ export function Checkout({
     if (!user) return;
 
     setIsSubmitting(true);
+=======
+  const [paymentDetails, setPaymentDetails] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    name: ''
+  });
+
+  const handlePlaceOrder = async () => {
+    setLoading(true);
+    
+    // Construct order data (for display/frontend usage mostly, 
+    // backend creates order from server-side cart)
+    const orderData = {
+      items: cartItems.map(item => ({
+        productId: item.id,
+        productName: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalPrice,
+      deliveryAddress: {
+        name: shippingDetails.fullName,
+        phone: shippingDetails.phone,
+        city: shippingDetails.city,
+        province: '', // simplified
+        postcode: shippingDetails.zipCode,
+        addressLine: shippingDetails.address,
+        notes: shippingDetails.notes
+      }
+    };
+>>>>>>> master
 
     try {
-      const orderData: OrderData = {
-        items: cartItems.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        totalPrice,
-        deliveryAddress: {
-          name: user.name,
-          phone: user.phone,
-          city: user.address.city,
-          province: user.address.province,
-          postcode: user.address.postcode,
-          addressLine: user.address.addressLine,
-          notes,
-        },
-        prescriptionRequired: hasPrescriptionItems,
-      };
-
       const order = await ordersAPI.create(orderData);
-      setOrderId(order.orderId);
-      setOrderDate(new Date().toLocaleDateString('en-GB'));
-      setStep(4);
+      onComplete(order);
     } catch (error) {
-      console.error('Order submission failed:', error);
-      alert('Failed to process payment. Please try again.');
+      console.error('Checkout failed:', error);
+      alert('Failed to place order. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const renderStep1 = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="mb-4">Delivery Information</h3>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-start gap-2">
-          <Lock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-blue-900 text-sm">
-              <strong>Delivery address is locked</strong>
-            </p>
-            <p className="text-blue-700 text-sm">
-              To change your delivery address, please update it in{' '}
-              <strong>My Account</strong> page.
-            </p>
+  return (
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <button 
+        onClick={onBack}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Shopping
+      </button>
+
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-6">
+          {/* Steps Indicator */}
+          <div className="flex items-center justify-between mb-8">
+            {['Shipping', 'Payment'].map((s, i) => {
+                // Determine if this step is active or completed
+                const currentIdx = step === 'shipping' ? 0 : 1;
+                const isActive = i === currentIdx;
+                const isCompleted = i < currentIdx;
+                
+                return (
+                  <div key={s} className="flex flex-col items-center flex-1 relative">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-2 transition-colors ${
+                      isActive ? 'bg-blue-600 text-white' : 
+                      isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {isCompleted ? <Check className="w-4 h-4" /> : i + 1}
+                    </div>
+                    <span className={`text-sm ${isActive ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+                      {s}
+                    </span>
+                    {i < 1 && (
+                      <div className={`absolute top-4 left-[60%] w-[80%] h-0.5 ${
+                        isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                      }`} />
+                    )}
+                  </div>
+                );
+            })}
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-gray-600 text-sm mb-2">Full Name</label>
-            <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-              {user?.name}
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-600 text-sm mb-2">Email</label>
-              <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                {user?.email}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-gray-600 text-sm mb-2">Phone</label>
-              <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                {user?.phone}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-gray-600 text-sm mb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              Delivery Address
-            </label>
-            <div className="space-y-3">
+          {step === 'shipping' && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                Shipping Details
+              </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-500 text-xs mb-1">City</label>
-                  <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                    {user?.address.city}
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.fullName}
+                    onChange={e => setShippingDetails({...shippingDetails, fullName: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-
                 <div>
-                  <label className="block text-gray-500 text-xs mb-1">
-                    Province/District
-                  </label>
-                  <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                    {user?.address.province}
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input 
+                    type="tel"
+                    value={shippingDetails.phone}
+                    onChange={e => setShippingDetails({...shippingDetails, phone: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.address}
+                    onChange={e => setShippingDetails({...shippingDetails, address: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
                 <div>
-                  <label className="block text-gray-500 text-xs mb-1">Postcode</label>
-                  <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                    {user?.address.postcode}
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.city}
+                    onChange={e => setShippingDetails({...shippingDetails, city: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                  <input 
+                    type="text"
+                    value={shippingDetails.zipCode}
+                    onChange={e => setShippingDetails({...shippingDetails, zipCode: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Notes (Optional)</label>
+                  <textarea 
+                    value={shippingDetails.notes}
+                    onChange={e => setShippingDetails({...shippingDetails, notes: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                  />
                 </div>
               </div>
+              <button
+                onClick={() => setStep('payment')}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mt-4"
+              >
+                Continue to Payment
+              </button>
+            </div>
+          )}
 
-              <div>
-                <label className="block text-gray-500 text-xs mb-1">Address Line</label>
-                <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700">
-                  {user?.address.addressLine}
+          {step === 'payment' && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+                Payment Method
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                  <input 
+                    type="text"
+                    placeholder="0000 0000 0000 0000"
+                    value={paymentDetails.cardNumber}
+                    onChange={e => setPaymentDetails({...paymentDetails, cardNumber: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                    <input 
+                      type="text"
+                      placeholder="MM/YY"
+                      value={paymentDetails.expiry}
+                      onChange={e => setPaymentDetails({...paymentDetails, expiry: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                    <input 
+                      type="text"
+                      placeholder="123"
+                      value={paymentDetails.cvc}
+                      onChange={e => setPaymentDetails({...paymentDetails, cvc: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                  <input 
+                    type="text"
+                    value={paymentDetails.name}
+                    onChange={e => setPaymentDetails({...paymentDetails, name: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-blue-900 text-sm">
-                  <strong>Complete Delivery Address:</strong>
-                </p>
-                <p className="text-blue-800 text-sm mt-1">
-                  {user?.address.addressLine}
-                  <br />
-                  {user?.address.province}, {user?.address.city}
-                  <br />
-                  {user?.address.postcode}, Turkey
-                </p>
+              
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={() => setStep('shipping')}
+                  className="w-1/3 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={loading}
+                  className="w-2/3 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay ₺${totalPrice.toFixed(2)}`
+                  )}
+                </button>
               </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-gray-600 text-sm mb-2">
-              Delivery Notes (Optional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              placeholder="Special delivery instructions..."
-            />
-          </div>
+          )}
         </div>
-      </div>
 
-      <button
-        onClick={() => setStep(2)}
-        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Continue to Review
-      </button>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="mb-4">Order Review</h3>
-
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <h4 className="mb-3 text-gray-900">Order Summary</h4>
-          <div className="space-y-2">
+        {/* Order Summary */}
+        <div className="h-fit bg-gray-50 p-6 rounded-lg border">
+          <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
+          <div className="space-y-4 max-h-60 overflow-y-auto mb-4">
             {cartItems.map(item => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-gray-700">
-                  {item.name} × {item.quantity}
-                </span>
-                <span className="text-gray-900">
-                  ₺{(item.price * item.quantity).toFixed(2)}
-                </span>
+              <div key={item.id} className="flex justify-between gap-4 text-sm">
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-gray-500">Qty: {item.quantity}</p>
+                </div>
+                <p>₺{(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
-            <div className="pt-2 border-t flex justify-between">
+          </div>
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span>₺{totalPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Shipping</span>
+              <span className="text-green-600">Free</span>
+            </div>
+            <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
               <span>Total</span>
               <span>₺{totalPrice.toFixed(2)}</span>
             </div>
           </div>
         </div>
+<<<<<<< HEAD
 
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <h4 className="mb-3 text-gray-900">Delivery Information</h4>
@@ -594,6 +698,8 @@ export function Checkout({
           {step === 3 && renderStep3()}
           {step === 4 && renderStep4()}
         </div>
+=======
+>>>>>>> master
       </div>
 
       {/* Customer Support Chat Widget */}
