@@ -242,10 +242,17 @@ export function PricingDiscount({ onBack, onNavigate }: PricingDiscountProps) {
             </button>
             <button
               onClick={() => onNavigate('invoices')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
             >
               <FileText className="w-5 h-5" />
               <span>Invoice Management</span>
+            </button>
+            <button
+              onClick={() => onNavigate('revenue')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <TrendingUp className="w-5 h-5" />
+              <span>Revenue & Profit</span>
             </button>
           </div>
         </nav>
