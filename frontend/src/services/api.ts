@@ -1,10 +1,56 @@
+<<<<<<< HEAD
+// Configuration - Replace these with your actual API endpoints
+const API_BASE_URL = 'https://your-api-endpoint.com/api';
+const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+
+// Type definitions
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  stockCount: number;
+  inStock: boolean;
+  rating: number;
+  reviewCount: number;
+  isPrescriptionRequired?: boolean;
+  popularity: number;
+}
+
+export interface CartItem extends Product {
+  quantity: number;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+// Mock data exports
+export { products as mockProducts } from '../data/products';
+export { mockReviews } from '../data/reviews';
+
+// Helper function for API calls
+async function apiCall<T>(
+=======
 import { Product, CartItem } from '../App';
 
 // Configuration
 const API_BASE_URL = 'http://localhost:8080/api';
 
+<<<<<<< HEAD
 // Helper function for API calls
 async function apiCall<T>(
+=======
+export async function apiCall<T>(
+>>>>>>> master
+>>>>>>> nazim
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -118,10 +164,21 @@ export interface OrderData {
 
 export interface OrderResponse {
   orderId: string;
-  status: 'processing' | 'in-transit' | 'delivered';
+  status: 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded';
   estimatedDelivery: string;
   totalPrice: number;
+<<<<<<< HEAD
   items: any[];
+=======
+  items: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+    originalPrice?: number;
+    discount?: number;
+  }>;
+>>>>>>> nazim
   date: string;
 }
 
@@ -134,6 +191,7 @@ const mapStatus = (backendStatus: string): 'processing' | 'in-transit' | 'delive
 };
 
 export const ordersAPI = {
+<<<<<<< HEAD
   // Complex Logic: Sync local cart to server, then checkout
   create: async (orderData: OrderData): Promise<OrderResponse> => {
     const userId = localStorage.getItem('userId');
@@ -160,9 +218,85 @@ export const ordersAPI = {
 
     // 3. Perform Checkout
     const order = await apiCall<any>(`/cart/checkout/${userId}`, {
+=======
+<<<<<<< HEAD
+  // Create new order
+  create: async (orderData: OrderData): Promise<OrderResponse> => {
+    // Real implementation:
+    // const formData = new FormData();
+    // formData.append('orderData', JSON.stringify(orderData));
+    // if (orderData.prescriptionFile) {
+    //   formData.append('prescription', orderData.prescriptionFile);
+    // }
+    // return apiCall<OrderResponse>('/orders', {
+    //   method: 'POST',
+    //   body: formData,
+    //   headers: {}, // Let browser set Content-Type for FormData
+    // });
+
+    // Mock implementation
+    console.log('Creating order:', orderData);
+    const orderId = `ORD-${Date.now()}`;
+    return new Promise(resolve =>
+      setTimeout(
+        () =>
+          resolve({
+            orderId,
+            status: 'processing',
+            estimatedDelivery: '2-4 hours',
+            totalPrice: orderData.totalPrice,
+            items: orderData.items.map(item => ({
+              productId: item.productId,
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            date: new Date().toISOString(),
+          }),
+        1000
+      )
+    );
+  },
+
+  // Get order by ID
+  getById: async (orderId: string): Promise<OrderResponse> => {
+    // return apiCall<OrderResponse>(`/orders/${orderId}`);
+    
+    return new Promise(resolve =>
+      setTimeout(
+        () =>
+          resolve({
+            orderId,
+            status: 'processing',
+            estimatedDelivery: '2-4 hours',
+            totalPrice: 450,
+            items: [
+              {
+                productId: '1',
+                productName: 'Product 1',
+                quantity: 2,
+                price: 200,
+              },
+              {
+                productId: '2',
+                productName: 'Product 2',
+                quantity: 1,
+                price: 50,
+              },
+            ],
+            date: new Date().toISOString(),
+          }),
+        500
+      )
+    );
+=======
+  create: async (userId: number): Promise<any> => {
+    return apiCall<any>(`/cart/checkout/${userId}`, {
+>>>>>>> nazim
         method: 'POST'
     });
 
+<<<<<<< HEAD
     // 4. Return formatted response
     return {
         orderId: order.id.toString(),
@@ -207,6 +341,11 @@ export const ordersAPI = {
           })),
           date: order.orderDate
       };
+=======
+  getById: async (orderId: string): Promise<any> => {
+    return apiCall<any>(`/orders/${orderId}`);
+>>>>>>> master
+>>>>>>> nazim
   },
 
   getHistory: async (): Promise<OrderResponse[]> => {
