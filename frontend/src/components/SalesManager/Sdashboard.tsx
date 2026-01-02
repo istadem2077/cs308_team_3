@@ -104,10 +104,17 @@ export function Sdashboard({ onBack, onNavigate }: SdashboardProps) {
             </button>
             <button
               onClick={() => onNavigate('pricing')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
             >
               <DollarSign className="w-5 h-5" />
               <span>Pricing & Discount</span>
+            </button>
+            <button
+              onClick={() => onNavigate('invoices')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <FileText className="w-5 h-5" />
+              <span>Invoice Management</span>
             </button>
           </div>
         </nav>
