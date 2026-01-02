@@ -1,16 +1,6 @@
-<<<<<<< HEAD
-
-  {
-=======
-<<<<<<< HEAD
 
   {
       "name": "Edu Pharmacy E-commerce desing (Community)",
-=======
-{
->>>>>>> nazim
-      "name": "Pharmacy E-commerce Website",
->>>>>>> master
       "version": "0.1.0",
       "private": true,
       "dependencies": {

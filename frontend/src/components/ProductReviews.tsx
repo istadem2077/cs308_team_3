@@ -18,12 +18,6 @@ export function ProductReviews({
 }: ProductReviewsProps) {
   if (!isOpen) return null;
 
-  const checkStatus = (review: Review) => {
-      if (review.status === "APPROVED") {
-          return (<p className="text-gray-700">{review.comment}</p>)
-      }
-  }
-
   const renderStars = (currentRating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -114,8 +108,7 @@ export function ProductReviews({
                       </div>
                       
                       {/* Comment */}
-                      {/*<p className="text-gray-700">{review.comment ? review.status === "APPROVED" : ""}</p>*/}
-                      {checkStatus(review)}
+                      <p className="text-gray-700">{review.comment}</p>
                     </div>
                   ))}
                 </div>

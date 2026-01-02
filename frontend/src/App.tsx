@@ -14,56 +14,10 @@ import { Hero } from './components/Hero';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
 import { ProductReviews } from './components/ProductReviews';
-<<<<<<< HEAD
-import { mockReviews } from './data/reviews';
-=======
-<<<<<<< HEAD
 import { Wishlist } from './components/Wishlist';
 import { authService, User } from './services/auth';
 import { mockProducts, mockReviews } from './services/api';
 import './styles/globals.css';
-=======
-import { productsAPI, cartAPI, reviewsAPI, ordersAPI, OrderResponse } from './services/api';
-import { authService, User } from './services/auth';
->>>>>>> nazim
-import { Loader2, ChevronDown } from 'lucide-react';
-
-import { authService, User } from './services/auth';
-import { productsAPI, ordersAPI, reviewsAPI, OrderResponse } from './services/api';
-
-export interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  image: string;
-  description: string;
-  inStock: boolean;
-  requiresPrescription: boolean;
-  stockCount: number;
-  popularity: number; // 0-100 score based on sales/views
-  rating: number; // 0-5 stars
-  reviewCount: number; // number of reviews
-  model: string; // Product model
-  serialNumber: string; // Product serial number
-  warrantyStatus: string; // Warranty information (e.g., "1 year", "2 years", "No warranty")
-  distributor: string; // Distributor/manufacturer information
-}
-
-export interface Review {
-  id: string;
-  productId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-}
-
-export interface CartItem extends Product {
-  quantity: number;
-}
->>>>>>> master
 
 type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';
 
@@ -75,18 +29,9 @@ export default function App() {
   const [showMyAccount, setShowMyAccount] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-<<<<<<< HEAD
-
-    const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-        // 1. Try to load saved cart from storage on initial load
-        const savedCart = localStorage.getItem('cartItems');
-        return savedCart ? JSON.parse(savedCart) : [];
-    });
-=======
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
->>>>>>> nazim
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,10 +47,6 @@ export default function App() {
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [showProductManager, setShowProductManager] = useState(false);
 
-    useEffect(() => {
-        localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    }, [cartItems]);
-
   useEffect(() => {
     // Check if user is already logged in
     const currentUser = authService.getCurrentUser();
@@ -114,24 +55,6 @@ export default function App() {
       setIsGuestMode(false);
     }
   }, []);
-
-  useEffect(() => {
-    // Fetch order history when user logs in
-    if (user) {
-      ordersAPI.getHistory()
-        .then(fetchedOrders => setOrders(fetchedOrders))
-        .catch(console.error);
-    }
-    }, [user]);
-
-    useEffect(() => {
-        // This ensures that when you reload the page, we fetch the LATEST status from DB
-        if (user) {
-            ordersAPI.getHistory()
-                .then(fetchedOrders => setOrders(fetchedOrders))
-                .catch(console.error);
-        }
-    }, [user]);
 
   useEffect(() => {
     // Load products (works for both guest and logged-in users)
@@ -151,40 +74,8 @@ export default function App() {
     }
   }, [user, isGuestMode]);
 
-  // Optional: If you want to load ALL reviews for products upfront
-  // Or better, fetch them only when a user clicks a product to view details
-  useEffect(() => {
-      if (selectedProductForReviews) {
-          reviewsAPI.getByProduct(selectedProductForReviews.id)
-              .then(apiReviews => {
-                  // backend returns ReviewResponseDto, might need mapping to your Review interface
-                  // const mappedReviews = apiReviews.map((r: any) => ({
-                  //     id: r.id.toString(),
-                  //     productId: r.productId.toString(),
-                  //     userName: r.userName,
-                  //     rating: r.rating,
-                  //     comment: r.comment,
-                  //     date: r.createdAt
-                  // }));
-                  setReviews(apiReviews);
-              })
-              .catch(console.error);
-      }
-  }, [selectedProductForReviews]);
-
-  const handleLoginSuccess = async () => {
+  const handleLoginSuccess = () => {
     const currentUser = authService.getCurrentUser();
-
-      if (currentUser && cartItems.length > 0) {
-          try {
-              // Use the userId from the authenticated user
-              await ordersAPI.syncCart(currentUser.id, cartItems);
-              console.log("Cart synced to database successfully");
-          } catch (err) {
-              console.error("Error syncing cart:", err);
-          }
-      }
-
     setUser(currentUser);
     setIsGuestMode(false);
     setShowAuthModal(false);
@@ -230,7 +121,7 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-const addToCart = (product: Product) => {
+  const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       const currentQuantity = existing ? existing.quantity : 0;
@@ -283,12 +174,7 @@ const addToCart = (product: Product) => {
     );
   };
 
-  const handleAddReview = async (review: Omit<Review, 'id' | 'date'>) => {
-  try {
-    // 1. Send to Backend
-    await reviewsAPI.add(review.productId, review.rating, review.comment);
-    
-    // 2. Keep existing UI logic to update screen immediately (Optimistic UI)
+  const handleAddReview = (review: Omit<Review, 'id' | 'date'>) => {
     const newReview: Review = {
       ...review,
       id: `review-${Date.now()}`,
@@ -297,21 +183,25 @@ const addToCart = (product: Product) => {
     
     setReviews(prev => [newReview, ...prev]);
     
-    // ... rest of your existing logic for updating product rating ...
+    // Update product rating and review count
     setProducts(prevProducts =>
       prevProducts.map(product => {
         if (product.id === review.productId) {
-             // ... your existing calculation logic ...
-             // (You can copy the logic you already wrote in App.tsx)
-             return product; // simplified for brevity
+          const productReviews = reviews.filter(r => r.productId === product.id);
+          const newReviewCount = productReviews.length + 1;
+          const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
+          const newRating = totalRating / newReviewCount;
+          
+          return {
+            ...product,
+            rating: Math.round(newRating * 10) / 10,
+            reviewCount: newReviewCount,
+          };
         }
         return product;
       })
     );
-  } catch (error) {
-    alert("Failed to submit review. Please try again.");
-  }
-};
+  };
 
   const handleOrderComplete = (order: OrderResponse) => {
     // Add order with "processing" status
@@ -333,76 +223,84 @@ const addToCart = (product: Product) => {
     );
   };
 
-    const handleRateProduct = async (productId: string, rating: number, userName: string) => {
-        try {
-            // Send to Backend (Empty comment)
-            await reviewsAPI.add(productId, rating, "");
-
-            // Update Local UI (Optimistic update)
-            const newReview: Review = {
-                id: `review-${Date.now()}`,
-                productId,
-                userName,
-                rating,
-                comment: '',
-                date: new Date().toISOString(),
-                status: 'PENDING'
-            };
-
-            setReviews(prev => [newReview, ...prev]);
-
-            // Update product rating stats visually
-            // (Keep your existing logic here for calculating new averages)
-            updateProductRatingLocal(productId, rating, 1);
-
-        } catch (error) {
-            console.error("Failed to rate product", error);
-        }
+  const handleRateProduct = (productId: string, rating: number, userName: string) => {
+    // Add review with just rating (no comment)
+    const newReview: Review = {
+      id: `review-${Date.now()}`,
+      productId,
+      userName,
+      rating,
+      comment: '',
+      date: new Date().toISOString(),
     };
+    
+    setReviews(prev => [newReview, ...prev]);
+    
+    // Update product rating
+    const productReviews = reviews.filter(r => r.productId === productId);
+    const allReviews = [...productReviews, newReview];
+    const newReviewCount = allReviews.length;
+    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+    const newRating = totalRating / newReviewCount;
+    
+    setProducts(prevProducts =>
+      prevProducts.map(product =>
+        product.id === productId
+          ? {
+              ...product,
+              rating: Math.round(newRating * 10) / 10,
+              reviewCount: newReviewCount,
+            }
+          : product
+      )
+    );
+  };
 
-    const handleAddCommentToRating = async (productId: string, rating: number, comment: string, userName: string) => {
-        try {
-            // Send to Backend
-            await reviewsAPI.add(productId, rating, comment);
+  const handleAddCommentToRating = (productId: string, rating: number, comment: string, userName: string) => {
+    // Find existing review without comment and update it, or create new one
+    const existingReview = reviews.find(
+      r => r.productId === productId && r.userName === userName && r.comment === ''
+    );
 
-            // Update Local UI
-            const newReview: Review = {
-                id: `review-${Date.now()}`,
-                productId,
-                userName,
-                rating,
-                comment,
-                date: new Date().toISOString(),
-                status: 'PENDING'
-            };
-
-            setReviews(prev => [newReview, ...prev]);
-
-            // Update product rating stats visually
-            updateProductRatingLocal(productId, rating, 1);
-
-        } catch (error) {
-            console.error("Failed to post comment", error);
-        }
-    };
-
-    // Helper to deduplicate the math logic in App.tsx
-    const updateProductRatingLocal = (productId: string, newRatingVal: number, countInc: number) => {
-        setProducts(prevProducts =>
-            prevProducts.map(product => {
-                if (product.id === productId) {
-                    // Simple approximation for demo UI
-                    return {
-                        ...product,
-                        reviewCount: product.reviewCount + countInc,
-                        // Note: True average requires all numbers, this is a visual approximation
-                        rating: newRatingVal
-                    };
-                }
-                return product;
-            })
-        );
+    if (existingReview) {
+      // Update existing review with comment
+      setReviews(prev =>
+        prev.map(r =>
+          r.id === existingReview.id ? { ...r, comment, date: new Date().toISOString() } : r
+        )
+      );
+    } else {
+      // Create new review with comment
+      const newReview: Review = {
+        id: `review-${Date.now()}`,
+        productId,
+        userName,
+        rating,
+        comment,
+        date: new Date().toISOString(),
+      };
+      
+      setReviews(prev => [newReview, ...prev]);
+      
+      // Update product rating and count
+      const productReviews = reviews.filter(r => r.productId === productId);
+      const newReviewCount = productReviews.length + 1;
+      const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + rating;
+      const newRating = totalRating / newReviewCount;
+      
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? {
+                ...product,
+                rating: Math.round(newRating * 10) / 10,
+                reviewCount: newReviewCount,
+              }
+            : product
+        )
+      );
     }
+  };
 
   // Wishlist functions
   const handleAddToWishlist = (product: Product) => {
@@ -453,13 +351,7 @@ const addToCart = (product: Product) => {
   } else if (sortBy === 'price-desc') {
     filteredProducts = [...filteredProducts].sort((a, b) => b.price - a.price);
   } else if (sortBy === 'popularity') {
-    filteredProducts = [...filteredProducts].sort((a, b) => {
-        if(a.popularity === b.popularity) {
-            return b.rating - a.rating;
-        }
-
-        return b.popularity - a.popularity;
-    });
+    filteredProducts = [...filteredProducts].sort((a, b) => b.popularity - a.popularity);
   }
 
   const categories = [
@@ -755,9 +647,7 @@ const addToCart = (product: Product) => {
           isOpen={true}
           onClose={() => setSelectedProductForReviews(null)}
           product={selectedProductForReviews}
-          reviews={reviews.filter(r =>
-              r.productId === selectedProductForReviews.id
-          )}
+          reviews={reviews.filter(r => r.productId === selectedProductForReviews.id)}
           onAddReview={handleAddReview}
           userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
         />

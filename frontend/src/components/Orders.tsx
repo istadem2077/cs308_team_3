@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, Truck, Calendar, Star } from 'lucide-react';
-import { OrderResponse, reviewsAPI } from '../services/api';
-=======
 import { useState } from 'react';
 import { Package, Clock, CheckCircle, Truck, Calendar, Star, XCircle, RotateCcw, AlertCircle, Mail, Info } from 'lucide-react';
 import { OrderResponse } from '../services/api';
->>>>>>> nazim
 import { authService } from '../services/auth';
 
 interface OrdersProps {
@@ -50,35 +44,6 @@ export function Orders({ orders, onUpdateOrderStatus, onRateProduct, onAddCommen
   const [refundStatuses, setRefundStatuses] = useState<ItemRefundStatus[]>([]);
   const [lastRefundAmount, setLastRefundAmount] = useState(0);
   const user = authService.getCurrentUser();
-
-    useEffect(() => {
-        const fetchUserReviews = async () => {
-            if (!user) return;
-            try {
-                // Fetch reviews specifically for this user
-                const userReviews = await reviewsAPI.getByUser(user.id);
-
-                const newStates: Record<string, { rating: number; showCommentBox: boolean; comment: string }> = {};
-
-                userReviews.forEach(review => {
-                    newStates[review.productId] = {
-                        rating: review.rating,
-                        comment: review.comment || '',
-                        // If there is a comment, we can choose to open the box automatically,
-                        // or keep it closed until requested. keeping it false is cleaner UI.
-                        showCommentBox: false
-                    };
-                });
-
-                // Merge with existing state to avoid overwriting ongoing interactions
-                setRatingStates(prev => ({ ...prev, ...newStates }));
-            } catch (error) {
-                console.error("Failed to load user reviews:", error);
-            }
-        };
-
-        fetchUserReviews();
-    }, [user?.id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

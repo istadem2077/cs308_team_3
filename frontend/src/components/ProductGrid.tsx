@@ -1,14 +1,5 @@
-<<<<<<< HEAD
 import { Product } from '../services/api';
 import { ShoppingCart, FileText, Package, Star, MessageSquare, Heart } from 'lucide-react';
-=======
-import { Product } from '../App';
-<<<<<<< HEAD
-import { ShoppingCart, FileText, Package, Star, MessageSquare } from 'lucide-react';
-=======
-import { ShoppingCart, Package, Star, MessageSquare } from 'lucide-react';
->>>>>>> master
->>>>>>> nazim
 
 interface ProductGridProps {
   products: Product[];
