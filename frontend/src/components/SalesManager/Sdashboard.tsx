@@ -11,6 +11,7 @@ import {
   CheckCircle,
   AlertCircle,
   Bell,
+  RotateCcw,
 } from 'lucide-react';
 import {
   LineChart,
@@ -118,10 +119,17 @@ export function Sdashboard({ onBack, onNavigate }: SdashboardProps) {
             </button>
             <button
               onClick={() => onNavigate('revenue')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
             >
               <TrendingUp className="w-5 h-5" />
               <span>Revenue & Profit</span>
+            </button>
+            <button
+              onClick={() => onNavigate('refunds')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <span>Refund Management</span>
             </button>
           </div>
         </nav>

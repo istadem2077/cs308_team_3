@@ -9,6 +9,7 @@ import {
   FileText,
   TrendingDown,
   AlertCircle,
+  RotateCcw,
 } from 'lucide-react';
 import {
   BarChart,
@@ -94,9 +95,16 @@ export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
               <FileText className="w-5 h-5" />
               <span>Invoice Management</span>
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg">
+            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg mb-2">
               <TrendingUp className="w-5 h-5" />
               <span>Revenue & Profit</span>
+            </button>
+            <button
+              onClick={() => onNavigate('refunds')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <span>Refund Management</span>
             </button>
           </div>
         </nav>
@@ -217,72 +225,68 @@ export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
           {/* Bar Chart - Revenue, Cost & Profit Trend */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
             <h3 className="text-gray-900 mb-6">Revenue, Cost & Profit Trend</h3>
-            <div style={{ width: '100%', height: '400px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
-                  <Bar dataKey="cost" fill="#f97316" name="Cost" />
-                  <Bar dataKey="profit" fill="#10b981" name="Profit" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
+                <Bar dataKey="cost" fill="#f97316" name="Cost" />
+                <Bar dataKey="profit" fill="#10b981" name="Profit" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
           {/* Line Chart Analysis */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
             <h3 className="text-gray-900 mb-6">Line Chart Analysis</h3>
-            <div style={{ width: '100%', height: '400px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', r: 4 }}
-                    name="Revenue"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="cost"
-                    stroke="#f97316"
-                    strokeWidth={2}
-                    dot={{ fill: '#f97316', r: 4 }}
-                    name="Cost"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="profit"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{ fill: '#10b981', r: 4 }}
-                    name="Profit"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ fill: '#3b82f6', r: 4 }}
+                  name="Revenue"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cost"
+                  stroke="#f97316"
+                  strokeWidth={2}
+                  dot={{ fill: '#f97316', r: 4 }}
+                  name="Cost"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: '#10b981', r: 4 }}
+                  name="Profit"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
 
           {/* Cost Calculation Note */}

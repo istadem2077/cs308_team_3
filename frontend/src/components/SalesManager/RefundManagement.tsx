@@ -8,108 +8,102 @@ import {
   DollarSign,
   FileText,
   Eye,
-  Printer,
-  Download,
   RotateCcw,
 } from 'lucide-react';
 
-interface InvoiceManagementProps {
+interface RefundManagementProps {
   onBack: () => void;
   onNavigate: (tab: string) => void;
 }
 
-interface Invoice {
+interface RefundRequest {
   id: string;
-  customerId: string;
-  products: string;
-  quantity: number;
-  totalPrice: number;
-  date: string;
+  customerName: string;
+  productName: string;
+  purchaseDate: string;
+  requestDate: string;
+  originalPrice: number;
+  discount: number;
+  refundAmount: number;
+  status: 'requested' | 'product-received' | 'approved' | 'rejected';
 }
 
-export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps) {
+export function RefundManagement({ onBack, onNavigate }: RefundManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState('2024-01-01');
-  const [endDate, setEndDate] = useState('2024-12-31');
 
-  const [invoices] = useState<Invoice[]>([
+  const [refundRequests] = useState<RefundRequest[]>([
     {
-      id: 'INV-001',
-      customerId: 'CUST-123',
-      products: 'Aspirin 500mg, Vitamin C',
-      quantity: 3,
-      totalPrice: 45.99,
-      date: '2024-12-10',
+      id: 'REF-001',
+      customerName: 'John Doe',
+      productName: 'Aspirin 500mg',
+      purchaseDate: '2024-11-20',
+      requestDate: '2024-12-10',
+      originalPrice: 24.99,
+      discount: 5.0,
+      refundAmount: 19.99,
+      status: 'requested',
     },
     {
-      id: 'INV-002',
-      customerId: 'CUST-456',
-      products: 'Hand Sanitizer',
-      quantity: 2,
-      totalPrice: 19.98,
-      date: '2024-12-12',
+      id: 'REF-002',
+      customerName: 'Jane Smith',
+      productName: 'Vitamin C 1000mg',
+      purchaseDate: '2024-11-25',
+      requestDate: '2024-12-12',
+      originalPrice: 15.99,
+      discount: 0.0,
+      refundAmount: 15.99,
+      status: 'product-received',
     },
     {
-      id: 'INV-003',
-      customerId: 'CUST-789',
-      products: 'Face Masks, Thermometer',
-      quantity: 15,
-      totalPrice: 85.5,
-      date: '2024-12-14',
+      id: 'REF-003',
+      customerName: 'Bob Johnson',
+      productName: 'Hand Sanitizer 500ml',
+      purchaseDate: '2024-12-01',
+      requestDate: '2024-12-14',
+      originalPrice: 12.99,
+      discount: 2.0,
+      refundAmount: 10.99,
+      status: 'approved',
     },
     {
-      id: 'INV-004',
-      customerId: 'CUST-234',
-      products: 'Ibuprofen 400mg',
-      quantity: 1,
-      totalPrice: 12.99,
-      date: '2024-12-15',
-    },
-    {
-      id: 'INV-005',
-      customerId: 'CUST-567',
-      products: 'Multivitamin Complex, Vitamin D3',
-      quantity: 4,
-      totalPrice: 120.0,
-      date: '2024-12-16',
-    },
-    {
-      id: 'INV-006',
-      customerId: 'CUST-890',
-      products: 'Paracetamol 500mg',
-      quantity: 2,
-      totalPrice: 90.0,
-      date: '2024-12-18',
+      id: 'REF-004',
+      customerName: 'Alice Brown',
+      productName: 'Face Masks (50 pack)',
+      purchaseDate: '2024-11-28',
+      requestDate: '2024-12-11',
+      originalPrice: 29.99,
+      discount: 0.0,
+      refundAmount: 29.99,
+      status: 'rejected',
     },
   ]);
 
-  const handleViewInvoice = (invoiceId: string) => {
-    alert(`Viewing invoice: ${invoiceId}`);
+  const handleViewRefund = (refundId: string) => {
+    alert(`Viewing refund request: ${refundId}`);
   };
 
-  const handlePrintInvoice = (invoiceId: string) => {
-    alert(`Printing invoice: ${invoiceId}`);
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'requested':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'product-received':
+        return 'bg-blue-100 text-blue-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleDownloadInvoice = (invoiceId: string) => {
-    alert(`Downloading invoice: ${invoiceId}`);
-  };
-
-  // Filter invoices by search query and date range
-  const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch =
-      invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.customerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.products.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const invoiceDate = new Date(invoice.date);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    const matchesDateRange = invoiceDate >= start && invoiceDate <= end;
-
-    return matchesSearch && matchesDateRange;
-  });
+  // Filter refund requests by search query
+  const filteredRequests = refundRequests.filter(
+    request =>
+      request.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.productName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -144,7 +138,10 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
               <DollarSign className="w-5 h-5" />
               <span>Pricing & Discount</span>
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg mb-2">
+            <button
+              onClick={() => onNavigate('invoices')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
+            >
               <FileText className="w-5 h-5" />
               <span>Invoice Management</span>
             </button>
@@ -155,10 +152,7 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
               <TrendingUp className="w-5 h-5" />
               <span>Revenue & Profit</span>
             </button>
-            <button
-              onClick={() => onNavigate('refunds')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
-            >
+            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg">
               <RotateCcw className="w-5 h-5" />
               <span>Refund Management</span>
             </button>
@@ -182,7 +176,7 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
         <header className="bg-white border-b border-gray-200 px-8 py-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-gray-900">Invoice Management</h1>
+              <h1 className="text-gray-900">Refund Management</h1>
             </div>
 
             <div className="flex items-center gap-4">
@@ -206,56 +200,42 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
 
         {/* Content Area */}
         <main className="flex-1 p-8 overflow-y-auto">
-          {/* Date Range Filter */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h3 className="text-gray-900 mb-4">Date Range Filter</h3>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Invoices Table */}
+          {/* Refund Requests Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h3 className="text-gray-900">Refund Requests</h3>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
-                      Invoice ID
+                      Request ID
                     </th>
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
-                      Customer ID
+                      Customer Name
                     </th>
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
-                      Product(s)
+                      Product Name
                     </th>
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
-                      Quantity
+                      Purchase Date
                     </th>
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
-                      Total Price
+                      Request Date
                     </th>
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
-                      Date
+                      Original Price
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm text-gray-700">
+                      Discount
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm text-gray-700">
+                      Refund Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm text-gray-700">
+                      Status
                     </th>
                     <th className="px-6 py-4 text-left text-sm text-gray-700">
                       Actions
@@ -263,57 +243,56 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredInvoices.length === 0 ? (
+                  {filteredRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                        No invoices found matching your criteria
+                      <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                        No refund requests found matching your criteria
                       </td>
                     </tr>
                   ) : (
-                    filteredInvoices.map(invoice => (
-                      <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                    filteredRequests.map(request => (
+                      <tr key={request.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {invoice.id}
+                          {request.id}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {invoice.customerId}
+                          {request.customerName}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {invoice.products}
+                          {request.productName}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {invoice.quantity}
+                          {request.purchaseDate}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {request.requestDate}
                         </td>
                         <td className="px-6 py-4 text-sm text-green-600">
-                          ${invoice.totalPrice.toFixed(2)}
+                          ${request.originalPrice.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {invoice.date}
+                        <td className="px-6 py-4 text-sm text-red-600">
+                          ${request.discount.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-green-600">
+                          ${request.refundAmount.toFixed(2)}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleViewInvoice(invoice.id)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handlePrintInvoice(invoice.id)}
-                              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Print"
-                            >
-                              <Printer className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDownloadInvoice(invoice.id)}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Download"
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </div>
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs ${getStatusStyle(
+                              request.status
+                            )}`}
+                          >
+                            {request.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleViewRefund(request.id)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     ))
