@@ -102,6 +102,13 @@ export function Sdashboard({ onBack, onNavigate }: SdashboardProps) {
               <LayoutDashboard className="w-5 h-5" />
               <span>Dashboard</span>
             </button>
+            <button
+              onClick={() => onNavigate('pricing')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+            >
+              <DollarSign className="w-5 h-5" />
+              <span>Pricing & Discount</span>
+            </button>
           </div>
         </nav>
 
