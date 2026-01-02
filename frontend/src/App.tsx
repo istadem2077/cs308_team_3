@@ -14,47 +14,10 @@ import { Hero } from './components/Hero';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
 import { ProductReviews } from './components/ProductReviews';
-<<<<<<< HEAD
 import { Wishlist } from './components/Wishlist';
 import { authService, User } from './services/auth';
 import { mockProducts, mockReviews } from './services/api';
 import './styles/globals.css';
-=======
-import { productsAPI, cartAPI, reviewsAPI, ordersAPI, OrderResponse } from './services/api';
-import { authService, User } from './services/auth';
-import { Loader2, ChevronDown } from 'lucide-react';
-
-export interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  image: string;
-  description: string;
-  inStock: boolean;
-  stockCount: number;
-  popularity: number;
-  rating: number;
-  reviewCount: number;
-  model: string;
-  serialNumber: string;
-  warrantyStatus: string;
-  distributor: string;
-}
-
-export interface Review {
-  id: string;
-  productId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-export interface CartItem extends Product {
-  quantity: number;
-}
->>>>>>> master
 
 type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';
 
@@ -79,14 +42,13 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('none');
   const [isCheckout, setIsCheckout] = useState(false);
-  
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [showProductManager, setShowProductManager] = useState(false);
 
-  // 1. Initial Auth Check
   useEffect(() => {
+    // Check if user is already logged in
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
@@ -94,60 +56,23 @@ export default function App() {
     }
   }, []);
 
-  // 2. Fetch Products
-  const fetchProducts = async () => {
-    try {
-      const data = await productsAPI.getAll();
-      setProducts(data);
-      setLoading(false);
-    } catch (err) {
-      console.error("Fetch products error:", err);
-      setError('Failed to fetch products');
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    // Load products (works for both guest and logged-in users)
+    const fetchProducts = async () => {
+      try {
+        const data = await productsAPI.getAll();
+        setProducts(data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch products');
+        setLoading(false);
+      }
+    };
+
     if (user || isGuestMode) {
       fetchProducts();
     }
   }, [user, isGuestMode]);
-
-  // 3. Sync Cart & Orders with Backend when User changes
-  useEffect(() => {
-    const syncUserData = async () => {
-      if (user) {
-        try {
-          // Load Server Cart
-          const serverCart = await cartAPI.load();
-          setCartItems(serverCart);
-
-          // Load Order History
-          const history = await ordersAPI.getHistory();
-          setOrders(history);
-        } catch (err) {
-          console.error("Failed to sync user data", err);
-        }
-      } 
-    };
-    syncUserData();
-  }, [user]);
-
-  // 4. Fetch Reviews when a product is selected
-  useEffect(() => {
-    const fetchReviews = async () => {
-      if (selectedProductForReviews) {
-        try {
-          const productReviews = await reviewsAPI.getByProduct(selectedProductForReviews.id);
-          setReviews(productReviews); 
-        } catch (err) {
-          console.error("Failed to fetch reviews", err);
-          setReviews([]); 
-        }
-      }
-    };
-    fetchReviews();
-  }, [selectedProductForReviews]);
 
   const handleLoginSuccess = () => {
     const currentUser = authService.getCurrentUser();
@@ -166,7 +91,6 @@ export default function App() {
     authService.logout();
     setUser(null);
     setCartItems([]);
-    setOrders([]);
     setShowMyAccount(false);
     setShowLogoutConfirm(false);
   };
@@ -177,6 +101,7 @@ export default function App() {
 
   const handleCheckoutClick = () => {
     if (!user) {
+      // Show login prompt if guest tries to checkout
       setShowLoginPrompt(true);
     } else {
       setIsCartOpen(false);
@@ -196,15 +121,12 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  // --- Cart Actions ---
-
-  const addToCart = async (product: Product) => {
-    // 1. Optimistic Update for UI responsiveness
-    const prevItems = [...cartItems];
+  const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       const currentQuantity = existing ? existing.quantity : 0;
       
+      // Check if adding one more would exceed stock
       if (currentQuantity >= product.stockCount) {
         alert(`Sorry, only ${product.stockCount} items available in stock for ${product.name}`);
         return prev;
@@ -219,29 +141,9 @@ export default function App() {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-
-    // 2. Server Sync
-    if (user) {
-      try {
-        await cartAPI.addToCart(product.id, 1);
-        // Reload to ensure consistency with server calculation
-        const updatedCart = await cartAPI.load();
-        setCartItems(updatedCart);
-      } catch (err) {
-        console.error("Add to cart failed", err);
-        setCartItems(prevItems); // Revert on error
-        alert("Failed to add item to server cart.");
-      }
-    }
   };
 
-  const updateQuantity = async (id: string, quantity: number) => {
-    const item = cartItems.find(i => i.id === id);
-    if (!item) return;
-
-    const oldQty = item.quantity;
-    const diff = quantity - oldQty;
-
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
       setCartItems(prev => prev.filter(item => item.id !== id));
     } else {
@@ -249,49 +151,10 @@ export default function App() {
         prev.map(item => (item.id === id ? { ...item, quantity } : item))
       );
     }
-
-    if (user && diff !== 0) {
-      try {
-        if (diff > 0) {
-           await cartAPI.addToCart(id, diff);
-        } else {
-           // For removal, we might loop or backend needs a 'reduce quantity' endpoint
-           // Since backend 'remove' usually removes the item entirely or reduces by 1,
-           // we assume standard behavior here or loop for 'diff' times if API requires
-           // Assuming addToCart with negative might not work, so we use logic:
-           // If backend remove API only removes 1 at a time:
-           for(let k=0; k < Math.abs(diff); k++) {
-                await cartAPI.removeFromCart(id); 
-           }
-        }
-        const updatedCart = await cartAPI.load();
-        setCartItems(updatedCart);
-      } catch (err) {
-        console.error("Update quantity failed", err);
-        const updatedCart = await cartAPI.load();
-        setCartItems(updatedCart); 
-      }
-    }
   };
 
-  const removeFromCart = async (id: string) => {
+  const removeFromCart = (id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
-
-    if (user) {
-      try {
-        // We might need to call remove multiple times or clear logic 
-        // if backend /cart/remove only decrements. 
-        // Assuming here we want to fully remove line item:
-        // Ideally backend should have 'delete item' endpoint. 
-        // If not, we iterate or rely on cartAPI implementation.
-        // For now, let's call remove once (or check backend implementation).
-        await cartAPI.removeFromCart(id); 
-        const updatedCart = await cartAPI.load();
-        setCartItems(updatedCart);
-      } catch (err) {
-        console.error("Remove failed", err);
-      }
-    }
   };
 
   const updateProductStock = (purchasedItems: CartItem[]) => {
@@ -311,53 +174,44 @@ export default function App() {
     );
   };
 
-  // --- Reviews ---
-
-  const handleAddReview = async (review: Omit<Review, 'id' | 'date'>) => {
-    if (user) {
-      try {
-        await reviewsAPI.addReview({
-          productId: parseInt(review.productId),
-          rating: review.rating,
-          comment: review.comment
-        });
-        
-        const updatedReviews = await reviewsAPI.getByProduct(review.productId);
-        setReviews(updatedReviews);
-        fetchProducts();
-      } catch (err) {
-        alert("Failed to post review");
-      }
-    } else {
-      const newReview: Review = {
-        ...review,
-        id: `review-${Date.now()}`,
-        date: new Date().toISOString(),
-      };
-      setReviews(prev => [newReview, ...prev]);
-    }
+  const handleAddReview = (review: Omit<Review, 'id' | 'date'>) => {
+    const newReview: Review = {
+      ...review,
+      id: `review-${Date.now()}`,
+      date: new Date().toISOString(),
+    };
+    
+    setReviews(prev => [newReview, ...prev]);
+    
+    // Update product rating and review count
+    setProducts(prevProducts =>
+      prevProducts.map(product => {
+        if (product.id === review.productId) {
+          const productReviews = reviews.filter(r => r.productId === product.id);
+          const newReviewCount = productReviews.length + 1;
+          const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
+          const newRating = totalRating / newReviewCount;
+          
+          return {
+            ...product,
+            rating: Math.round(newRating * 10) / 10,
+            reviewCount: newReviewCount,
+          };
+        }
+        return product;
+      })
+    );
   };
 
-  // --- Orders ---
-
-  const handleOrderComplete = async () => { // Removed OrderResponse arg as create returns it or we fetch history
-    if (user) {
-      try {
-        // Call checkout API
-        const userId = authService.getUserId();
-        if(userId) {
-            await ordersAPI.create(userId);
-            const history = await ordersAPI.getHistory();
-            setOrders(history);
-            setCartItems([]);
-            // Ideally re-fetch products to get updated stock
-            fetchProducts();
-        }
-      } catch (err) {
-        console.error("Checkout failed", err);
-        alert("Checkout failed. Please try again.");
-      }
-    }
+  const handleOrderComplete = (order: OrderResponse) => {
+    // Add order with "processing" status
+    const newOrder = {
+      ...order,
+      status: 'processing' as const,
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    updateProductStock(cartItems);
+    setCartItems([]);
     setIsCheckout(false);
   };
 
@@ -369,22 +223,83 @@ export default function App() {
     );
   };
 
-  const handleRateProduct = async (productId: string, rating: number, userName: string) => {
-    await handleAddReview({
-        productId,
-        rating,
-        comment: '',
-        userName
-    });
+  const handleRateProduct = (productId: string, rating: number, userName: string) => {
+    // Add review with just rating (no comment)
+    const newReview: Review = {
+      id: `review-${Date.now()}`,
+      productId,
+      userName,
+      rating,
+      comment: '',
+      date: new Date().toISOString(),
+    };
+    
+    setReviews(prev => [newReview, ...prev]);
+    
+    // Update product rating
+    const productReviews = reviews.filter(r => r.productId === productId);
+    const allReviews = [...productReviews, newReview];
+    const newReviewCount = allReviews.length;
+    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+    const newRating = totalRating / newReviewCount;
+    
+    setProducts(prevProducts =>
+      prevProducts.map(product =>
+        product.id === productId
+          ? {
+              ...product,
+              rating: Math.round(newRating * 10) / 10,
+              reviewCount: newReviewCount,
+            }
+          : product
+      )
+    );
   };
 
-  const handleAddCommentToRating = async (productId: string, rating: number, comment: string, userName: string) => {
-     await handleAddReview({
+  const handleAddCommentToRating = (productId: string, rating: number, comment: string, userName: string) => {
+    // Find existing review without comment and update it, or create new one
+    const existingReview = reviews.find(
+      r => r.productId === productId && r.userName === userName && r.comment === ''
+    );
+
+    if (existingReview) {
+      // Update existing review with comment
+      setReviews(prev =>
+        prev.map(r =>
+          r.id === existingReview.id ? { ...r, comment, date: new Date().toISOString() } : r
+        )
+      );
+    } else {
+      // Create new review with comment
+      const newReview: Review = {
+        id: `review-${Date.now()}`,
         productId,
+        userName,
         rating,
         comment,
-        userName
-    });
+        date: new Date().toISOString(),
+      };
+      
+      setReviews(prev => [newReview, ...prev]);
+      
+      // Update product rating and count
+      const productReviews = reviews.filter(r => r.productId === productId);
+      const newReviewCount = productReviews.length + 1;
+      const totalRating = productReviews.reduce((sum, r) => sum + r.rating, 0) + rating;
+      const newRating = totalRating / newReviewCount;
+      
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? {
+                ...product,
+                rating: Math.round(newRating * 10) / 10,
+                reviewCount: newReviewCount,
+              }
+            : product
+        )
+      );
+    }
   };
 
   // Wishlist functions
@@ -419,6 +334,7 @@ export default function App() {
     0
   );
 
+  // Filter and sort products
   let filteredProducts = products.filter(product => {
     const matchesSearch = 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -429,6 +345,7 @@ export default function App() {
     return matchesSearch && matchesCategory;
   });
 
+  // Sort by price
   if (sortBy === 'price-asc') {
     filteredProducts = [...filteredProducts].sort((a, b) => a.price - b.price);
   } else if (sortBy === 'price-desc') {
@@ -442,6 +359,7 @@ export default function App() {
     ...Array.from(new Set(products.map(p => p.category))),
   ];
 
+  // Show login/register modal if not authenticated and not in guest mode
   if (!user && !isGuestMode && !showAuthModal) {
     if (authView === 'login') {
       return (
@@ -463,6 +381,7 @@ export default function App() {
     }
   }
 
+  // Show auth modal if triggered from guest mode
   if (showAuthModal) {
     if (authView === 'login') {
       return (
@@ -484,6 +403,7 @@ export default function App() {
     }
   }
 
+  // Show My Account page (only for logged-in users)
   if (showMyAccount && user) {
     return (
       <MyAccount
@@ -553,7 +473,7 @@ export default function App() {
     );
   }
 
-  if (isCheckout && (user || isGuestMode)) {
+  if (isCheckout && user) {
     return (
       <Checkout
         cartItems={cartItems}
@@ -601,6 +521,7 @@ export default function App() {
       <Hero />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Guest Mode Notice */}
         {isGuestMode && !user && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
             <div>
@@ -631,6 +552,7 @@ export default function App() {
           </div>
         )}
 
+        {/* Category Filters */}
         <div className="mb-6">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {categories.map(category => (
@@ -649,6 +571,7 @@ export default function App() {
           </div>
         </div>
 
+        {/* Sort Filter */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <label htmlFor="sort-select" className="text-gray-700">
@@ -724,7 +647,7 @@ export default function App() {
           isOpen={true}
           onClose={() => setSelectedProductForReviews(null)}
           product={selectedProductForReviews}
-          reviews={reviews}
+          reviews={reviews.filter(r => r.productId === selectedProductForReviews.id)}
           onAddReview={handleAddReview}
           userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
         />

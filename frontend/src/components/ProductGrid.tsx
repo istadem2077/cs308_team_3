@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { Product } from '../services/api';
 import { ShoppingCart, FileText, Package, Star, MessageSquare, Heart } from 'lucide-react';
-=======
-import { Product } from '../App';
-import { ShoppingCart, Package, Star, MessageSquare } from 'lucide-react';
->>>>>>> master
 
 interface ProductGridProps {
   products: Product[];
@@ -73,7 +68,12 @@ export function ProductGrid({
                 alt={product.name}
                 className="w-full h-48 object-cover"
               />
-              {/* Rx Badge Removed */}
+              {product.requiresPrescription && (
+                <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  Rx
+                </div>
+              )}
               {!product.inStock && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <span className="bg-red-500 text-white px-4 py-2 rounded">
@@ -84,11 +84,12 @@ export function ProductGrid({
             </div>
 
             <div className="p-4">
-              <h3 className="mb-1 text-lg font-medium truncate">{product.name}</h3>
+              <h3 className="mb-1">{product.name}</h3>
               <p className="text-gray-600 text-sm mb-2 capitalize">
                 {product.category}
               </p>
               
+              {/* Rating */}
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex items-center gap-0.5">
                   {renderStars(product.rating)}
@@ -99,7 +100,7 @@ export function ProductGrid({
               </div>
 
               <div className="flex items-center justify-between mb-3">
-                <p className="text-blue-600 font-bold">₺{product.price.toFixed(2)}</p>
+                <p className="text-blue-600">₺{product.price.toFixed(2)}</p>
                 <div
                   className={`flex items-center gap-1 text-sm ${
                     product.stockCount <= 5
@@ -110,9 +111,9 @@ export function ProductGrid({
                   <Package className="w-4 h-4" />
                   <span>
                     {product.stockCount <= 5 && product.stockCount > 0
-                      ? `Last ${product.stockCount} left`
+                      ? `Last ${product.stockCount} item${product.stockCount !== 1 ? 's' : ''}`
                       : product.stockCount > 5
-                      ? 'In Stock'
+                      ? 'High number in stock'
                       : 'Out of stock'}
                   </span>
                 </div>
