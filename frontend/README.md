@@ -1,7 +1,7 @@
 
-  # Pharmacy E-commerce Website
+  # Edu Pharmacy E-commerce desing (Community)
 
-  This is a code bundle for Pharmacy E-commerce Website. The original project is available at https://www.figma.com/design/cede3PyNy9rhSAcBsjoCt7/Pharmacy-E-commerce-Website.
+  This is a code bundle for Edu Pharmacy E-commerce desing (Community). The original project is available at https://www.figma.com/design/PuYJa7TzztWoqdvXSJ9rGG/Edu-Pharmacy-E-commerce-desing--Community-.
 
   ## Running the code
 

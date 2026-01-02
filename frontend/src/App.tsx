@@ -1,16 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
+import { Loader2, ChevronDown } from 'lucide-react';
+import { Product, CartItem, Review, OrderResponse, productsAPI } from './services/api';
 import { ProductGrid } from './components/ProductGrid';
 import { Cart } from './components/Cart';
 import { ProductDetail } from './components/ProductDetail';
+import { Auth } from './components/Auth';
 import { Checkout } from './components/Checkout';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
 import { MyAccount } from './components/MyAccount';
+import { ProductManager } from './components/ProductManager';
+import { CustomerChat } from './components/CustomerChat';
+import { Header } from './components/Header';
+import { Hero } from './components/Hero';
 import { LogoutConfirmation } from './components/LogoutConfirmation';
 import { LoginPrompt } from './components/LoginPrompt';
 import { ProductReviews } from './components/ProductReviews';
+<<<<<<< HEAD
+import { Wishlist } from './components/Wishlist';
+import { authService, User } from './services/auth';
+import { mockProducts, mockReviews } from './services/api';
+import './styles/globals.css';
+=======
 import { productsAPI, cartAPI, reviewsAPI, ordersAPI, OrderResponse } from './services/api';
 import { authService, User } from './services/auth';
 import { Loader2, ChevronDown } from 'lucide-react';
@@ -23,7 +32,6 @@ export interface Product {
   image: string;
   description: string;
   inStock: boolean;
-  // Removed requiresPrescription
   stockCount: number;
   popularity: number;
   rating: number;
@@ -46,6 +54,7 @@ export interface Review {
 export interface CartItem extends Product {
   quantity: number;
 }
+>>>>>>> master
 
 type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';
 
@@ -59,10 +68,12 @@ export default function App() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -72,6 +83,7 @@ export default function App() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [showProductManager, setShowProductManager] = useState(false);
 
   // 1. Initial Auth Check
   useEffect(() => {
@@ -89,6 +101,7 @@ export default function App() {
       setProducts(data);
       setLoading(false);
     } catch (err) {
+      console.error("Fetch products error:", err);
       setError('Failed to fetch products');
       setLoading(false);
     }
@@ -115,12 +128,10 @@ export default function App() {
         } catch (err) {
           console.error("Failed to sync user data", err);
         }
-      } else if (isGuestMode) {
-        // Keep local cart items if guest
-      }
+      } 
     };
     syncUserData();
-  }, [user, isGuestMode]);
+  }, [user]);
 
   // 4. Fetch Reviews when a product is selected
   useEffect(() => {
@@ -188,7 +199,7 @@ export default function App() {
   // --- Cart Actions ---
 
   const addToCart = async (product: Product) => {
-    // 1. Optimistic Update
+    // 1. Optimistic Update for UI responsiveness
     const prevItems = [...cartItems];
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -213,6 +224,7 @@ export default function App() {
     if (user) {
       try {
         await cartAPI.addToCart(product.id, 1);
+        // Reload to ensure consistency with server calculation
         const updatedCart = await cartAPI.load();
         setCartItems(updatedCart);
       } catch (err) {
@@ -230,7 +242,6 @@ export default function App() {
     const oldQty = item.quantity;
     const diff = quantity - oldQty;
 
-    // 1. Optimistic Update
     if (quantity === 0) {
       setCartItems(prev => prev.filter(item => item.id !== id));
     } else {
@@ -239,13 +250,19 @@ export default function App() {
       );
     }
 
-    // 2. Server Sync
     if (user && diff !== 0) {
       try {
         if (diff > 0) {
            await cartAPI.addToCart(id, diff);
         } else {
-           await cartAPI.removeFromCart(id); 
+           // For removal, we might loop or backend needs a 'reduce quantity' endpoint
+           // Since backend 'remove' usually removes the item entirely or reduces by 1,
+           // we assume standard behavior here or loop for 'diff' times if API requires
+           // Assuming addToCart with negative might not work, so we use logic:
+           // If backend remove API only removes 1 at a time:
+           for(let k=0; k < Math.abs(diff); k++) {
+                await cartAPI.removeFromCart(id); 
+           }
         }
         const updatedCart = await cartAPI.load();
         setCartItems(updatedCart);
@@ -258,12 +275,16 @@ export default function App() {
   };
 
   const removeFromCart = async (id: string) => {
-    // 1. Optimistic
     setCartItems(prev => prev.filter(item => item.id !== id));
 
-    // 2. Server Sync
     if (user) {
       try {
+        // We might need to call remove multiple times or clear logic 
+        // if backend /cart/remove only decrements. 
+        // Assuming here we want to fully remove line item:
+        // Ideally backend should have 'delete item' endpoint. 
+        // If not, we iterate or rely on cartAPI implementation.
+        // For now, let's call remove once (or check backend implementation).
         await cartAPI.removeFromCart(id); 
         const updatedCart = await cartAPI.load();
         setCartItems(updatedCart);
@@ -308,7 +329,6 @@ export default function App() {
         alert("Failed to post review");
       }
     } else {
-      // Guest mode local update
       const newReview: Review = {
         ...review,
         id: `review-${Date.now()}`,
@@ -320,15 +340,22 @@ export default function App() {
 
   // --- Orders ---
 
-  const handleOrderComplete = async (order: OrderResponse) => {
+  const handleOrderComplete = async () => { // Removed OrderResponse arg as create returns it or we fetch history
     if (user) {
       try {
-        const history = await ordersAPI.getHistory();
-        setOrders(history);
-        setCartItems([]);
-        updateProductStock(cartItems);
+        // Call checkout API
+        const userId = authService.getUserId();
+        if(userId) {
+            await ordersAPI.create(userId);
+            const history = await ordersAPI.getHistory();
+            setOrders(history);
+            setCartItems([]);
+            // Ideally re-fetch products to get updated stock
+            fetchProducts();
+        }
       } catch (err) {
-        console.error("Failed to refresh orders", err);
+        console.error("Checkout failed", err);
+        alert("Checkout failed. Please try again.");
       }
     }
     setIsCheckout(false);
@@ -358,6 +385,32 @@ export default function App() {
         comment,
         userName
     });
+  };
+
+  // Wishlist functions
+  const handleAddToWishlist = (product: Product) => {
+    // Require login for wishlist
+    if (!user) {
+      alert('Please log in to add items to your wishlist');
+      setAuthView('login');
+      setShowAuthModal(true);
+      return;
+    }
+
+    setWishlistItems(prev => {
+      const exists = prev.find(item => item.id === product.id);
+      if (exists) {
+        // Remove from wishlist
+        return prev.filter(item => item.id !== product.id);
+      } else {
+        // Add to wishlist
+        return [...prev, product];
+      }
+    });
+  };
+
+  const handleRemoveFromWishlist = (productId: string) => {
+    setWishlistItems(prev => prev.filter(item => item.id !== productId));
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -392,15 +445,16 @@ export default function App() {
   if (!user && !isGuestMode && !showAuthModal) {
     if (authView === 'login') {
       return (
-        <Login
+        <Auth
           onLoginSuccess={handleLoginSuccess}
           onSwitchToRegister={() => setAuthView('register')}
           onSkip={handleSkipLogin}
+          onProductManager={() => setShowProductManager(true)}
         />
       );
     } else {
       return (
-        <Register
+        <Auth
           onRegisterSuccess={handleLoginSuccess}
           onSwitchToLogin={() => setAuthView('login')}
           onSkip={handleSkipLogin}
@@ -412,15 +466,16 @@ export default function App() {
   if (showAuthModal) {
     if (authView === 'login') {
       return (
-        <Login
+        <Auth
           onLoginSuccess={handleLoginSuccess}
           onSwitchToRegister={() => setAuthView('register')}
           onSkip={() => setShowAuthModal(false)}
+          onProductManager={() => setShowProductManager(true)}
         />
       );
     } else {
       return (
-        <Register
+        <Auth
           onRegisterSuccess={handleLoginSuccess}
           onSwitchToLogin={() => setAuthView('login')}
           onSkip={() => setShowAuthModal(false)}
@@ -440,6 +495,33 @@ export default function App() {
         onUpdateOrderStatus={handleUpdateOrderStatus}
         onRateProduct={handleRateProduct}
         onAddComment={handleAddCommentToRating}
+      />
+    );
+  }
+
+  // Show Product Manager
+  if (showProductManager) {
+    return (
+      <ProductManager
+        products={products}
+        onBack={() => setShowProductManager(false)}
+        onAddProduct={(product) => {
+          const newProduct: Product = {
+            ...product,
+            id: `prod-${Date.now()}`,
+          };
+          setProducts(prev => [newProduct, ...prev]);
+        }}
+        onUpdateProduct={(id, updatedProduct) => {
+          setProducts(prev =>
+            prev.map(p => (p.id === id ? updatedProduct : p))
+          );
+        }}
+        onDeleteProduct={(id) => {
+          setProducts(prev => prev.filter(p => p.id !== id));
+          // Also remove from cart if present
+          setCartItems(prev => prev.filter(item => item.id !== id));
+        }}
       />
     );
   }
@@ -482,11 +564,33 @@ export default function App() {
     );
   }
 
+  // Show Wishlist page
+  if (showWishlist) {
+    return (
+      <>
+        <Wishlist
+          wishlistItems={wishlistItems}
+          onRemoveFromWishlist={handleRemoveFromWishlist}
+          onAddToCart={addToCart}
+          onBack={() => setShowWishlist(false)}
+        />
+        {/* Customer Support Chat Widget */}
+        <CustomerChat
+          userName={user?.name}
+          userEmail={user?.email}
+          isLoggedIn={!!user}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         cartItemCount={totalItems}
+        wishlistItemCount={wishlistItems.length}
         onCartClick={() => setIsCartOpen(true)}
+        onWishlistClick={() => setShowWishlist(true)}
         onSearchChange={setSearchQuery}
         searchQuery={searchQuery}
         userName={user?.name}
@@ -575,6 +679,8 @@ export default function App() {
           onProductClick={setSelectedProduct}
           onAddToCart={addToCart}
           onCommentsClick={setSelectedProductForReviews}
+          onAddToWishlist={handleAddToWishlist}
+          wishlistItems={wishlistItems}
         />
       </main>
 
@@ -593,6 +699,8 @@ export default function App() {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onAddToCart={addToCart}
+          onAddToWishlist={handleAddToWishlist}
+          isInWishlist={wishlistItems.some(item => item.id === selectedProduct.id)}
         />
       )}
 
@@ -621,6 +729,13 @@ export default function App() {
           userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
         />
       )}
+
+      {/* Customer Support Chat Widget */}
+      <CustomerChat
+        userName={user?.name}
+        userEmail={user?.email}
+        isLoggedIn={!!user}
+      />
     </div>
   );
 }

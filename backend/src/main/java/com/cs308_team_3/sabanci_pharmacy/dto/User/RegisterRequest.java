@@ -8,5 +8,9 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String confirmPassword;
-    private String address;
+
+    private String addressLine;
+    private String city;
+    private String province;
+    private String zipCode;
 }

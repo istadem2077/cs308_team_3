@@ -1,12 +1,28 @@
+<<<<<<< HEAD
+import { X, ShoppingCart, FileText, CheckCircle, Package, Shield, Truck, Heart } from 'lucide-react';
+import { Product } from '../services/api';
+=======
 import { X, ShoppingCart, Package, Star, ShieldCheck, Truck } from 'lucide-react';
 import { Product } from '../App';
+>>>>>>> master
 
 interface ProductDetailProps {
   product: Product;
   onClose: () => void;
   onAddToCart: (product: Product) => void;
+  onAddToWishlist?: (product: Product) => void;
+  isInWishlist?: boolean;
 }
 
+<<<<<<< HEAD
+export function ProductDetail({
+  product,
+  onClose,
+  onAddToCart,
+  onAddToWishlist,
+  isInWishlist,
+}: ProductDetailProps) {
+=======
 export function ProductDetail({ product, onClose, onAddToCart }: ProductDetailProps) {
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }).map((_, i) => (
@@ -21,6 +37,7 @@ export function ProductDetail({ product, onClose, onAddToCart }: ProductDetailPr
     ));
   };
 
+>>>>>>> master
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
@@ -73,6 +90,37 @@ export function ProductDetail({ product, onClose, onAddToCart }: ProductDetailPr
                     Low Stock
                   </span>
                 )}
+<<<<<<< HEAD
+
+                <button
+                  onClick={() => {
+                    onAddToCart(product);
+                    onClose();
+                  }}
+                  disabled={!product.inStock || product.stockCount === 0}
+                  className={`w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                    product.inStock && product.stockCount > 0
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+
+                {onAddToWishlist && (
+                  <button
+                    onClick={() => onAddToWishlist(product)}
+                    className={`w-full py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                      isInWishlist ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-300 text-gray-500 hover:bg-gray-400'
+                    }`}
+                  >
+                    <Heart className="w-5 h-5" />
+                    {isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  </button>
+                )}
+=======
+>>>>>>> master
               </div>
               
               <h2 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h2>

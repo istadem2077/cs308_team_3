@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Pill, Mail, Lock, Loader2 } from 'lucide-react';
+import { Pill, Mail, Lock, Loader2, Settings } from 'lucide-react';
 import { authService, LoginCredentials } from '../services/auth';
 
 interface LoginProps {
   onLoginSuccess: () => void;
   onSwitchToRegister: () => void;
   onSkip: () => void;
+  onProductManager?: () => void;
 }
 
-export function Login({ onLoginSuccess, onSwitchToRegister, onSkip }: LoginProps) {
+export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductManager }: LoginProps) {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -32,7 +33,22 @@ export function Login({ onLoginSuccess, onSwitchToRegister, onSkip }: LoginProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4 relative">
+      {/* Management Access Button - Fixed Position */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onProductManager?.();
+          }}
+          className="flex items-center justify-center gap-2 py-3 px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 shadow-lg"
+        >
+          <Settings className="w-5 h-5" />
+          <span className="whitespace-nowrap">Proceed as Product Manager</span>
+        </button>
+      </div>
+      
+      {/* Main Login Card */}
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">

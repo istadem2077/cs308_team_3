@@ -1,4 +1,4 @@
-import { Review } from '../App';
+import { Review } from '../services/api';
 
 export const mockReviews: Review[] = [
   {

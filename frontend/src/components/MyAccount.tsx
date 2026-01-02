@@ -1,13 +1,34 @@
 import { useState } from 'react';
-import { ArrowLeft, User, Mail, Phone, MapPin, Edit2, Save, X, Package, LogOut } from 'lucide-react';
-import { User as UserType, authService, TURKISH_CITIES } from '../services/auth';
+import {
+  User as UserIcon,
+  Package,
+  MapPin,
+  Heart,
+  LogOut,
+  Edit2,
+  Truck,
+  CheckCircle,
+  Clock,
+  ChevronLeft,
+  ArrowLeft,
+  Star,
+  MessageSquare,
+  X,
+  Save,
+  Mail,
+  Phone,
+} from 'lucide-react';
+import type { User } from '../services/auth';
+import { authService } from '../services/auth';
+import { OrderResponse, Product } from '../services/api';
+import { CustomerChat } from './CustomerChat';
 import { Orders } from './Orders';
-import { OrderResponse } from '../services/api';
+import { TURKISH_CITIES } from '../data/cities';
 
 interface MyAccountProps {
-  user: UserType;
+  user: User;
   onBack: () => void;
-  onUserUpdate: (user: UserType) => void;
+  onUserUpdate: (user: User) => void;
   onLogout: () => void;
   orders: OrderResponse[];
   onUpdateOrderStatus: (orderId: string, newStatus: 'processing' | 'in-transit' | 'delivered') => void;
@@ -29,7 +50,7 @@ export function MyAccount({
 }: MyAccountProps) {
   const [activeView, setActiveView] = useState<ActiveView>('profile');
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState<UserType>(user);
+  const [editedUser, setEditedUser] = useState<User>(user);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -131,7 +152,7 @@ export function MyAccount({
             <div className="bg-white rounded-lg shadow-sm p-4 sticky top-4">
               <div className="mb-6">
                 <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <User className="w-8 h-8 text-white" />
+                  <UserIcon className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-center text-gray-900">{user.name}</h3>
                 <p className="text-center text-gray-500 text-sm">{user.email}</p>
@@ -149,7 +170,7 @@ export function MyAccount({
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <User className="w-5 h-5" />
+                  <UserIcon className="w-5 h-5" />
                   <span>My Account</span>
                 </button>
 
@@ -239,7 +260,7 @@ export function MyAccount({
                   {/* Personal Information */}
                   <div>
                     <h3 className="mb-4 flex items-center gap-2 text-gray-700">
-                      <User className="w-5 h-5" />
+                      <UserIcon className="w-5 h-5" />
                       Personal Information
                     </h3>
                     <div className="grid md:grid-cols-2 gap-4">
@@ -485,6 +506,13 @@ export function MyAccount({
           </div>
         </div>
       </div>
+
+      {/* Customer Support Chat Widget */}
+      <CustomerChat
+        userName={user.name}
+        userEmail={user.email}
+        isLoggedIn={true}
+      />
     </div>
   );
 }

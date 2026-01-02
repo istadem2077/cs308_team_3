@@ -1,5 +1,5 @@
-import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
-import { CartItem } from '../App';
+import { X, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
+import { CartItem } from '../services/api';
 
 interface CartProps {
   isOpen: boolean;
@@ -41,7 +41,7 @@ export function Cart({
 
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-            <ShoppingBag className="w-16 h-16 mb-4" />
+            <ShoppingCart className="w-16 h-16 mb-4" />
             <p>Your cart is empty</p>
           </div>
         ) : (
