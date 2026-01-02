@@ -30,4 +30,10 @@ public class ReviewController {
         List<ReviewResponseDto> reviews = reviewService.getReviewsByProduct(productId);
         return ResponseEntity.ok(reviews);
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReviewResponseDto>> getUserReviews(@PathVariable Integer userId) {
+        List<ReviewResponseDto> reviews = reviewService.getReviewsByUser(userId);
+        return ResponseEntity.ok(reviews);
+    }
 }

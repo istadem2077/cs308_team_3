@@ -13,6 +13,7 @@ import com.cs308_team_3.sabanci_pharmacy.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,6 +58,14 @@ public class ReviewService {
     public List<ReviewResponseDto> getReviewsByProduct(Integer productId) {
         Optional<Review> reviews = reviewRepository.findByProductId(productId);
         return reviews.stream().map(this::mapToResponseDto).collect(Collectors.toList());
+    }
+
+    public List<ReviewResponseDto> getReviewsByUser(Integer userId) {
+        Optional<List<Review>> reviews = reviewRepository.findByUserId(userId);
+        return reviews.orElse(Collections.emptyList())
+                .stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
     }
 
     private ReviewResponseDto mapToResponseDto(Review review) {

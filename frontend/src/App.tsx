@@ -652,8 +652,7 @@ const addToCart = (product: Product) => {
           onClose={() => setSelectedProductForReviews(null)}
           product={selectedProductForReviews}
           reviews={reviews.filter(r =>
-              r.productId === selectedProductForReviews.id &&
-              r.status === 'APPROVED'
+              r.productId === selectedProductForReviews.id
           )}
           onAddReview={handleAddReview}
           userName={user?.name || (isGuestMode ? 'Guest User' : undefined)}
