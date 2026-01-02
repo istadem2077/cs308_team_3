@@ -143,6 +143,31 @@ export function PricingDiscount({ onBack, onNavigate }: PricingDiscountProps) {
     setDiscountRate('');
   };
 
+  // Calculate preview discount for a product
+  const getPreviewDiscount = (productId: string, product: Product) => {
+    const discount = parseFloat(discountRate);
+    
+    // If product is selected and discount is valid, show preview
+    if (selectedProducts.has(productId) && !isNaN(discount) && discount > 0 && discount <= 100) {
+      return {
+        discountPercent: discount,
+        newPrice: product.currentPrice * (1 - discount / 100),
+        isPreview: true,
+      };
+    }
+    
+    // Otherwise show saved discount if any
+    if (product.discountPercent > 0) {
+      return {
+        discountPercent: product.discountPercent,
+        newPrice: product.newPrice,
+        isPreview: false,
+      };
+    }
+    
+    return null;
+  };
+
   const handleEditProduct = (productId: string, currentPrice: number) => {
     setEditingProduct(productId);
     setEditPrice(currentPrice.toString());
@@ -328,75 +353,91 @@ export function PricingDiscount({ onBack, onNavigate }: PricingDiscountProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredProducts.map(product => (
-                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.has(product.id)}
-                          onChange={e => handleSelectProduct(product.id, e.target.checked)}
-                          className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {product.name}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-700">
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {editingProduct === product.id ? (
+                  {filteredProducts.map(product => {
+                    const previewDiscount = getPreviewDiscount(product.id, product);
+                    
+                    return (
+                      <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
                           <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={editPrice}
-                            onChange={e => setEditPrice(e.target.value)}
-                            className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                            autoFocus
+                            type="checkbox"
+                            checked={selectedProducts.has(product.id)}
+                            onChange={e => handleSelectProduct(product.id, e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                           />
-                        ) : (
-                          `$${product.currentPrice.toFixed(2)}`
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {product.discountPercent > 0 ? `${product.discountPercent.toFixed(0)}%` : '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {product.discountPercent > 0 ? `$${product.newPrice.toFixed(2)}` : '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        {editingProduct === product.id ? (
-                          <div className="flex items-center gap-2">
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {product.name}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-700">
+                            {product.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {editingProduct === product.id ? (
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={editPrice}
+                              onChange={e => setEditPrice(e.target.value)}
+                              className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                              autoFocus
+                            />
+                          ) : (
+                            `$${product.currentPrice.toFixed(2)}`
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {previewDiscount ? (
+                            <span className={previewDiscount.isPreview ? 'text-orange-600' : 'text-gray-600'}>
+                              {previewDiscount.discountPercent.toFixed(0)}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {previewDiscount ? (
+                            <span className={previewDiscount.isPreview ? 'text-orange-600' : 'text-gray-900'}>
+                              ${previewDiscount.newPrice.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {editingProduct === product.id ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleSaveEdit(product.id)}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Save"
+                              >
+                                <Save className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Cancel"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => handleSaveEdit(product.id)}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Save"
+                              onClick={() => handleEditProduct(product.id, product.currentPrice)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit Price"
                             >
-                              <Save className="w-4 h-4" />
+                              <Edit2 className="w-4 h-4" />
                             </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Cancel"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleEditProduct(product.id, product.currentPrice)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit Price"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
