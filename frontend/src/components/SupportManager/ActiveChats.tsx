@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   MessageSquare,
-  LogOut,
   Search,
   User,
   Send,
@@ -14,10 +13,6 @@ import {
   CheckCircle2,
   Circle,
 } from 'lucide-react';
-
-interface ActiveChatsProps {
-  onBack: () => void;
-}
 
 interface ChatUser {
   id: string;
@@ -37,7 +32,7 @@ interface Message {
   timestamp: string;
 }
 
-export function ActiveChats({ onBack }: ActiveChatsProps) {
+export function ActiveChats() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -144,35 +139,6 @@ export function ActiveChats({ onBack }: ActiveChatsProps) {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-5 border-b border-gray-700">
-          <h2 className="text-lg">Support Agent</h2>
-        </div>
-
-        <nav className="flex-1 p-4">
-          <div className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white mb-2 relative">
-            <MessageSquare className="w-5 h-5" />
-            <span>Active Chats</span>
-            {totalUnread > 0 && (
-              <span className="absolute right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs">
-                {totalUnread}
-              </span>
-            )}
-          </div>
-        </nav>
-
-        <div className="p-4 border-t border-gray-700">
-          <button
-            onClick={onBack}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Exit Dashboard</span>
-          </button>
-        </div>
-      </aside>
-
       {/* Chat List */}
       <div className="w-96 bg-white border-r border-slate-200 flex flex-col shadow-sm">
         <div className="p-6 border-b border-slate-200 bg-gradient-to-b from-white to-slate-50">
