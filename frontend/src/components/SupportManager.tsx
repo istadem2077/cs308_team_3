@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, History, Users, LogOut } from 'lucide-react';
+import { MessageSquare, History, Users, LogOut, Headphones } from 'lucide-react';
 import { ActiveChats } from './SupportManager/ActiveChats';
 import { ChatHistory } from './SupportManager/ChatHistory';
 import { Customers } from './SupportManager/Customers';
@@ -19,24 +19,39 @@ export function SupportManager({ onBack }: SupportManagerProps) {
   return (
     <div className="flex h-screen bg-slate-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-5 border-b border-gray-700">
-          <h2 className="text-lg">Support Agent</h2>
+      <aside className="w-80 bg-slate-900 text-white flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-700/50">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Headphones className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl text-white">Support Manager</h2>
+              <p className="text-sm text-slate-400">Sabanci University</p>
+            </div>
+          </div>
         </div>
 
-        <nav className="flex-1 p-4">
+        {/* Navigation Label */}
+        <div className="px-6 pt-6 pb-3">
+          <p className="text-xs text-slate-500 uppercase tracking-wider">Navigation</p>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="flex-1 px-4">
           <button
             onClick={() => setCurrentPage('active-chats')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 relative transition-colors ${
+            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl mb-2 relative transition-all duration-200 ${
               currentPage === 'active-chats'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'text-slate-300 hover:bg-slate-800/50'
             }`}
           >
             <MessageSquare className="w-5 h-5" />
             <span>Active Chats</span>
             {currentPage !== 'active-chats' && unreadCount > 0 && (
-              <span className="absolute right-3 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs">
+              <span className="absolute right-4 px-2 py-0.5 bg-red-500 rounded-full flex items-center justify-center text-xs min-w-[20px]">
                 {unreadCount}
               </span>
             )}
@@ -44,10 +59,10 @@ export function SupportManager({ onBack }: SupportManagerProps) {
 
           <button
             onClick={() => setCurrentPage('chat-history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl mb-2 transition-all duration-200 ${
               currentPage === 'chat-history'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'text-slate-300 hover:bg-slate-800/50'
             }`}
           >
             <History className="w-5 h-5" />
@@ -56,10 +71,10 @@ export function SupportManager({ onBack }: SupportManagerProps) {
 
           <button
             onClick={() => setCurrentPage('customers')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl mb-2 transition-all duration-200 ${
               currentPage === 'customers'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'text-slate-300 hover:bg-slate-800/50'
             }`}
           >
             <Users className="w-5 h-5" />
@@ -67,10 +82,11 @@ export function SupportManager({ onBack }: SupportManagerProps) {
           </button>
         </nav>
 
-        <div className="p-4 border-t border-gray-700">
+        {/* Exit Button */}
+        <div className="p-4 border-t border-slate-700/50">
           <button
             onClick={onBack}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
+            className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-slate-300 hover:bg-slate-800/50 transition-all duration-200"
           >
             <LogOut className="w-5 h-5" />
             <span>Exit Dashboard</span>
