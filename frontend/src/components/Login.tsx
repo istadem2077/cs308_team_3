@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pill, Mail, Lock, Loader2, Settings, TrendingUp } from 'lucide-react';
+import { Pill, Mail, Lock, Loader2, Settings, TrendingUp, Headphones } from 'lucide-react';
 import { authService, LoginCredentials } from '../services/auth';
 
 interface LoginProps {
@@ -8,9 +8,10 @@ interface LoginProps {
   onSkip: () => void;
   onProductManager?: () => void;
   onSalesManager?: () => void;
+  onSupportManager?: () => void;
 }
 
-export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductManager, onSalesManager }: LoginProps) {
+export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductManager, onSalesManager, onSupportManager }: LoginProps) {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -56,6 +57,16 @@ export function Login({ onLoginSuccess, onSwitchToRegister, onSkip, onProductMan
         >
           <TrendingUp className="w-5 h-5" />
           <span className="whitespace-nowrap">Proceed as Sales Manager</span>
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onSupportManager?.();
+          }}
+          className="flex items-center justify-center gap-2 py-3 px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 shadow-lg"
+        >
+          <Headphones className="w-5 h-5" />
+          <span className="whitespace-nowrap">Proceed as Support Manager</span>
         </button>
       </div>
       

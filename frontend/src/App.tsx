@@ -9,6 +9,7 @@ import { Checkout } from './components/Checkout';
 import { MyAccount } from './components/MyAccount';
 import { ProductManager } from './components/ProductManager';
 import { SalesManager } from './components/SalesManager';
+import { SupportManager } from './components/SupportManager';
 import { CustomerChat } from './components/CustomerChat';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -48,6 +49,7 @@ export default function App() {
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [showProductManager, setShowProductManager] = useState(false);
   const [showSalesManager, setShowSalesManager] = useState(false);
+  const [showSupportManager, setShowSupportManager] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -371,6 +373,7 @@ export default function App() {
           onSkip={handleSkipLogin}
           onProductManager={() => setShowProductManager(true)}
           onSalesManager={() => setShowSalesManager(true)}
+          onSupportManager={() => setShowSupportManager(true)}
         />
       );
     } else {
@@ -394,6 +397,7 @@ export default function App() {
           onSkip={() => setShowAuthModal(false)}
           onProductManager={() => setShowProductManager(true)}
           onSalesManager={() => setShowSalesManager(true)}
+          onSupportManager={() => setShowSupportManager(true)}
         />
       );
     } else {
@@ -455,6 +459,15 @@ export default function App() {
     return (
       <SalesManager
         onBack={() => setShowSalesManager(false)}
+      />
+    );
+  }
+
+  // Show Support Manager
+  if (showSupportManager) {
+    return (
+      <SupportManager
+        onBack={() => setShowSupportManager(false)}
       />
     );
   }

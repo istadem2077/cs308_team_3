@@ -9,6 +9,7 @@ interface AuthProps {
   onSkip?: () => void;
   onProductManager?: () => void;
   onSalesManager?: () => void;
+  onSupportManager?: () => void;
 }
 
 export function Auth({
@@ -19,6 +20,7 @@ export function Auth({
   onSkip,
   onProductManager,
   onSalesManager,
+  onSupportManager,
 }: AuthProps) {
   // If we have onRegisterSuccess, show Register component
   if (onRegisterSuccess) {
@@ -38,6 +40,7 @@ export function Auth({
       onSkip={onSkip || (() => {})}
       onProductManager={onProductManager}
       onSalesManager={onSalesManager}
+      onSupportManager={onSupportManager}
     />
   );
 }
