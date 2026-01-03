@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { MessageSquare, History, LogOut } from 'lucide-react';
+import { MessageSquare, History, Users, LogOut } from 'lucide-react';
 import { ActiveChats } from './SupportManager/ActiveChats';
 import { ChatHistory } from './SupportManager/ChatHistory';
+import { Customers } from './SupportManager/Customers';
 
 interface SupportManagerProps {
   onBack: () => void;
 }
 
-type SupportPage = 'active-chats' | 'chat-history';
+type SupportPage = 'active-chats' | 'chat-history' | 'customers';
 
 export function SupportManager({ onBack }: SupportManagerProps) {
   const [currentPage, setCurrentPage] = useState<SupportPage>('active-chats');
@@ -52,6 +53,18 @@ export function SupportManager({ onBack }: SupportManagerProps) {
             <History className="w-5 h-5" />
             <span>Chat History</span>
           </button>
+
+          <button
+            onClick={() => setCurrentPage('customers')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+              currentPage === 'customers'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-800'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span>Customers</span>
+          </button>
         </nav>
 
         <div className="p-4 border-t border-gray-700">
@@ -69,6 +82,7 @@ export function SupportManager({ onBack }: SupportManagerProps) {
       <div className="flex-1">
         {currentPage === 'active-chats' && <ActiveChats />}
         {currentPage === 'chat-history' && <ChatHistory onBack={onBack} />}
+        {currentPage === 'customers' && <Customers onBack={onBack} />}
       </div>
     </div>
   );
