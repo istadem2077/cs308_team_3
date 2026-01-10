@@ -7,5 +7,9 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order,Integer> {
+    // existing code...
     List<Order> findByUserId(Integer userId);
+
+    // NEW: Get all orders, newest first
+    List<Order> findAllByOrderByCreatedAtDesc();
 }

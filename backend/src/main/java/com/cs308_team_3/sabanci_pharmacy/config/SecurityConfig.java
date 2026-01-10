@@ -55,13 +55,16 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
 
-                        // 4. SALES MANAGER (Placeholder for future sales tasks)
-                        .requestMatchers("/api/orders/**", "/api/sales/**").hasAuthority("SALES_MANAGER")
+                        // 4. Allow BOTH Product Manager and Sales Manager to manage orders
+                        .requestMatchers("/api/orders/**").hasAnyAuthority("PRODUCT_MANAGER", "SALES_MANAGER")
 
-                        // 5. SUPPORT AGENT (Placeholder for future support tasks)
+                        // 5. Keep Sales specific stuff for Sales Manager only
+                        .requestMatchers("/api/sales/**").hasAuthority("SALES_MANAGER")
+
+                        // 6. SUPPORT AGENT (Placeholder for future support tasks)
                         .requestMatchers("/api/tickets/**", "/api/support/**").hasAuthority("SUPPORT_AGENT")
 
-                        // 6. CUSTOMER (Authenticated users can do basic things)
+                        // 7. CUSTOMER (Authenticated users can do basic things)
                         .requestMatchers("/api/cart/**", "/api/my-orders/**").hasAnyAuthority("CUSTOMER", "PRODUCT_MANAGER", "SALES_MANAGER", "SUPPORT_AGENT")
 
                         // Block everything else
