@@ -41,6 +41,7 @@ public class AddressService {
         address.setCity(addressDto.getCity());
         address.setProvince(addressDto.getProvince());
         address.setZipCode(addressDto.getZipCode());
+        address.setPhone(addressDto.getPhone());
         address.setIsDefault(isFirstAddress || Boolean.TRUE.equals(addressDto.getIsDefault()));
 
         // If setting as default, unset others

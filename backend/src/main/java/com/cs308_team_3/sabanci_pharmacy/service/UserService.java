@@ -51,6 +51,9 @@ public class UserService {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
+        user.setPhone_number(request.getPhone());
+        user.setGender(request.getGender());
+        user.setAge(request.getAge());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         user.setRole("USER"); // Force new registrations to be normal users
@@ -65,6 +68,7 @@ public class UserService {
             address.setCity(request.getCity());
             address.setProvince(request.getProvince());
             address.setZipCode(request.getZipCode());
+            address.setPhone(request.getPhone());
             address.setIsDefault(true); // First address is always default
 
             addressRepository.save(address);

@@ -20,6 +20,8 @@ configurations {
 	}
 }
 
+
+
 repositories {
 	mavenCentral()
 }
@@ -51,3 +53,21 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+//test {
+//    useJUnitPlatform()
+//}
+//
+//
+//tasks.register('e2eTest', Test){
+//    description = 'Runs E2E integration tests.'
+//    group = 'verification'
+//
+//    useJUnitPlatform {
+//        includeTags 'e2e'
+//    }
+//
+//    testLogging {
+//        events "passed", "skipped", "failed"
+//    }
+//}
