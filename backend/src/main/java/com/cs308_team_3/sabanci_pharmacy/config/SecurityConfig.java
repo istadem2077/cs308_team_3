@@ -35,14 +35,32 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/login", "/api/user/register", "/api/products/**", "/api/products").permitAll()
+                        // 1. PUBLIC Endpoints (Everyone can access)
+                        .requestMatchers(
+                                "/api/user/login",
+                                "/api/user/register",
+                                "/error" // <--- CRITICAL FIX for 403 errors
+                        ).permitAll()
 
-                        //PRODUCT_MANAGER ONLY Endpoints (Task 2 & 3)
+                        // 2. PUBLIC VIEWING (Everyone can SEE products, but not change them)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
+
+                        // 3. PRODUCT MANAGER (Can ADD/EDIT products & Approve Reviews)
                         .requestMatchers("/api/reviews/pending", "/api/reviews/*/status").hasAuthority("PRODUCT_MANAGER")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
 
-                        //Protect the pending reviews endpoint
-                        .requestMatchers("/api/reviews/pending").hasAuthority("PRODUCT_MANAGER")
+                        // 4. SALES MANAGER (Placeholder for future sales tasks)
+                        .requestMatchers("/api/orders/**", "/api/sales/**").hasAuthority("SALES_MANAGER")
 
+                        // 5. SUPPORT AGENT (Placeholder for future support tasks)
+                        .requestMatchers("/api/tickets/**", "/api/support/**").hasAuthority("SUPPORT_AGENT")
+
+                        // 6. CUSTOMER (Authenticated users can do basic things)
+                        .requestMatchers("/api/cart/**", "/api/my-orders/**").hasAnyAuthority("CUSTOMER", "PRODUCT_MANAGER", "SALES_MANAGER", "SUPPORT_AGENT")
+
+                        // Block everything else
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
