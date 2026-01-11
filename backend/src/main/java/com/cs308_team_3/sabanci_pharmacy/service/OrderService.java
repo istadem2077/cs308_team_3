@@ -34,6 +34,13 @@ public class OrderService {
         return mapToDto(order);
     }
 
+    public List<OrderResponseDto> getAllDeliveries() {
+        List<Order> orders = orderRepository.findAllByOrderByCreatedAtDesc();
+        return orders.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     // --- Helper Method: Converts Entity -> DTO ---
     private OrderResponseDto mapToDto(Order order) {
         OrderResponseDto dto = new OrderResponseDto();

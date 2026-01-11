@@ -31,9 +31,9 @@ public class User {
 
     private String password;
 
-    // ADD THIS FIELD
+    // user role
     @Column(nullable = false)
-    private String role = "USER"; // Default value
+    private String role = "CUSTOMER"; // Default value
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();

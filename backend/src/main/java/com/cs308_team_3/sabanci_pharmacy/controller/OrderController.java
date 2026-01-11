@@ -25,4 +25,9 @@ public class OrderController {
     public OrderResponseDto getOrderDetails(@PathVariable Integer orderId) {
         return orderService.getOrder(orderId);
     }
+
+    @GetMapping("/all")
+    public List<OrderResponseDto> getAllDeliveries() {
+        return orderService.getAllDeliveries();
+    }
 }
