@@ -4,6 +4,9 @@ import com.cs308_team_3.sabanci_pharmacy.entity.Product;
 import com.cs308_team_3.sabanci_pharmacy.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.util.List;
 
 @RestController
@@ -14,8 +17,14 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @PreAuthorize("hasRole('PRODUCT_MANAGER')")
+    @PostMapping("/add")
+    public ResponseEntity<Product> addProduct(@RequestBody Product product){
+	return ResponseEntity.ok(productService.saveProduct(product));
     }
 
     @GetMapping("/{id}")
@@ -23,12 +32,13 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return productService.saveProduct(product);
-    }
+    //@PostMapping
+    //public Product createProduct(@RequestBody Product product) {
+    //    return productService.saveProduct(product);
+    //}
 
-    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PRODUCT_MANAGER')")
+    @DeleteMapping("/remove/{id}")
     public void deleteProduct(@PathVariable Integer id) {
         productService.deleteProduct(id);
     }

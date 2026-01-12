@@ -89,7 +89,7 @@ public class ReviewService {
     }
 
     public List<ReviewResponseDto> getPendingReviews() {
-        List<Review> reviews = reviewRepository.findByStatus("PENDING");
+        Optional<Review> reviews = reviewRepository.findByStatus("PENDING");
         return reviews.stream().map(this::mapToResponseDto).collect(Collectors.toList());
     }
 

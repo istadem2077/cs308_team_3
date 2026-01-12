@@ -42,7 +42,7 @@ public class ReviewController {
     public ResponseEntity<List<ReviewResponseDto>> getUserReviews(@PathVariable Integer userId) {
         List<ReviewResponseDto> reviews = reviewService.getReviewsByUser(userId);
         return ResponseEntity.ok(reviews);
-      
+    }
     // PUT /api/reviews/{reviewId}/status?status=APPROVED
     @PutMapping("/{reviewId}/status")
     public ResponseEntity<String> updateReviewStatus(@PathVariable Integer reviewId, @RequestParam String status) {

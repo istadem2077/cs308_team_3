@@ -11,6 +11,7 @@ dist/
 tmp/
 app/**/*.js
 app/**/*.js.map
+backend/src/main/resources/application.properties
 
 # dependencies
 node_modules/

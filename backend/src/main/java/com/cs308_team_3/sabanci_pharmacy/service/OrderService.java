@@ -27,6 +27,24 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    public OrderResponseDto updateOrderStatus(Integer orderId, String newStatus) {
+	Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+
+	// basic validation to ensure consistent status naming per PDF [cite: 11]
+	String formattedStatus = newStatus.toUpperCase();
+	List<String> validStatuses = List.of("PENDING", "PROCESSING", "IN-TRANSIT", "DELIVERED", "CANCELLED");
+
+	if (!validStatuses.contains(formattedStatus)) {
+	    throw new RuntimeException("Invalid status. Valid statuses are: " + validStatuses);
+	}
+
+	order.setStatus(formattedStatus);
+	Order savedOrder = orderRepository.save(order);
+    
+	return mapToDto(savedOrder);
+    }
+
     // 2. Get Single Order Detail
     public OrderResponseDto getOrder(Integer orderId) {
         Order order = orderRepository.findById(orderId)
