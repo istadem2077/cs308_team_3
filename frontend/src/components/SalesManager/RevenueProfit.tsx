@@ -35,26 +35,36 @@ export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
   const [startDate, setStartDate] = useState('2024-01-01');
   const [endDate, setEndDate] = useState('2024-12-31');
 
-  // Monthly data for charts
-  const monthlyData = [
-    { month: 'Jan', revenue: 13000, cost: 6500, profit: 6500 },
-    { month: 'Feb', revenue: 15000, cost: 7500, profit: 7500 },
-    { month: 'Mar', revenue: 14000, cost: 7000, profit: 7000 },
-    { month: 'Apr', revenue: 18000, cost: 9000, profit: 9000 },
-    { month: 'May', revenue: 16000, cost: 8000, profit: 8000 },
-    { month: 'Jun', revenue: 19000, cost: 9500, profit: 9500 },
-    { month: 'Jul', revenue: 22000, cost: 11000, profit: 11000 },
-    { month: 'Aug', revenue: 21000, cost: 10500, profit: 10500 },
-    { month: 'Sep', revenue: 23000, cost: 11500, profit: 11500 },
-    { month: 'Oct', revenue: 25000, cost: 12500, profit: 12500 },
-    { month: 'Nov', revenue: 27000, cost: 13500, profit: 13500 },
-    { month: 'Dec', revenue: 30000, cost: 15000, profit: 15000 },
+  // Full year monthly data for charts with dates
+  const allMonthlyData = [
+    { month: 'Jan', date: '2024-01-01', revenue: 13000, cost: 6500, profit: 6500, loss: 450 },
+    { month: 'Feb', date: '2024-02-01', revenue: 15000, cost: 7500, profit: 7500, loss: 380 },
+    { month: 'Mar', date: '2024-03-01', revenue: 14000, cost: 7000, profit: 7000, loss: 520 },
+    { month: 'Apr', date: '2024-04-01', revenue: 18000, cost: 9000, profit: 9000, loss: 290 },
+    { month: 'May', date: '2024-05-01', revenue: 16000, cost: 8000, profit: 8000, loss: 610 },
+    { month: 'Jun', date: '2024-06-01', revenue: 19000, cost: 9500, profit: 9500, loss: 340 },
+    { month: 'Jul', date: '2024-07-01', revenue: 22000, cost: 11000, profit: 11000, loss: 420 },
+    { month: 'Aug', date: '2024-08-01', revenue: 21000, cost: 10500, profit: 10500, loss: 550 },
+    { month: 'Sep', date: '2024-09-01', revenue: 23000, cost: 11500, profit: 11500, loss: 380 },
+    { month: 'Oct', date: '2024-10-01', revenue: 25000, cost: 12500, profit: 12500, loss: 470 },
+    { month: 'Nov', date: '2024-11-01', revenue: 27000, cost: 13500, profit: 13500, loss: 320 },
+    { month: 'Dec', date: '2024-12-01', revenue: 30000, cost: 15000, profit: 15000, loss: 590 },
   ];
 
-  // Calculate totals
+  // Filter data based on date range
+  const monthlyData = allMonthlyData.filter(item => {
+    const itemDate = new Date(item.date);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return itemDate >= start && itemDate <= end;
+  });
+
+  // Calculate totals from filtered data
   const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
   const totalCost = monthlyData.reduce((sum, item) => sum + item.cost, 0);
-  const totalProfit = totalRevenue - totalCost;
+  const totalProfit = monthlyData.reduce((sum, item) => sum + item.profit, 0);
+  const totalLoss = monthlyData.reduce((sum, item) => sum + item.loss, 0);
+  const netProfitLoss = totalProfit - totalLoss;
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -220,13 +230,62 @@ export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Net Profit</p>
-                  <p className="text-3xl text-green-600">${totalProfit.toLocaleString()}</p>
+                  <p className="text-3xl text-green-600">${netProfitLoss.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-green-600" />
                 </div>
               </div>
               <p className="text-xs text-gray-500">Revenue - Cost</p>
+            </div>
+          </div>
+
+          {/* Profit/Loss Metrics */}
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            {/* Total Profit */}
+            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl shadow-lg p-6 text-white">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-sm text-green-100 mb-1">Total Profit</p>
+                  <p className="text-3xl">${totalProfit.toLocaleString()}</p>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+              </div>
+              <p className="text-xs text-green-100">Gross profit from sales</p>
+            </div>
+
+            {/* Total Loss */}
+            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl shadow-lg p-6 text-white">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-sm text-red-100 mb-1">Total Loss</p>
+                  <p className="text-3xl">${totalLoss.toLocaleString()}</p>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <TrendingDown className="w-5 h-5" />
+                </div>
+              </div>
+              <p className="text-xs text-red-100">Refunds, returns & damages</p>
+            </div>
+
+            {/* Net Profit/Loss */}
+            <div
+              className={`rounded-2xl shadow-lg p-6 text-white ${
+                netProfitLoss >= 0 ? 'bg-gradient-to-br from-emerald-600 to-emerald-700' : 'bg-gradient-to-br from-rose-600 to-rose-700'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-sm mb-1 opacity-90">Net Profit/Loss</p>
+                  <p className="text-3xl">${netProfitLoss.toLocaleString()}</p>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  {netProfitLoss >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                </div>
+              </div>
+              <p className="text-xs opacity-90">Profit - Loss</p>
             </div>
           </div>
 
@@ -295,6 +354,53 @@ export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Profit vs Loss Chart */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="mb-6">
+              <h3 className="text-gray-900 mb-2">Profit vs Loss Analysis</h3>
+              <p className="text-sm text-gray-500">Comparison of gross profit against operational losses</p>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="profit" fill="#10b981" name="Profit" />
+                <Bar dataKey="loss" fill="#ef4444" name="Loss" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Profit/Loss Breakdown Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-6">
+            <h3 className="text-gray-900 mb-4">Loss Breakdown</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-xl p-4 border border-blue-100">
+                <p className="text-sm text-gray-600 mb-2">Refunds & Returns</p>
+                <p className="text-2xl text-gray-900">${Math.round(totalLoss * 0.6).toLocaleString()}</p>
+                <p className="text-xs text-gray-500 mt-1">~60% of total loss</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-blue-100">
+                <p className="text-sm text-gray-600 mb-2">Damaged Products</p>
+                <p className="text-2xl text-gray-900">${Math.round(totalLoss * 0.25).toLocaleString()}</p>
+                <p className="text-xs text-gray-500 mt-1">~25% of total loss</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-blue-100">
+                <p className="text-sm text-gray-600 mb-2">Other Expenses</p>
+                <p className="text-2xl text-gray-900">${Math.round(totalLoss * 0.15).toLocaleString()}</p>
+                <p className="text-xs text-gray-500 mt-1">~15% of total loss</p>
+              </div>
+            </div>
           </div>
 
           {/* Cost Calculation Note */}

@@ -12,6 +12,8 @@ import {
   ShoppingBag,
   CheckCircle2,
   Circle,
+  UserPlus,
+  UserCheck,
 } from 'lucide-react';
 
 interface ChatUser {
@@ -23,6 +25,9 @@ interface ChatUser {
   unreadCount: number;
   isOnline: boolean;
   priority: 'high' | 'normal' | 'low';
+  isClaimed: boolean;
+  claimedBy?: string;
+  claimedAt?: string;
 }
 
 interface Message {
@@ -36,8 +41,9 @@ export function ActiveChats() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
+  const [chatFilter, setChatFilter] = useState<'unclaimed' | 'claimed'>('unclaimed');
 
-  const [activeChats] = useState<ChatUser[]>([
+  const [activeChats, setActiveChats] = useState<ChatUser[]>([
     {
       id: '1',
       name: 'John Doe',
@@ -47,6 +53,7 @@ export function ActiveChats() {
       unreadCount: 2,
       isOnline: true,
       priority: 'high',
+      isClaimed: false,
     },
     {
       id: '2',
@@ -57,6 +64,7 @@ export function ActiveChats() {
       unreadCount: 1,
       isOnline: true,
       priority: 'normal',
+      isClaimed: false,
     },
     {
       id: '3',
@@ -67,6 +75,33 @@ export function ActiveChats() {
       unreadCount: 1,
       isOnline: false,
       priority: 'low',
+      isClaimed: true,
+      claimedBy: 'Support Agent 1',
+      claimedAt: '14:21',
+    },
+    {
+      id: '4',
+      name: 'Ahmed Hassan',
+      status: 'logged-in',
+      message: 'My prescription was not approved',
+      timestamp: '14:15',
+      unreadCount: 3,
+      isOnline: true,
+      priority: 'high',
+      isClaimed: false,
+    },
+    {
+      id: '5',
+      name: 'Sarah Wilson',
+      status: 'logged-in',
+      message: 'Can I change my delivery address?',
+      timestamp: '14:10',
+      unreadCount: 0,
+      isOnline: true,
+      priority: 'normal',
+      isClaimed: true,
+      claimedBy: 'You',
+      claimedAt: '14:11',
     },
   ]);
 
@@ -77,18 +112,6 @@ export function ActiveChats() {
         sender: 'user',
         text: 'I need help with my order',
         timestamp: '14:30',
-      },
-      {
-        id: '2',
-        sender: 'agent',
-        text: 'Hello! I\'d be happy to help you with your order. Can you please provide your order number?',
-        timestamp: '14:31',
-      },
-      {
-        id: '3',
-        sender: 'user',
-        text: 'It\'s ORD-12345',
-        timestamp: '14:32',
       },
     ],
     '2': [
@@ -105,6 +128,34 @@ export function ActiveChats() {
         sender: 'user',
         text: 'What are your delivery options?',
         timestamp: '14:20',
+      },
+      {
+        id: '2',
+        sender: 'agent',
+        text: 'We offer standard delivery (2-3 days) and express delivery (24 hours) across Turkey.',
+        timestamp: '14:21',
+      },
+    ],
+    '4': [
+      {
+        id: '1',
+        sender: 'user',
+        text: 'My prescription was not approved',
+        timestamp: '14:15',
+      },
+    ],
+    '5': [
+      {
+        id: '1',
+        sender: 'user',
+        text: 'Can I change my delivery address?',
+        timestamp: '14:10',
+      },
+      {
+        id: '2',
+        sender: 'agent',
+        text: 'Yes, you can change your delivery address. What is your order number?',
+        timestamp: '14:11',
       },
     ],
   });
@@ -127,15 +178,53 @@ export function ActiveChats() {
     setMessageInput('');
   };
 
-  const filteredChats = activeChats.filter(chat =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chat.message.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleClaimChat = (chatId: string) => {
+    setActiveChats(prev =>
+      prev.map(chat =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              isClaimed: true,
+              claimedBy: 'You',
+              claimedAt: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+            }
+          : chat
+      )
+    );
+    setChatFilter('claimed');
+    setSelectedChat(chatId);
+  };
+
+  const handleUnclaimChat = (chatId: string) => {
+    setActiveChats(prev =>
+      prev.map(chat =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              isClaimed: false,
+              claimedBy: undefined,
+              claimedAt: undefined,
+            }
+          : chat
+      )
+    );
+  };
+
+  const filteredChats = activeChats.filter(chat => {
+    const matchesSearch =
+      chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      chat.message.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesFilter = chatFilter === 'unclaimed' ? !chat.isClaimed : chat.isClaimed;
+    
+    return matchesSearch && matchesFilter;
+  });
 
   const selectedChatData = activeChats.find(chat => chat.id === selectedChat);
   const chatMessages = selectedChat ? messages[selectedChat] || [] : [];
 
-  const totalUnread = activeChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
+  const unclaimedCount = activeChats.filter(chat => !chat.isClaimed).length;
+  const claimedCount = activeChats.filter(chat => chat.isClaimed).length;
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -145,13 +234,54 @@ export function ActiveChats() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-slate-900 mb-1">Conversations</h1>
-              <p className="text-sm text-slate-500">{filteredChats.length} active chat{filteredChats.length !== 1 ? 's' : ''}</p>
+              <p className="text-sm text-slate-500">{filteredChats.length} {chatFilter} chat{filteredChats.length !== 1 ? 's' : ''}</p>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-100 rounded-full">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-xs text-green-700">Online</span>
             </div>
           </div>
+
+          {/* Unclaimed / Claimed Tabs */}
+          <div className="flex gap-2 mb-4 p-1 bg-slate-100 rounded-xl">
+            <button
+              onClick={() => setChatFilter('unclaimed')}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                chatFilter === 'unclaimed'
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Unclaimed</span>
+              {unclaimedCount > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  chatFilter === 'unclaimed' ? 'bg-purple-100 text-purple-600' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {unclaimedCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setChatFilter('claimed')}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                chatFilter === 'claimed'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>Claimed</span>
+              {claimedCount > 0 && (
+                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  chatFilter === 'claimed' ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {claimedCount}
+                </span>
+              )}
+            </button>
+          </div>
+
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -165,61 +295,76 @@ export function ActiveChats() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
-          {filteredChats.map(chat => (
-            <button
-              key={chat.id}
-              onClick={() => setSelectedChat(chat.id)}
-              className={`w-full p-4 rounded-xl mb-2 text-left transition-all duration-200 ${
-                selectedChat === chat.id
-                  ? 'bg-gradient-to-r from-blue-50 to-blue-50/50 border-2 border-blue-200 shadow-sm'
-                  : 'hover:bg-slate-50 border-2 border-transparent hover:border-slate-100'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white shadow-sm">
-                    <span className="text-lg">{chat.name.charAt(0)}</span>
+          {filteredChats.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-8 h-8 text-slate-400" />
+              </div>
+              <p className="text-sm text-slate-500">No {chatFilter} chats</p>
+            </div>
+          ) : (
+            filteredChats.map(chat => (
+              <button
+                key={chat.id}
+                onClick={() => setSelectedChat(chat.id)}
+                className={`w-full p-4 rounded-xl mb-2 text-left transition-all duration-200 ${
+                  selectedChat === chat.id
+                    ? 'bg-gradient-to-r from-blue-50 to-blue-50/50 border-2 border-blue-200 shadow-sm'
+                    : 'hover:bg-slate-50 border-2 border-transparent hover:border-slate-100'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white shadow-sm">
+                      <span className="text-lg">{chat.name.charAt(0)}</span>
+                    </div>
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white shadow-sm ${
+                        chat.isOnline ? 'bg-green-500' : 'bg-slate-400'
+                      }`}
+                    ></div>
                   </div>
-                  <div
-                    className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white shadow-sm ${
-                      chat.isOnline ? 'bg-green-500' : 'bg-slate-400'
-                    }`}
-                  ></div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-sm text-slate-900 truncate">{chat.name}</h3>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                      <span className="text-xs text-slate-500">{chat.timestamp}</span>
-                      {chat.unreadCount > 0 && (
-                        <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs shadow-sm">
-                          {chat.unreadCount}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h3 className="text-sm text-slate-900 truncate">{chat.name}</h3>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        <span className="text-xs text-slate-500">{chat.timestamp}</span>
+                        {chat.unreadCount > 0 && (
+                          <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs shadow-sm">
+                            {chat.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs ${
+                          chat.status === 'logged-in'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}
+                      >
+                        {chat.status === 'logged-in' ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                        {chat.status === 'logged-in' ? 'Registered' : 'Guest'}
+                      </span>
+                      {chat.priority === 'high' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded-md text-xs">
+                          High Priority
+                        </span>
+                      )}
+                      {chat.isClaimed && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-100 rounded-md text-xs">
+                          <UserCheck className="w-3 h-3" />
+                          {chat.claimedBy === 'You' ? 'By You' : chat.claimedBy}
                         </span>
                       )}
                     </div>
+                    <p className="text-sm text-slate-600 truncate">{chat.message}</p>
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs ${
-                        chat.status === 'logged-in'
-                          ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                          : 'bg-slate-100 text-slate-600 border border-slate-200'
-                      }`}
-                    >
-                      {chat.status === 'logged-in' ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                      {chat.status === 'logged-in' ? 'Registered' : 'Guest'}
-                    </span>
-                    {chat.priority === 'high' && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded-md text-xs">
-                        High Priority
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-600 truncate">{chat.message}</p>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          )}
         </div>
       </div>
 
@@ -256,10 +401,33 @@ export function ActiveChats() {
                       <span className={`text-xs ${selectedChatData?.isOnline ? 'text-green-600' : 'text-slate-500'}`}>
                         {selectedChatData?.isOnline ? 'Active now' : 'Offline'}
                       </span>
+                      {selectedChatData?.isClaimed && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 border border-green-100 rounded-md text-xs">
+                          <UserCheck className="w-3 h-3" />
+                          Claimed by {selectedChatData.claimedBy}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {selectedChatData && !selectedChatData.isClaimed && (
+                    <button
+                      onClick={() => handleClaimChat(selectedChat)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all shadow-sm text-sm flex items-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Claim Chat
+                    </button>
+                  )}
+                  {selectedChatData && selectedChatData.isClaimed && selectedChatData.claimedBy === 'You' && (
+                    <button
+                      onClick={() => handleUnclaimChat(selectedChat)}
+                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-all text-sm flex items-center gap-2"
+                    >
+                      Unclaim Chat
+                    </button>
+                  )}
                   <button className="p-2.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-600 hover:text-slate-900">
                     <Phone className="w-5 h-5" />
                   </button>
@@ -308,34 +476,51 @@ export function ActiveChats() {
             {/* Message Input */}
             <div className="bg-white border-t border-slate-200 p-6 shadow-lg">
               <div className="max-w-4xl mx-auto">
-                <div className="flex items-end gap-3">
-                  <button className="p-3 hover:bg-slate-100 rounded-xl transition-colors text-slate-600 hover:text-slate-900 mb-1">
-                    <Paperclip className="w-5 h-5" />
-                  </button>
-                  <div className="flex-1 relative">
-                    <textarea
-                      placeholder="Type your message..."
-                      value={messageInput}
-                      onChange={e => setMessageInput(e.target.value)}
-                      onKeyPress={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      rows={1}
-                      className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-slate-50 focus:bg-white text-sm transition-all"
-                    />
+                {selectedChatData && !selectedChatData.isClaimed ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+                    <p className="text-sm text-yellow-800 mb-3">
+                      You need to claim this chat before you can send messages.
+                    </p>
+                    <button
+                      onClick={() => handleClaimChat(selectedChat)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all shadow-sm text-sm inline-flex items-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Claim Chat to Reply
+                    </button>
                   </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!messageInput.trim()}
-                    className="p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-1"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 mt-2 ml-14">Press Enter to send, Shift + Enter for new line</p>
+                ) : (
+                  <>
+                    <div className="flex items-end gap-3">
+                      <button className="p-3 hover:bg-slate-100 rounded-xl transition-colors text-slate-600 hover:text-slate-900 mb-1">
+                        <Paperclip className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1 relative">
+                        <textarea
+                          placeholder="Type your message..."
+                          value={messageInput}
+                          onChange={e => setMessageInput(e.target.value)}
+                          onKeyPress={e => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          rows={1}
+                          className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-slate-50 focus:bg-white text-sm transition-all"
+                        />
+                      </div>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!messageInput.trim()}
+                        className="p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-1"
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 ml-14">Press Enter to send, Shift + Enter for new line</p>
+                  </>
+                )}
               </div>
             </div>
           </>
@@ -370,6 +555,19 @@ export function ActiveChats() {
                 <div className={`w-2 h-2 rounded-full ${selectedChatData.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}></div>
                 <span className="text-xs">{selectedChatData.isOnline ? 'Online' : 'Offline'}</span>
               </div>
+
+              {/* Claim Status */}
+              {selectedChatData.isClaimed && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-xl">
+                  <div className="flex items-center justify-center gap-2 text-green-700 mb-1">
+                    <UserCheck className="w-4 h-4" />
+                    <p className="text-sm">Claimed Chat</p>
+                  </div>
+                  <p className="text-xs text-green-600">
+                    By {selectedChatData.claimedBy} at {selectedChatData.claimedAt}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-5 mt-6">

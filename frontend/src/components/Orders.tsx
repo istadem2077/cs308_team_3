@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Clock, CheckCircle, Truck, Calendar, Star, XCircle, RotateCcw, AlertCircle, Mail, Info } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, Calendar, Star, XCircle, RotateCcw, AlertCircle, Mail, Info, Download } from 'lucide-react';
 import { OrderResponse } from '../services/api';
 import { authService } from '../services/auth';
 
@@ -230,6 +230,59 @@ export function Orders({ orders, onUpdateOrderStatus, onRateProduct, onAddCommen
 
   const canRequestRefund = (order: OrderResponse): boolean => {
     return order.status === 'delivered' && isWithin30Days(order.date);
+  };
+
+  const handleDownloadInvoice = (order: OrderResponse) => {
+    // Generate invoice content
+    const invoiceContent = `
+SABANCI UNIVERSITY PHARMACY
+E-COMMERCE PLATFORM
+======================================
+INVOICE
+
+Order ID: ${order.orderId}
+Date: ${new Date(order.date).toLocaleDateString('en-GB')}
+Customer: ${user?.name || 'Guest'}
+Email: ${user?.email || 'N/A'}
+
+--------------------------------------
+ITEMS
+--------------------------------------
+${order.items.map(item => {
+  const originalPrice = item.originalPrice || item.price;
+  const hasDiscount = originalPrice > item.price;
+  return `
+${item.productName}
+Quantity: ${item.quantity}
+${hasDiscount ? `Original Price: ₺${(originalPrice * item.quantity).toFixed(2)}\n` : ''}${hasDiscount ? `Discount: -₺${((originalPrice - item.price) * item.quantity).toFixed(2)}\n` : ''}Price: ₺${(item.price * item.quantity).toFixed(2)}
+`;
+}).join('--------------------------------------')}
+--------------------------------------
+
+SUBTOTAL: ₺${order.totalPrice.toFixed(2)}
+SHIPPING: Free
+--------------------------------------
+TOTAL: ₺${order.totalPrice.toFixed(2)}
+
+--------------------------------------
+Delivery: ${order.estimatedDelivery}
+Status: ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+
+Thank you for your purchase!
+Sabanci University Pharmacy
+======================================
+    `;
+
+    // Create and download PDF-like text file
+    const blob = new Blob([invoiceContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Invoice-${order.orderId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -479,6 +532,17 @@ export function Orders({ orders, onUpdateOrderStatus, onRateProduct, onAddCommen
                   <p className="text-gray-900">{order.estimatedDelivery}</p>
                 </div>
                 <div className="flex justify-end items-center gap-2">
+                  {/* Download Invoice button - only for completed orders */}
+                  {order.status === 'delivered' && (
+                    <button
+                      onClick={() => handleDownloadInvoice(order)}
+                      className="text-blue-600 hover:text-blue-700 text-sm px-3 py-1 border border-blue-600 rounded-lg hover:bg-blue-50 flex items-center gap-1"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download Invoice
+                    </button>
+                  )}
+                  
                   {/* Cancel button - only for processing orders */}
                   {order.status === 'processing' && (
                     <>

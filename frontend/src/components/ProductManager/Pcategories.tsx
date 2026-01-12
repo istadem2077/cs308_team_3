@@ -42,6 +42,8 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [editCategory, setEditCategory] = useState({ name: '', description: '' });
+  const [customCategories, setCustomCategories] = useState<Category[]>([]);
 
   // Calculate categories from products
   const categoryMap = new Map<string, { count: number; value: number }>();
@@ -53,7 +55,7 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
     });
   });
 
-  const categories: Category[] = Array.from(categoryMap.entries()).map(([name, data], index) => ({
+  const productCategories: Category[] = Array.from(categoryMap.entries()).map(([name, data], index) => ({
     id: `cat-${index}`,
     name: name.charAt(0).toUpperCase() + name.slice(1),
     description: `All ${name} products`,
@@ -62,26 +64,75 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
     createdDate: '2024-01-15',
   }));
 
+  // Merge product categories with custom categories
+  const categories = [...productCategories, ...customCategories];
+
   const filteredCategories = categories.filter(cat =>
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddCategory = () => {
-    // In real app, this would add to backend
+    if (!newCategory.name.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    const newCat: Category = {
+      id: `custom-${Date.now()}`,
+      name: newCategory.name.trim(),
+      description: newCategory.description.trim() || `Custom ${newCategory.name} category`,
+      productCount: 0,
+      totalValue: 0,
+      createdDate: new Date().toISOString().split('T')[0],
+    };
+
+    setCustomCategories(prev => [...prev, newCat]);
     setShowAddModal(false);
     setNewCategory({ name: '', description: '' });
   };
 
   const handleEditCategory = () => {
-    // In real app, this would update backend
-    setShowEditModal(false);
-    setSelectedCategory(null);
+    if (!selectedCategory || !editCategory.name.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    // Only allow editing custom categories
+    if (selectedCategory.id.startsWith('custom-')) {
+      setCustomCategories(prev =>
+        prev.map(cat =>
+          cat.id === selectedCategory.id
+            ? {
+                ...cat,
+                name: editCategory.name.trim(),
+                description: editCategory.description.trim() || `Custom ${editCategory.name} category`,
+              }
+            : cat
+        )
+      );
+      setShowEditModal(false);
+      setSelectedCategory(null);
+      setEditCategory({ name: '', description: '' });
+    } else {
+      alert('Product-based categories cannot be edited. Only custom categories can be modified.');
+      setShowEditModal(false);
+      setSelectedCategory(null);
+    }
   };
 
   const handleDeleteCategory = () => {
-    // In real app, this would delete from backend
-    setShowDeleteModal(false);
-    setSelectedCategory(null);
+    if (!selectedCategory) return;
+
+    // Only allow deleting custom categories
+    if (selectedCategory.id.startsWith('custom-')) {
+      setCustomCategories(prev => prev.filter(cat => cat.id !== selectedCategory.id));
+      setShowDeleteModal(false);
+      setSelectedCategory(null);
+    } else {
+      alert('Product-based categories cannot be deleted. Only custom categories can be removed.');
+      setShowDeleteModal(false);
+      setSelectedCategory(null);
+    }
   };
 
   const totalCategories = categories.length;
@@ -263,6 +314,7 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
                         <button
                           onClick={() => {
                             setSelectedCategory(category);
+                            setEditCategory({ name: category.name, description: category.description });
                             setShowEditModal(true);
                           }}
                           className="w-8 h-8 bg-gray-100 hover:bg-blue-100 rounded-lg flex items-center justify-center transition-colors duration-200"
@@ -389,7 +441,8 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
                 <label className="block text-sm text-gray-700 mb-2">Category Name</label>
                 <input
                   type="text"
-                  defaultValue={selectedCategory.name}
+                  value={editCategory.name}
+                  onChange={e => setEditCategory({ ...editCategory, name: e.target.value })}
                   placeholder="Category name"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -398,7 +451,8 @@ export function Pcategories({ products, onBack, onNavigate }: PcategoriesProps) 
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Description</label>
                 <textarea
-                  defaultValue={selectedCategory.description}
+                  value={editCategory.description}
+                  onChange={e => setEditCategory({ ...editCategory, description: e.target.value })}
                   placeholder="Brief description"
                   rows={3}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
