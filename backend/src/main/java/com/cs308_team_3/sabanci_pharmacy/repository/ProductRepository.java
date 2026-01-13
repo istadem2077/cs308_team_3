@@ -1,12 +1,46 @@
-package com.cs308_team_3.sabanci_pharmacy.repository;
+package com.cs308_team_3.sabanci_pharmacy.controller;
 
 import com.cs308_team_3.sabanci_pharmacy.entity.Product;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import com.cs308_team_3.sabanci_pharmacy.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.util.List;
 
-@Repository
-public interface ProductRepository extends JpaRepository<Product, Integer> {
-    List<Product> findByCategoryId(Integer categoryId);
-    List<Product> findByNameContaining(String name);
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+
+    @Autowired
+    private ProductService productService;
+
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+    
+    // NEW: Search Endpoint
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String query) {
+        return ResponseEntity.ok(productService.searchProducts(query));
+    }
+
+    @PreAuthorize("hasRole('PRODUCT_MANAGER')")
+    @PostMapping("/add")
+    public ResponseEntity<Product> addProduct(@RequestBody Product product){
+	return ResponseEntity.ok(productService.saveProduct(product));
+    }
+
+    @GetMapping("/{id}")
+    public Product getProductById(@PathVariable Integer id) {
+        return productService.getProductById(id);
+    }
+
+    @PreAuthorize("hasRole('PRODUCT_MANAGER')")
+    @DeleteMapping("/remove/{id}")
+    public void deleteProduct(@PathVariable Integer id) {
+        productService.deleteProduct(id);
+    }
 }

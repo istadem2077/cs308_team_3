@@ -28,4 +28,9 @@ public class ProductService {
     public void deleteProduct(Integer id) {
         productRepository.deleteById(id);
     }
+
+    // NEW: Search products
+    public List<Product> searchProducts(String query) {
+        return productRepository.findByNameContaining(query);
+    }
 }
