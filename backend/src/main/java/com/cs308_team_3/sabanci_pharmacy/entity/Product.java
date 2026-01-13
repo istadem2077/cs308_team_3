@@ -27,6 +27,12 @@ public class Product {
     private BigDecimal price;
     private Integer total_orders;
 
+    @Column
+    private BigDecimal cost;
+
+    @Column(name = "discount_rate")
+    private BigDecimal discountRate = BigDecimal.ZERO;
+    
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;

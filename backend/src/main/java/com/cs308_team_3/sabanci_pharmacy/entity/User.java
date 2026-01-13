@@ -26,11 +26,14 @@ public class User {
     @Column
     private BigInteger phone_number;
 
+    @Column
+    private BigInteger tax_id;
+    
     @Column(nullable = false, unique = true)
     private String email;
 
     private String password;
-
+    
     // user role
     @Column(nullable = false)
     private String role = "CUSTOMER"; // Default value
