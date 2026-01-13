@@ -40,77 +40,97 @@ export interface AuthResponse {
   token: string;
 }
 
-const API_BASE_URL = 'https://your-api-endpoint.com/api';
+// Base URL: берём из .env, как и в services/api.ts
+const viteEnv = (import.meta as any).env as {
+  VITE_API_BASE_URL?: string;
+};
+const API_BASE_URL = viteEnv.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// Mock implementation - Replace with real API calls
+// Реальная имплементация, использующая backend /api/user/login и /api/user/register
 export const authService = {
   // Login user
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // Real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(credentials),
-    // });
-    // if (!response.ok) throw new Error('Login failed');
-    // return await response.json();
+    const response = await fetch(`${API_BASE_URL}/user/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    if (!response.ok) {
+      throw new Error('Login failed');
+    }
 
-    // Mock implementation
-    console.log('Login attempt:', credentials.email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: '1',
-      name: 'Test User',
+    // Backend AuthResponse: { token, name, userId, address }
+    const data: { token: string; name: string; userId: number; address: string } =
+      await response.json();
+
+    const user: User = {
+      id: String(data.userId),
+      name: data.name,
       email: credentials.email,
-      age: 22,
-      gender: 'male',
-      phone: '+90 555 123 4567',
+      age: 0,
+      gender: 'other',
+      phone: '',
       address: {
-        city: 'Istanbul',
-        province: 'Tuzla',
-        postcode: '34956',
-        addressLine: 'Sabanci University Campus, A Block, Room 301',
+        city: '',
+        province: '',
+        postcode: '',
+        addressLine: data.address,
       },
     };
 
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-    return { user: mockUser, token };
+    return { user, token: data.token };
   },
 
   // Register new user
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    // Real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data),
-    // });
-    // if (!response.ok) throw new Error('Registration failed');
-    // return await response.json();
-
-    // Mock implementation
-    console.log('Registration attempt:', data.email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockUser: User = {
-      id: Date.now().toString(),
+    const payload = {
       name: data.name,
+      email: data.email,
+      password: data.password,
+      confirmPassword: data.password,
+      gender: data.gender,
+      phone: data.phone,
+      age: data.age,
+      addressLine: data.address.addressLine,
+      city: data.address.city,
+      province: data.address.province,
+      zipCode: data.address.postcode,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/user/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error('Registration failed');
+    }
+
+    const res: { token: string; name: string; userId: number; address: string } =
+      await response.json();
+
+    const user: User = {
+      id: String(res.userId),
+      name: res.name,
       email: data.email,
       age: data.age,
       gender: data.gender,
       phone: data.phone,
-      address: data.address,
+      address: {
+        city: data.address.city,
+        province: data.address.province,
+        postcode: data.address.postcode,
+        addressLine: res.address,
+      },
     };
 
-    const token = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.setItem('authToken', res.token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-    return { user: mockUser, token };
+    return { user, token: res.token };
   },
 
   // Logout user

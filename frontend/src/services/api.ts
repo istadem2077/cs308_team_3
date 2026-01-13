@@ -1,6 +1,23 @@
-// Configuration - Replace these with your actual API endpoints
-const API_BASE_URL = 'https://your-api-endpoint.com/api';
-const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+// Configuration - values берём из .env (Vite)
+// В корне фронта создайте файл .env с переменными:
+// VITE_API_BASE_URL=https://your-backend-url.com/api
+// VITE_API_KEY=your_api_key_here
+// Приведение к any нужно, чтобы линтер не ругался на import.meta.env в TypeScript-конфигурации.
+const viteEnv = (import.meta as any).env as {
+  VITE_API_BASE_URL?: string;
+  VITE_API_KEY?: string;
+};
+const API_BASE_URL = viteEnv.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const API_KEY = viteEnv.VITE_API_KEY || '';
+
+// Берём токен авторизации из localStorage (ставится после логина)
+const getAuthToken = () => {
+  try {
+    return localStorage.getItem('authToken') || '';
+  } catch {
+    return '';
+  }
+};
 
 // Type definitions
 export interface Product {
@@ -42,10 +59,17 @@ async function apiCall<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${API_KEY}`,
-  };
+  const token = getAuthToken();
+  const authHeader = token ? `Bearer ${token}` : API_KEY ? `Bearer ${API_KEY}` : undefined;
+  const isFormData = options.body instanceof FormData;
+
+  const defaultHeaders: Record<string, string> = {};
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+  if (authHeader) {
+    defaultHeaders['Authorization'] = authHeader;
+  }
 
   try {
     const response = await fetch(url, {
@@ -71,42 +95,23 @@ async function apiCall<T>(
 export const productsAPI = {
   // Get all products
   getAll: async (): Promise<Product[]> => {
-    // Mock implementation - replace with real API call
-    // return apiCall<Product[]>('/products');
-    
-    // For now, using mock data
-    const { products } = await import('../data/products');
-    return new Promise(resolve => setTimeout(() => resolve(products), 500));
+    // Реальный запрос к вашему backend
+    return apiCall<Product[]>('/products');
   },
 
   // Get product by ID
   getById: async (id: string): Promise<Product> => {
-    // return apiCall<Product>(`/products/${id}`);
-    
-    const { products } = await import('../data/products');
-    const product = products.find(p => p.id === id);
-    if (!product) throw new Error('Product not found');
-    return new Promise(resolve => setTimeout(() => resolve(product), 300));
+    return apiCall<Product>(`/products/${id}`);
   },
 
   // Search products
   search: async (query: string): Promise<Product[]> => {
-    // return apiCall<Product[]>(`/products/search?q=${encodeURIComponent(query)}`);
-    
-    const { products } = await import('../data/products');
-    const filtered = products.filter(p =>
-      p.name.toLowerCase().includes(query.toLowerCase())
-    );
-    return new Promise(resolve => setTimeout(() => resolve(filtered), 400));
+    return apiCall<Product[]>(`/products/search?q=${encodeURIComponent(query)}`);
   },
 
   // Get products by category
   getByCategory: async (category: string): Promise<Product[]> => {
-    // return apiCall<Product[]>(`/products/category/${category}`);
-    
-    const { products } = await import('../data/products');
-    const filtered = products.filter(p => p.category === category);
-    return new Promise(resolve => setTimeout(() => resolve(filtered), 400));
+    return apiCall<Product[]>(`/products/category/${category}`);
   },
 };
 
@@ -150,80 +155,21 @@ export interface OrderResponse {
 export const ordersAPI = {
   // Create new order
   create: async (orderData: OrderData): Promise<OrderResponse> => {
-    // Real implementation:
-    // const formData = new FormData();
-    // formData.append('orderData', JSON.stringify(orderData));
-    // if (orderData.prescriptionFile) {
-    //   formData.append('prescription', orderData.prescriptionFile);
-    // }
-    // return apiCall<OrderResponse>('/orders', {
-    //   method: 'POST',
-    //   body: formData,
-    //   headers: {}, // Let browser set Content-Type for FormData
-    // });
-
-    // Mock implementation
-    console.log('Creating order:', orderData);
-    const orderId = `ORD-${Date.now()}`;
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            orderId,
-            status: 'processing',
-            estimatedDelivery: '2-4 hours',
-            totalPrice: orderData.totalPrice,
-            items: orderData.items.map(item => ({
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-            date: new Date().toISOString(),
-          }),
-        1000
-      )
-    );
+    // Реальный запрос на создание заказа
+    return apiCall<OrderResponse>('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
   },
 
   // Get order by ID
   getById: async (orderId: string): Promise<OrderResponse> => {
-    // return apiCall<OrderResponse>(`/orders/${orderId}`);
-    
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            orderId,
-            status: 'processing',
-            estimatedDelivery: '2-4 hours',
-            totalPrice: 450,
-            items: [
-              {
-                productId: '1',
-                productName: 'Product 1',
-                quantity: 2,
-                price: 200,
-              },
-              {
-                productId: '2',
-                productName: 'Product 2',
-                quantity: 1,
-                price: 50,
-              },
-            ],
-            date: new Date().toISOString(),
-          }),
-        500
-      )
-    );
+    return apiCall<OrderResponse>(`/orders/${orderId}`);
   },
 
   // Get user's order history
   getHistory: async (): Promise<OrderResponse[]> => {
-    // return apiCall<OrderResponse[]>('/orders/history');
-    
-    return new Promise(resolve => setTimeout(() => resolve([]), 500));
+    return apiCall<OrderResponse[]>('/orders/history');
   },
 };
 
@@ -231,20 +177,15 @@ export const ordersAPI = {
 export const cartAPI = {
   // Save cart to server
   save: async (items: CartItem[]): Promise<void> => {
-    // return apiCall<void>('/cart', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ items }),
-    // });
-    
-    console.log('Saving cart:', items);
-    return new Promise(resolve => setTimeout(resolve, 300));
+    return apiCall<void>('/cart', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
   },
 
   // Load cart from server
   load: async (): Promise<CartItem[]> => {
-    // return apiCall<CartItem[]>('/cart');
-    
-    return new Promise(resolve => setTimeout(() => resolve([]), 300));
+    return apiCall<CartItem[]>('/cart');
   },
 };
 
@@ -261,88 +202,35 @@ export interface User {
 export const userAPI = {
   // Get current user profile
   getProfile: async (): Promise<User> => {
-    // return apiCall<User>('/user/profile');
-    
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            id: '1',
-            name: 'Student Name',
-            email: 'student@sabanciuniv.edu',
-            phone: '+90 555 123 4567',
-            dormitory: 'A Block',
-            roomNumber: '301',
-          }),
-        500
-      )
-    );
+    return apiCall<User>('/user/profile');
   },
 
   // Update user profile
   updateProfile: async (userData: Partial<User>): Promise<User> => {
-    // return apiCall<User>('/user/profile', {
-    //   method: 'PUT',
-    //   body: JSON.stringify(userData),
-    // });
-    
-    console.log('Updating profile:', userData);
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            id: '1',
-            name: userData.name || 'Student Name',
-            email: userData.email || 'student@sabanciuniv.edu',
-            phone: userData.phone || '+90 555 123 4567',
-            dormitory: userData.dormitory || 'A Block',
-            roomNumber: userData.roomNumber || '301',
-          }),
-        500
-      )
-    );
+    return apiCall<User>('/user/profile', {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
   },
 };
 
 // Prescription Upload API
 export const prescriptionAPI = {
   upload: async (file: File, orderId: string): Promise<{ url: string }> => {
-    // const formData = new FormData();
-    // formData.append('prescription', file);
-    // formData.append('orderId', orderId);
-    // return apiCall<{ url: string }>('/prescriptions/upload', {
-    //   method: 'POST',
-    //   body: formData,
-    //   headers: {}, // Let browser set Content-Type
-    // });
-
-    console.log('Uploading prescription:', file.name, 'for order:', orderId);
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            url: `https://storage.example.com/prescriptions/${orderId}/${file.name}`,
-          }),
-        1000
-      )
-    );
+    const formData = new FormData();
+    formData.append('prescription', file);
+    formData.append('orderId', orderId);
+    return apiCall<{ url: string }>('/prescriptions/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {}, // Let browser set Content-Type
+    });
   },
 };
 
 // Inventory API (for real-time stock updates)
 export const inventoryAPI = {
   checkStock: async (productId: string): Promise<{ inStock: boolean; quantity: number }> => {
-    // return apiCall<{ inStock: boolean; quantity: number }>(`/inventory/${productId}`);
-    
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            inStock: true,
-            quantity: 50,
-          }),
-        300
-      )
-    );
+    return apiCall<{ inStock: boolean; quantity: number }>(`/inventory/${productId}`);
   },
 };
