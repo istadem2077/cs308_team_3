@@ -16,6 +16,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role: string; // Added role field
   age: number;
   gender: 'male' | 'female' | 'other';
   phone: string;
@@ -74,7 +75,8 @@ export const authService = {
       id: data.userId.toString(),
       name: data.name,
       email: credentials.email,
-      age: 0, // Not returned in login response, would need profile fetch
+      role: data.role, // Map the role from backend
+      age: 0,
       gender: 'other',
       phone: '',
       address: {
@@ -87,7 +89,7 @@ export const authService = {
 
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('userId', data.userId.toString()); // Save ID separately for API calls
+    localStorage.setItem('userId', data.userId.toString());
 
     return { user, token: data.token };
   },
@@ -129,6 +131,7 @@ export const authService = {
       email: data.email,
       age: data.age,
       gender: data.gender,
+      role: "CUSTOMER",
       phone: data.phone,
       address: data.address,
     };

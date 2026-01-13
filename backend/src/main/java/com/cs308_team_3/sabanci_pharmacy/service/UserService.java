@@ -56,7 +56,7 @@ public class UserService {
         user.setAge(request.getAge());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        user.setRole("USER"); // Force new registrations to be normal users
+        user.setRole("CUSTOMER"); // Force new registrations to be normal users
 
         User savedUser = userRepository.save(user);
 
@@ -83,7 +83,7 @@ public class UserService {
 
         String token = jwtUtil.generateToken(savedUser.getEmail());
 
-        return new AuthResponse(token, savedUser.getName(), savedUser.getId(), fullAddressString);
+        return new AuthResponse(token, savedUser.getName(), savedUser.getId(), fullAddressString, savedUser.getRole());
     }
 
     public AuthResponse loginUser(LoginRequest loginRequest) {
@@ -104,7 +104,7 @@ public class UserService {
 
         String token =  jwtUtil.generateToken(user.getEmail());
 
-        return new AuthResponse(token, user.getName(), user.getId(), defaultAddressStr);
+        return new AuthResponse(token, user.getName(), user.getId(), defaultAddressStr, user.getRole());
     }
 
     public User updatePassword(PasswordUpdateRequest request){

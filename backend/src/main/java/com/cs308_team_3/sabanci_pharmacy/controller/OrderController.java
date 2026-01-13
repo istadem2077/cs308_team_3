@@ -17,13 +17,11 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    // GET /api/orders/user/1
     @GetMapping("/user/{userId}")
     public List<OrderResponseDto> getUserOrders(@PathVariable Integer userId) {
         return orderService.getUserOrders(userId);
     }
     
-    // NEW: Customer Cancel Order
     @PutMapping("/{orderId}/cancel")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderResponseDto> cancelOrder(@PathVariable Integer orderId, Principal principal) {
@@ -31,7 +29,6 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    // NEW: Customer Return/Refund Order
     @PutMapping("/{orderId}/return")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderResponseDto> returnOrder(@PathVariable Integer orderId, Principal principal) {
@@ -39,18 +36,17 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
     
-    // PUT /api/orders/5/status (Manager Only)
-    @PreAuthorize("hasRole('PRODUCT_MANAGER')")
+    // Updated: Allow SALES_MANAGER to update status (for refunds)
+    @PreAuthorize("hasAnyAuthority('PRODUCT_MANAGER', 'SALES_MANAGER')")
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderResponseDto> updateOrderStatus(
-							      @PathVariable Integer orderId, 
-							      @RequestParam String status) {
+            @PathVariable Integer orderId, 
+            @RequestParam String status) {
     
-	OrderResponseDto updatedOrder = orderService.updateOrderStatus(orderId, status);
-	return ResponseEntity.ok(updatedOrder);
+        OrderResponseDto updatedOrder = orderService.updateOrderStatus(orderId, status);
+        return ResponseEntity.ok(updatedOrder);
     }
 
-    // GET /api/orders/5
     @GetMapping("/{orderId}")
     public OrderResponseDto getOrderDetails(@PathVariable Integer orderId) {
         return orderService.getOrder(orderId);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   User,
@@ -27,18 +27,23 @@ export interface Order {
 }
 
 interface PordersProps {
-  orders: Order[];
+  orders: Promise<Order[]>; // Accepted as a Promise to match existing structure
   onBack: () => void;
   onNavigate: (tab: string) => void;
-  onUpdateOrderStatus: (id: string, status: 'completed' | 'pending' | 'cancelled') => void;
+  onUpdateOrderStatus: (id: string, status: string) => void;
 }
 
 export function Porders({ orders, onBack, onNavigate, onUpdateOrderStatus }: PordersProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderList, setOrderList] = useState<Order[]>([]);
 
-  const filteredOrders = orders.filter(
+  useEffect(() => {
+    orders.then(data => setOrderList(data));
+  }, [orders]);
+
+  const filteredOrders = orderList.filter(
     order =>
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,16 +51,22 @@ export function Porders({ orders, onBack, onNavigate, onUpdateOrderStatus }: Por
   );
 
   const getStatusBadge = (status: string) => {
-    if (status === 'completed') {
+    if (status === 'delivered') {
       return (
         <span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">
-          Completed
+          Delivered
         </span>
       );
     } else if (status === 'pending') {
       return (
         <span className="px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
           Pending
+        </span>
+      );
+    } else if (status === 'in_transit') {
+      return (
+          <span className="px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
+          In Transit
         </span>
       );
     } else {
@@ -247,21 +258,30 @@ export function Porders({ orders, onBack, onNavigate, onUpdateOrderStatus }: Por
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {order.status === 'pending' ? (
+                          {order.status === 'in_transit' ? (
                             <button
-                              onClick={() => onUpdateOrderStatus(order.id, 'completed')}
+                              onClick={() => onUpdateOrderStatus(order.id, 'delivered')}
                               className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-200 text-xs"
                             >
-                              Mark Complete
+                              Mark Delivered
                             </button>
-                          ) : order.status === 'completed' ? (
+                          ) : order.status === 'pending' ? (
                             <button
-                              onClick={() => onUpdateOrderStatus(order.id, 'pending')}
+                              onClick={() => onUpdateOrderStatus(order.id, 'in_transit')}
                               className="px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors duration-200 text-xs"
                             >
-                              Mark Pending
+                              Mark In-Transit
                             </button>
+
                           ) : null}
+                          {order.status !== "delivered" && order.status !== 'cancelled' ? (
+                              <button
+                                  onClick={() => onUpdateOrderStatus(order.id, 'cancelled')}
+                                  className="px-3 py-1.5 bg-yellow-100 text-red-700 rounded-lg hover:bg-yellow-200 transition-colors duration-200 text-xs"
+                              >
+                                Cancel
+                              </button>
+                          ): null}
                         </div>
                       </td>
                     </tr>

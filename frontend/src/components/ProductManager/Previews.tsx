@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , useEffect} from 'react';
 import {
   Search,
   User,
@@ -27,7 +27,7 @@ export interface ProductReview {
 }
 
 interface PreviewsProps {
-  reviews: ProductReview[];
+  reviews: Promise<ProductReview[]>; // Changed to match parent
   onBack: () => void;
   onNavigate: (tab: string) => void;
   onUpdateReviewStatus: (id: string, status: 'approved' | 'pending' | 'disapproved') => void;
@@ -35,8 +35,13 @@ interface PreviewsProps {
 
 export function Previews({ reviews, onBack, onNavigate, onUpdateReviewStatus }: PreviewsProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [reviewList, setReviewList] = useState<ProductReview[]>([]);
 
-  const filteredReviews = reviews.filter(
+  useEffect(() => {
+    reviews.then(data => setReviewList(data));
+  }, [reviews]);
+
+  const filteredReviews = reviewList.filter(
     review =>
       review.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||

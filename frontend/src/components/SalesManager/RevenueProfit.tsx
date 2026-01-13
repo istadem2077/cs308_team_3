@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   User,
@@ -8,9 +8,10 @@ import {
   DollarSign,
   FileText,
   TrendingDown,
-  AlertCircle,
   RotateCcw,
   Bell,
+  Calendar,
+  Loader2
 } from 'lucide-react';
 import {
   BarChart,
@@ -24,399 +25,396 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { salesManagerAPI } from '../../services/managerApi';
 
 interface RevenueProfitProps {
   onBack: () => void;
+  onLogout: () => void; // Added prop
   onNavigate: (tab: string) => void;
 }
 
-export function RevenueProfit({ onBack, onNavigate }: RevenueProfitProps) {
+interface ChartDataPoint {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+export function RevenueProfit({ onBack, onNavigate , onLogout}: RevenueProfitProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState('2024-01-01');
-  const [endDate, setEndDate] = useState('2024-12-31');
 
-  // Full year monthly data for charts with dates
-  const allMonthlyData = [
-    { month: 'Jan', date: '2024-01-01', revenue: 13000, cost: 6500, profit: 6500, loss: 450 },
-    { month: 'Feb', date: '2024-02-01', revenue: 15000, cost: 7500, profit: 7500, loss: 380 },
-    { month: 'Mar', date: '2024-03-01', revenue: 14000, cost: 7000, profit: 7000, loss: 520 },
-    { month: 'Apr', date: '2024-04-01', revenue: 18000, cost: 9000, profit: 9000, loss: 290 },
-    { month: 'May', date: '2024-05-01', revenue: 16000, cost: 8000, profit: 8000, loss: 610 },
-    { month: 'Jun', date: '2024-06-01', revenue: 19000, cost: 9500, profit: 9500, loss: 340 },
-    { month: 'Jul', date: '2024-07-01', revenue: 22000, cost: 11000, profit: 11000, loss: 420 },
-    { month: 'Aug', date: '2024-08-01', revenue: 21000, cost: 10500, profit: 10500, loss: 550 },
-    { month: 'Sep', date: '2024-09-01', revenue: 23000, cost: 11500, profit: 11500, loss: 380 },
-    { month: 'Oct', date: '2024-10-01', revenue: 25000, cost: 12500, profit: 12500, loss: 470 },
-    { month: 'Nov', date: '2024-11-01', revenue: 27000, cost: 13500, profit: 13500, loss: 320 },
-    { month: 'Dec', date: '2024-12-01', revenue: 30000, cost: 15000, profit: 15000, loss: 590 },
-  ];
+  // Stats Date Range (Defaults to current month)
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const lastDay = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(firstDay);
+  const [endDate, setEndDate] = useState(lastDay);
 
-  // Filter data based on date range
-  const monthlyData = allMonthlyData.filter(item => {
-    const itemDate = new Date(item.date);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    return itemDate >= start && itemDate <= end;
+  // Chart Year Selection
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const [stats, setStats] = useState({
+    revenue: 0,
+    profit: 0,
+    orderCount: 0,
+    cost: 0
   });
 
-  // Calculate totals from filtered data
-  const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalCost = monthlyData.reduce((sum, item) => sum + item.cost, 0);
-  const totalProfit = monthlyData.reduce((sum, item) => sum + item.profit, 0);
-  const totalLoss = monthlyData.reduce((sum, item) => sum + item.loss, 0);
-  const netProfitLoss = totalProfit - totalLoss;
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [loadingCharts, setLoadingCharts] = useState(false);
+
+  // Fetch Totals when date range changes
+  useEffect(() => {
+    fetchStats();
+  }, [startDate, endDate]);
+
+  // Fetch Trend Charts when year changes
+  useEffect(() => {
+    fetchMonthlyTrend(selectedYear);
+  }, [selectedYear]);
+
+  const fetchStats = async () => {
+    try {
+      setLoadingStats(true);
+      // Backend expects ISO DateTime (e.g., 2023-01-01T00:00:00)
+      // Append time to ensure full coverage of the selected days
+      const startISO = new Date(`${startDate}T00:00:00`).toISOString();
+      const endISO = new Date(`${endDate}T23:59:59`).toISOString();
+
+      const data = await salesManagerAPI.getFinancialReport(startISO, endISO);
+
+      setStats({
+        revenue: data.revenue || 0,
+        profit: data.profit || 0,
+        orderCount: data.orderCount || 0,
+        cost: (data.revenue || 0) - (data.profit || 0)
+      });
+    } catch (error) {
+      console.error("Failed to fetch stats", error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const fetchMonthlyTrend = async (year: number) => {
+    try {
+      setLoadingCharts(true);
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+
+      // Create an array of promises to fetch data for each month in parallel
+      const promises = months.map(async (monthName, index) => {
+        // Construct start/end for specific month
+        const startOfMonth = new Date(year, index, 1);
+        const endOfMonth = new Date(year, index + 1, 0, 23, 59, 59); // Last day of month
+
+        const startISO = startOfMonth.toISOString();
+        const endISO = endOfMonth.toISOString();
+
+        try {
+          const result = await salesManagerAPI.getFinancialReport(startISO, endISO);
+          return {
+            month: monthName,
+            revenue: result.revenue || 0,
+            profit: result.profit || 0,
+            cost: (result.revenue || 0) - (result.profit || 0)
+          };
+        } catch (err) {
+          console.error(`Error fetching data for ${monthName}`, err);
+          return { month: monthName, revenue: 0, profit: 0, cost: 0 };
+        }
+      });
+
+      const results = await Promise.all(promises);
+      setChartData(results);
+
+    } catch (error) {
+      console.error("Failed to fetch chart trend", error);
+    } finally {
+      setLoadingCharts(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Sidebar */}
-      <aside className="w-72 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-2xl">
-        <div className="p-6 border-b border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg">Sales Manager</h2>
-              <p className="text-xs text-gray-400">Sabanci University</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-4">
-          <div className="mb-2">
-            <p className="text-xs text-gray-400 px-3 mb-2">NAVIGATION</p>
-            <button
-              onClick={() => onNavigate('dashboard')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              <span>Dashboard</span>
-            </button>
-            <button
-              onClick={() => onNavigate('pricing')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
-            >
-              <DollarSign className="w-5 h-5" />
-              <span>Pricing & Discount</span>
-            </button>
-            <button
-              onClick={() => onNavigate('invoices')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
-            >
-              <FileText className="w-5 h-5" />
-              <span>Invoice Management</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg mb-2">
-              <TrendingUp className="w-5 h-5" />
-              <span>Revenue & Profit</span>
-            </button>
-            <button
-              onClick={() => onNavigate('refunds')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
-            >
-              <RotateCcw className="w-5 h-5" />
-              <span>Refund Management</span>
-            </button>
-            <button
-              onClick={() => onNavigate('notifications')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
-            >
-              <Bell className="w-5 h-5" />
-              <span>Notifications</span>
-            </button>
-          </div>
-        </nav>
-
-        <div className="p-4 border-t border-gray-700">
-          <button
-            onClick={onBack}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Exit Dashboard</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-8 py-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-gray-900">Revenue & Profit Analysis</h1>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-80 bg-gray-50"
-                />
+      <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Sidebar */}
+        <aside className="w-72 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-2xl">
+          <div className="p-6 border-b border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-6 h-6" />
               </div>
+              <div>
+                <h2 className="text-lg">Sales Manager</h2>
+                <p className="text-xs text-gray-400">Sabanci University</p>
+              </div>
+            </div>
+          </div>
 
-              <button className="w-11 h-11 bg-gradient-to-br from-green-50 to-green-100 rounded-xl flex items-center justify-center hover:from-green-100 hover:to-green-200 transition-all duration-200">
-                <User className="w-5 h-5 text-green-700" />
+          <nav className="flex-1 p-4">
+            <div className="mb-2">
+              <p className="text-xs text-gray-400 px-3 mb-2">NAVIGATION</p>
+              <button
+                  onClick={() => onNavigate('dashboard')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                <span>Dashboard</span>
+              </button>
+              <button
+                  onClick={() => onNavigate('pricing')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
+              >
+                <DollarSign className="w-5 h-5" />
+                <span>Pricing & Discount</span>
+              </button>
+              <button
+                  onClick={() => onNavigate('invoices')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
+              >
+                <FileText className="w-5 h-5" />
+                <span>Invoice Management</span>
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg mb-2">
+                <TrendingUp className="w-5 h-5" />
+                <span>Revenue & Profit</span>
+              </button>
+              <button
+                  onClick={() => onNavigate('refunds')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white mb-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                <span>Refund Management</span>
+              </button>
+              <button
+                  onClick={() => onNavigate('notifications')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
+              >
+                <Bell className="w-5 h-5" />
+                <span>Notifications</span>
               </button>
             </div>
-          </div>
-        </header>
+          </nav>
 
-        {/* Content Area */}
-        <main className="flex-1 p-8 overflow-y-auto">
-          {/* Analysis Period */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h3 className="text-gray-900 mb-4">Analysis Period</h3>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Metrics Cards */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            {/* Total Revenue */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                  <p className="text-3xl text-blue-600">${totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-xs text-gray-500">All sales combined</p>
-            </div>
-
-            {/* Estimated Cost */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Estimated Cost</p>
-                  <p className="text-3xl text-orange-600">${totalCost.toLocaleString()}</p>
-                </div>
-                <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 text-orange-600" />
-                </div>
-              </div>
-              <p className="text-xs text-gray-500">Default: 50% of sale price</p>
-            </div>
-
-            {/* Net Profit */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Net Profit</p>
-                  <p className="text-3xl text-green-600">${netProfitLoss.toLocaleString()}</p>
-                </div>
-                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                </div>
-              </div>
-              <p className="text-xs text-gray-500">Revenue - Cost</p>
-            </div>
-          </div>
-
-          {/* Profit/Loss Metrics */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            {/* Total Profit */}
-            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl shadow-lg p-6 text-white">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm text-green-100 mb-1">Total Profit</p>
-                  <p className="text-3xl">${totalProfit.toLocaleString()}</p>
-                </div>
-                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-green-100">Gross profit from sales</p>
-            </div>
-
-            {/* Total Loss */}
-            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl shadow-lg p-6 text-white">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-sm text-red-100 mb-1">Total Loss</p>
-                  <p className="text-3xl">${totalLoss.toLocaleString()}</p>
-                </div>
-                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-xs text-red-100">Refunds, returns & damages</p>
-            </div>
-
-            {/* Net Profit/Loss */}
-            <div
-              className={`rounded-2xl shadow-lg p-6 text-white ${
-                netProfitLoss >= 0 ? 'bg-gradient-to-br from-emerald-600 to-emerald-700' : 'bg-gradient-to-br from-rose-600 to-rose-700'
-              }`}
+          <div className="p-4 border-t border-gray-700">
+            <button
+                onClick={onBack}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white"
             >
-              <div className="flex items-start justify-between mb-4">
+              <LogOut className="w-5 h-5" />
+              <span>Exit Dashboard</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Top Bar */}
+          <header className="bg-white border-b border-gray-200 px-8 py-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-gray-900">Revenue & Profit Analysis</h1>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-80 bg-gray-50"
+                  />
+                </div>
+
+                {/* Update User Button */}
+                <button
+                    onClick={onLogout}
+                    className="w-11 h-11 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center hover:from-blue-100 hover:to-blue-200 transition-all duration-200"
+                    title="Logout"
+                >
+                  <User className="w-5 h-5 text-blue-700" />
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Content Area */}
+          <main className="flex-1 p-8 overflow-y-auto">
+            {/* Analysis Period for Totals */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-gray-500" />
+                Analysis Period (For Totals)
+              </h3>
+
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm mb-1 opacity-90">Net Profit/Loss</p>
-                  <p className="text-3xl">${netProfitLoss.toLocaleString()}</p>
+                  <label className="block text-sm text-gray-600 mb-2">Start Date</label>
+                  <input
+                      type="date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
                 </div>
-                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                  {netProfitLoss >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">End Date</label>
+                  <input
+                      type="date"
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
                 </div>
               </div>
-              <p className="text-xs opacity-90">Profit - Loss</p>
             </div>
-          </div>
 
-          {/* Bar Chart - Revenue, Cost & Profit Trend */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h3 className="text-gray-900 mb-6">Revenue, Cost & Profit Trend</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
-                <Bar dataKey="cost" fill="#f97316" name="Cost" />
-                <Bar dataKey="profit" fill="#10b981" name="Profit" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Line Chart Analysis */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h3 className="text-gray-900 mb-6">Line Chart Analysis</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ fill: '#3b82f6', r: 4 }}
-                  name="Revenue"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cost"
-                  stroke="#f97316"
-                  strokeWidth={2}
-                  dot={{ fill: '#f97316', r: 4 }}
-                  name="Cost"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="profit"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ fill: '#10b981', r: 4 }}
-                  name="Profit"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Profit vs Loss Chart */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="mb-6">
-              <h3 className="text-gray-900 mb-2">Profit vs Loss Analysis</h3>
-              <p className="text-sm text-gray-500">Comparison of gross profit against operational losses</p>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="profit" fill="#10b981" name="Profit" />
-                <Bar dataKey="loss" fill="#ef4444" name="Loss" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Profit/Loss Breakdown Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-6">
-            <h3 className="text-gray-900 mb-4">Loss Breakdown</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl p-4 border border-blue-100">
-                <p className="text-sm text-gray-600 mb-2">Refunds & Returns</p>
-                <p className="text-2xl text-gray-900">${Math.round(totalLoss * 0.6).toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">~60% of total loss</p>
+            {/* Metrics Cards */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              {/* Total Revenue */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+                    <p className="text-3xl text-blue-600">
+                      {loadingStats ? <Loader2 className="w-6 h-6 animate-spin"/> : `$${stats.revenue.toLocaleString()}`}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Selected period aggregate</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-blue-100">
-                <p className="text-sm text-gray-600 mb-2">Damaged Products</p>
-                <p className="text-2xl text-gray-900">${Math.round(totalLoss * 0.25).toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">~25% of total loss</p>
+
+              {/* Total Cost */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Cost (Calculated)</p>
+                    <p className="text-3xl text-orange-600">
+                      {loadingStats ? <Loader2 className="w-6 h-6 animate-spin"/> : `$${stats.cost.toLocaleString()}`}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                    <TrendingDown className="w-5 h-5 text-orange-600" />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Revenue - Profit</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-blue-100">
-                <p className="text-sm text-gray-600 mb-2">Other Expenses</p>
-                <p className="text-2xl text-gray-900">${Math.round(totalLoss * 0.15).toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">~15% of total loss</p>
+
+              {/* Total Profit */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Profit</p>
+                    <p className="text-3xl text-green-600">
+                      {loadingStats ? <Loader2 className="w-6 h-6 animate-spin"/> : `$${stats.profit.toLocaleString()}`}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Net earnings</p>
               </div>
             </div>
-          </div>
 
-          {/* Cost Calculation Note */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm text-amber-900">
-                <span className="font-medium">Cost Calculation Note:</span>
-              </p>
-              <p className="text-sm text-amber-800 mt-1">
-                By default, product cost is calculated as 50% of the sale price. If the Product Manager has specified a custom cost for any product, that custom value will be used instead and indicated in the product details.
-              </p>
+            {/* Charts Section with Year Selector */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-gray-900">Revenue & Profit Trend</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Select Year:</span>
+                  <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {loadingCharts ? (
+                  <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl">
+                    <div className="text-center">
+                      <Loader2 className="w-8 h-8 text-green-600 animate-spin mx-auto mb-2" />
+                      <p className="text-gray-500">Loading monthly data...</p>
+                    </div>
+                  </div>
+              ) : (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" stroke="#6b7280" />
+                      <YAxis stroke="#6b7280" />
+                      <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                          }}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
+                      <Bar dataKey="cost" fill="#f97316" name="Cost" />
+                      <Bar dataKey="profit" fill="#10b981" name="Profit" />
+                    </BarChart>
+                  </ResponsiveContainer>
+              )}
             </div>
-          </div>
-        </main>
+
+            {/* Line Chart Analysis */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+              <h3 className="text-gray-900 mb-6">Trend Analysis</h3>
+              {loadingCharts ? (
+                  <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-xl">
+                    <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+                  </div>
+              ) : (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" stroke="#6b7280" />
+                      <YAxis stroke="#6b7280" />
+                      <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                          }}
+                      />
+                      <Legend />
+                      <Line
+                          type="monotone"
+                          dataKey="revenue"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          dot={{ fill: '#3b82f6', r: 4 }}
+                          name="Revenue"
+                      />
+                      <Line
+                          type="monotone"
+                          dataKey="profit"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          dot={{ fill: '#10b981', r: 4 }}
+                          name="Profit"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
   );
 }

@@ -110,6 +110,20 @@ export default function App() {
     if (currentUser) {
       setUser(currentUser);
       setIsGuestMode(false);
+
+      // FIX: Restore the correct view based on the stored user's role
+      switch (currentUser.role) {
+        case 'PRODUCT_MANAGER':
+          setShowProductManager(true);
+          break;
+        case 'SALES_MANAGER':
+          setShowSalesManager(true);
+          break;
+        case 'SUPPORT_AGENT':
+          setShowSupportManager(true);
+          break;
+          // CUSTOMER or default falls through to the main shop view
+      }
     }
   }, []);
 
@@ -162,20 +176,38 @@ export default function App() {
   const handleLoginSuccess = async () => {
     const currentUser = authService.getCurrentUser();
 
-    if (currentUser && cartItems.length > 0) {
-      try {
-        // Use the userId from the authenticated user
-        await ordersAPI.syncCart(currentUser.id, cartItems);
-        console.log("Cart synced to database successfully");
-      } catch (err) {
-        console.error("Error syncing cart:", err);
+    if (currentUser) {
+      // 1. Sync Cart logic (keep existing)
+      if (cartItems.length > 0) {
+        try {
+          await ordersAPI.syncCart(currentUser.id, cartItems);
+        } catch (err) {
+          console.error("Error syncing cart:", err);
+        }
+      }
+
+      setUser(currentUser);
+      setIsGuestMode(false);
+      setShowAuthModal(false);
+      setShowLoginPrompt(false);
+
+      // 2. Role-Based Redirection Logic
+      switch (currentUser.role) {
+        case 'PRODUCT_MANAGER':
+          setShowProductManager(true);
+          break;
+        case 'SALES_MANAGER':
+          setShowSalesManager(true);
+          break;
+        case 'SUPPORT_AGENT':
+          setShowSupportManager(true);
+          break;
+        case 'CUSTOMER':
+        default:
+          // Stay on main page / shop view
+          break;
       }
     }
-
-    setUser(currentUser);
-    setIsGuestMode(false);
-    setShowAuthModal(false);
-    setShowLoginPrompt(false);
   };
 
   const handleSkipLogin = () => {
@@ -193,6 +225,11 @@ export default function App() {
     setCartItems([]);
     setShowMyAccount(false);
     setShowLogoutConfirm(false);
+
+    // Close all manager views
+    setShowProductManager(false);
+    setShowSalesManager(false);
+    setShowSupportManager(false);
   };
 
   const handleCheckoutClick = () => {
@@ -312,12 +349,22 @@ export default function App() {
     setIsCheckout(false);
   };
 
-  const handleUpdateOrderStatus = (orderId: string, newStatus: 'processing' | 'in-transit' | 'delivered') => {
-    setOrders(prev =>
-        prev.map(order =>
-            order.orderId === orderId ? { ...order, status: newStatus } : order
-        )
-    );
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: 'processing' | 'in-transit' | 'delivered' | 'cancelled') => {
+    if (newStatus === 'cancelled') {
+      try {
+        // Call the new API method
+        await ordersAPI.cancel(orderId);
+
+        // Refresh the orders list to show the new status
+        const updatedOrders = await ordersAPI.getHistory();
+        setOrders(updatedOrders); // Assuming you have a setOrders state
+
+        alert('Order cancelled successfully');
+      } catch (error) {
+        console.error('Failed to cancel order:', error);
+        alert('Failed to cancel order. It may have already been shipped.');
+      }
+    }
   };
 
   const handleRateProduct = async (productId: string, rating: number, userName: string) => {
@@ -451,6 +498,29 @@ export default function App() {
     'all',
     ...Array.from(new Set(products.map(p => p.category))),
   ];
+
+  if (showProductManager) {
+    return (
+        <ProductManager
+            products={products}
+            onBack={() => setShowProductManager(false)}
+            onAddProduct={(product) => { /* ... */ }}
+            onUpdateProduct={(id, updatedProduct) => { /* ... */ }}
+            onDeleteProduct={(id) => { /* ... */ }}
+            onLogout={handleLogout} // Added prop
+        />
+    );
+  }
+
+  // Pass handleLogout to SalesManager
+  if (showSalesManager) {
+    return (
+        <SalesManager
+            onBack={() => setShowSalesManager(false)}
+            onLogout={handleLogout} // Added prop
+        />
+    );
+  }
 
   // Show login/register modal if not authenticated and not in guest mode
   if (!user && !isGuestMode && !showAuthModal) {

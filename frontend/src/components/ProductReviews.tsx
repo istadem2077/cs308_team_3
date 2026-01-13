@@ -1,5 +1,5 @@
 import { X, Star } from 'lucide-react';
-import { Product, Review } from '../services/api';
+import { Product, Review } from '../App';
 
 interface ProductReviewsProps {
   isOpen: boolean;

@@ -57,4 +57,8 @@
       port: 3000,
       open: true,
     },
+    define: {
+      // Polyfill global for libraries like sockjs-client
+      global: 'window',
+    },
   });

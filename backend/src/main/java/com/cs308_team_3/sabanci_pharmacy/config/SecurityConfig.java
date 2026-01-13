@@ -46,32 +46,35 @@ public class SecurityConfig {
                                 "/api/user/login",
                                 "/api/user/register",
                                 "/error",
-                                "/ws-chat/**" // <-- ADDED: Allow WebSocket Handshake
+                                "/ws-chat/**"
                         ).permitAll()
 
                         // 2. PUBLIC VIEWING
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
 
-                        // 3. PRODUCT MANAGER
-                        .requestMatchers("/api/reviews/pending", "/api/reviews/*/status").hasAuthority("PRODUCT_MANAGER")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**").hasAuthority("PRODUCT_MANAGER")
+                        // 3. PRODUCT MANAGER - Changed to hasRole
+				       .requestMatchers("/api/reviews/pending", "/api/reviews/*/status").hasAnyRole("PRODUCT_MANAGER", "SALES_MANAGER")
+				       .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/**").hasAnyRole("PRODUCT_MANAGER", "SALES_MANAGER")
+				       .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/products/**").hasAnyRole("PRODUCT_MANAGER", "SALES_MANAGER")
+				       .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**").hasAnyRole("PRODUCT_MANAGER", "SALES_MANAGER")
+				       .requestMatchers("/api/pm/**").hasAnyRole("PRODUCT_MANAGER", "SALES_MANAGER")
 
-                        // 4. ORDERS (PM & Sales)
-                        .requestMatchers("/api/orders/**").hasAnyAuthority("PRODUCT_MANAGER", "SALES_MANAGER")
+                        // 4. ORDERS (PM & Sales) - Changed to hasAnyRole
+                        .requestMatchers("/api/orders/*/status*").hasAnyRole("PRODUCT_MANAGER", "SALES_MANAGER")
 
-                        // 5. SALES MANAGER
-                        .requestMatchers("/api/sales/**").hasAuthority("SALES_MANAGER")
+                        // 5. SALES MANAGER - Changed to hasRole
+                        .requestMatchers("/api/sales/**").hasRole("SALES_MANAGER")
 
-                        // 6. SUPPORT AGENT
-                        .requestMatchers("/api/tickets/**", "/api/support/context/**", "/api/support/queue", "/api/support/session/*/claim").hasAuthority("SUPPORT_AGENT")
+                        // 6. SUPPORT AGENT - Changed to hasRole
+                        .requestMatchers("/api/tickets/**", "/api/support/context/**", "/api/support/queue", "/api/support/session/*/claim").hasRole("SUPPORT_AGENT")
 
-                        // 7. PUBLIC/CUSTOMER for Initiating Chat (Guests can init)
+                        // 7. PUBLIC/CUSTOMER for Initiating Chat
                         .requestMatchers("/api/support/session/init").permitAll()
 
-                        // 8. AUTHENTICATED USERS
-                        .requestMatchers("/api/cart/**", "/api/my-orders/**").hasAnyAuthority("CUSTOMER", "PRODUCT_MANAGER", "SALES_MANAGER", "SUPPORT_AGENT")
+                        // 8. AUTHENTICATED USERS - Changed to hasAnyRole
+                        .requestMatchers("/api/cart/**", "/api/orders/**",
+                                "/api/wishlist/**", "/api/addresses/**",
+                                "/api/categories**", "/api/invoice/**").hasAnyRole("CUSTOMER", "PRODUCT_MANAGER", "SALES_MANAGER", "SUPPORT_AGENT")
 
                         .anyRequest().authenticated()
                 )

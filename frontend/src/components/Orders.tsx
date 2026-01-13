@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Package, Clock, CheckCircle, Truck, Calendar, Star, XCircle, RotateCcw, AlertCircle, Mail, Info, Download } from 'lucide-react';
-import { OrderResponse } from '../services/api';
+import {OrderResponse, ordersAPI} from '../services/api';
 import { authService } from '../services/auth';
+import {Order} from "./ProductManager/Porders";
 
 interface OrdersProps {
   orders: OrderResponse[];
   onUpdateOrderStatus: (orderId: string, newStatus: 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded') => void;
   onRateProduct: (productId: string, rating: number, userName: string) => void;
   onAddComment: (productId: string, rating: number, comment: string, userName: string) => void;
+  onRefresh?: () => void; // New optional prop to trigger data reload
 }
 
 interface RefundRequest {
@@ -33,7 +35,7 @@ interface ItemRefundStatus {
   rejectionReason?: string;
 }
 
-export function Orders({ orders, onUpdateOrderStatus, onRateProduct, onAddComment }: OrdersProps) {
+export function Orders({ orders, onUpdateOrderStatus,onRateProduct, onAddComment, onRefresh }: OrdersProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'processing' | 'in-transit' | 'completed'>('all');
   const [ratingStates, setRatingStates] = useState<Record<string, { rating: number; showCommentBox: boolean; comment: string }>>({});
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -556,12 +558,6 @@ Sabanci University Pharmacy
                       >
                         <XCircle className="w-4 h-4" />
                         Cancel Order
-                      </button>
-                      <button
-                        onClick={() => onUpdateOrderStatus(order.orderId, 'in-transit')}
-                        className="text-blue-600 hover:text-blue-700 text-sm px-3 py-1 border border-blue-600 rounded-lg hover:bg-blue-50"
-                      >
-                        Move to In Transit
                       </button>
                     </>
                   )}

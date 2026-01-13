@@ -25,6 +25,7 @@ interface PproductsProps {
   onAddProduct: (product: Omit<Product, 'id'>) => void;
   onUpdateProduct: (id: string, product: Product) => void;
   onDeleteProduct: (id: string) => void;
+  onLogout: () => void; // Added prop
 }
 
 export function Pproducts({
@@ -34,6 +35,7 @@ export function Pproducts({
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
+  onLogout,
 }: PproductsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -234,7 +236,12 @@ export function Pproducts({
                 />
               </div>
 
-              <button className="w-11 h-11 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center hover:from-blue-100 hover:to-blue-200 transition-all duration-200">
+              {/* Update User Button */}
+              <button
+                  onClick={onLogout}
+                  className="w-11 h-11 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center hover:from-blue-100 hover:to-blue-200 transition-all duration-200"
+                  title="Logout"
+              >
                 <User className="w-5 h-5 text-blue-700" />
               </button>
             </div>

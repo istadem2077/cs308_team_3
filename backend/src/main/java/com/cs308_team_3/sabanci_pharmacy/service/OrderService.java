@@ -35,8 +35,8 @@ public class OrderService {
             .orElseThrow(() -> new RuntimeException("Order not found"));
 
         String formattedStatus = newStatus.toUpperCase();
-        // Updated list of valid statuses including return states
-        List<String> validStatuses = List.of("PENDING", "PROCESSING", "IN-TRANSIT", "DELIVERED", "CANCELLED", "REFUNDED", "RETURN_REQUESTED");
+        //
+        List<String> validStatuses = List.of("PENDING", "PROCESSING", "IN-TRANSIT", "DELIVERED", "CANCELLED", "REFUNDED", "RETURN_REQUESTED", "RETURN_REJECTED");
 
         if (!validStatuses.contains(formattedStatus)) {
             throw new RuntimeException("Invalid status. Valid statuses are: " + validStatuses);
@@ -48,7 +48,6 @@ public class OrderService {
         return mapToDto(savedOrder);
     }
 
-    // NEW: Customer Cancel Order
     public OrderResponseDto cancelOrder(Integer orderId, String userEmail) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -62,7 +61,6 @@ public class OrderService {
 
         String status = order.getStatus().toUpperCase();
         
-        // Constraint: Only cancel if "PROCESSING" (Allowed PENDING as well for usability)
         if (!status.equals("PROCESSING") && !status.equals("PENDING")) {
             throw new RuntimeException("Order can only be cancelled if it is in PROCESSING status.");
         }
@@ -71,7 +69,6 @@ public class OrderService {
         return mapToDto(orderRepository.save(order));
     }
 
-    // NEW: Customer Return/Refund Order
     public OrderResponseDto returnOrder(Integer orderId, String userEmail) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -85,12 +82,12 @@ public class OrderService {
 
         String status = order.getStatus().toUpperCase();
 
-        // Constraint: Only return if "DELIVERED"
         if (!status.equals("DELIVERED")) {
             throw new RuntimeException("Order can only be refunded/returned if it is in DELIVERED status.");
         }
 
-        order.setStatus("REFUNDED"); 
+        // Changed from REFUNDED to RETURN_REQUESTED to allow Manager approval
+        order.setStatus("RETURN_REQUESTED"); 
         return mapToDto(orderRepository.save(order));
     }
 
@@ -112,6 +109,7 @@ public class OrderService {
         dto.setOrderId(order.getId());
         dto.setOrderDate(order.getCreatedAt());
         dto.setStatus(order.getStatus());
+        //dto.setUserName(order.getUser().getName()); // Ensure User name is mapped if needed for UI
 
         List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {
             OrderItemDto itemDto = new OrderItemDto();

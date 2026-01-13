@@ -28,16 +28,18 @@ async function apiCall<T>(
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    // Handle empty responses (like from DELETE)
     if (response.status === 204) return {} as T;
 
-    // Check if content type is JSON
+    // FIX: Robust Content-Type check
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
       return await response.json();
-    } else {
-      return {} as T;
     }
+
+    // Fallback for text responses
+    const text = await response.text();
+    return text as unknown as T;
+
   } catch (error) {
     console.error('API call failed:', error);
     throw error;
@@ -49,25 +51,25 @@ export const productsAPI = {
   getAll: async (): Promise<Product[]> => {
     const products = await apiCall<any[]>('/products');
 
-    // Mapper: Backend returns object for category, frontend expects string
-    return products.map(p => ({
+    // Safe mapper with fallbacks
+    return Array.isArray(products) ? products.map(p => ({
       id: p.id.toString(),
       name: p.name,
       category: p.category ? p.category.name : 'Uncategorized',
       price: p.price,
-      image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400', // Fallback image
+      image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400',
       description: p.description,
       inStock: (p.quantity || 0) > 0,
       stockCount: p.quantity || 0,
       requiresPrescription: false,
       popularity: p.total_orders || 0,
-      rating: p.averageRating, // Default or fetch from reviews
+      rating: p.averageRating || 0,
       reviewCount: 0,
       model: 'Standard',
       serialNumber: `SN-${p.id}`,
       warrantyStatus: '1 Year',
       distributor: 'Sabanci Pharmacy'
-    }));
+    })) : [];
   },
 
   getById: async (id: string): Promise<Product> => {
@@ -93,13 +95,11 @@ export const productsAPI = {
   },
 
   search: async (query: string): Promise<Product[]> => {
-    // Perform client-side filtering since backend search endpoint wasn't provided in controllers
     const all = await productsAPI.getAll();
     return all.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
   },
 
   getByCategory: async (category: string): Promise<Product[]> => {
-    // Perform client-side filtering
     const all = await productsAPI.getAll();
     return all.filter(p => p.category === category);
   },
@@ -118,55 +118,49 @@ export interface OrderData {
 
 export interface OrderResponse {
   orderId: string;
-  status: 'processing' | 'in-transit' | 'delivered';
+  status: 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded';
   estimatedDelivery: string;
   totalPrice: number;
   items: any[];
   date: string;
 }
 
-// Helper to map Database status to Frontend UI status
-const mapStatus = (backendStatus: string): 'processing' | 'in-transit' | 'delivered' => {
+const mapStatus = (backendStatus: string): 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded' => {
   const status = backendStatus ? backendStatus.toUpperCase() : 'PENDING';
   if (status === 'IN_TRANSIT' || status === 'SHIPPED') return 'in-transit';
   if (status === 'DELIVERED') return 'delivered';
-  return 'processing'; // Default for "PENDING" or unknown
+  if (status === 'CANCELLED') return 'cancelled';
+  if (status === 'REFUNDED' || status === 'RETURNED') return 'refunded';
+  return 'processing';
 };
 
 export const ordersAPI = {
-  // Complex Logic: Sync local cart to server, then checkout
   create: async (orderData: OrderData): Promise<OrderResponse> => {
     const userId = localStorage.getItem('userId');
     if (!userId) throw new Error("User not logged in");
 
-    // 1. Clear server cart to ensure it matches local checkout state
-    // We try to clear it, but if it fails (empty), we ignore
     try {
       await apiCall(`/cart/${userId}`, { method: 'DELETE' });
     } catch (e) { console.log("Cart clear ignored or failed", e); }
 
-    // 2. Add all items from checkout to server cart
-    // This loops through items and adds them one by one
     for (const item of orderData.items) {
-      await apiCall('/cart/add', {
-        method: 'POST',
-        body: JSON.stringify({
-          userId: parseInt(userId),
-          productId: parseInt(item.productId),
-          quantity: item.quantity
-        })
-      });
+      try {
+        await apiCall('/cart/add', {
+          method: 'POST',
+          body: JSON.stringify({
+            userId: parseInt(userId),
+            productId: parseInt(item.productId),
+            quantity: item.quantity
+          })
+        });
+      } catch (e) { console.error(e) }
     }
 
-    // 3. Perform Checkout
-    const order = await apiCall<any>(`/cart/checkout/${userId}`, {
-      method: 'POST'
-    });
+    const order = await apiCall<any>(`/cart/checkout/${userId}`, { method: 'POST' });
 
-    // 4. Return formatted response
     return {
       orderId: order.id.toString(),
-      status: mapStatus(order.status), // Backend status is PENDING
+      status: mapStatus(order.status),
       estimatedDelivery: '2 Days',
       totalPrice: orderData.totalPrice,
       items: orderData.items,
@@ -174,7 +168,6 @@ export const ordersAPI = {
     };
   },
   syncCart: async (userId: string, items: CartItem[]) => {
-    // Loop through local items and send them to the server
     for (const item of items) {
       try {
         await apiCall('/cart/add', {
@@ -195,15 +188,15 @@ export const ordersAPI = {
     const order = await apiCall<any>(`/orders/${orderId}`);
     return {
       orderId: order.orderId.toString(),
-      status: mapStatus(order.status), // <--- FIX: Use real status
+      status: mapStatus(order.status),
       estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '2 Days',
       totalPrice: order.totalAmount,
       items: order.items.map((item: any) => ({
-        productId: item.productId || '0', // Backend DTO doesn't send ID currently
-        name: item.productName,           // Map productName to name
+        productId: item.productId || '0',
+        name: item.productName,
         productName: item.productName,
         quantity: item.quantity,
-        price: item.unitPrice             // <--- CRITICAL FIX (was undefined before)
+        price: item.unitPrice
       })),
       date: order.orderDate
     };
@@ -224,23 +217,30 @@ export const ordersAPI = {
         name: item.productName,
         productName: item.productName,
         quantity: item.quantity,
-        price: item.unitPrice             // <--- CRITICAL FIX
+        price: item.unitPrice
       })),
       date: order.orderDate
     }));
   },
 
+  cancel: async (orderId: string): Promise<OrderResponse> => {
+    const response = await apiCall<any>(`/orders/${orderId}/cancel`, { method: 'PUT' });
+    return {
+      orderId: response.orderId.toString(),
+      status: mapStatus(response.status),
+      estimatedDelivery: 'Cancelled',
+      totalPrice: response.totalAmount,
+      items: response.items || [],
+      date: response.orderDate
+    };
+  },
+
   downloadInvoice: async (orderId: string) => {
     const token = localStorage.getItem('authToken');
     const response = await fetch(`http://localhost:8080/api/invoice/${orderId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
-
     if (!response.ok) throw new Error('Failed to download invoice');
-
-    // Convert response to blob and trigger download
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -258,7 +258,6 @@ export const reviewsAPI = {
     const userId = localStorage.getItem('userId');
     if(!userId) throw new Error("Must be logged in");
 
-
     const safeComment = comment === 0 ? "0" : String(comment || "");
     return apiCall('/reviews', {
       method: 'POST',
@@ -273,7 +272,6 @@ export const reviewsAPI = {
 
   getByProduct: async (productId: string) => {
     const reviews = await apiCall<any[]>(`/reviews/product/${productId}`);
-    // Map the backend response to our frontend interface
     return reviews.map(r => ({
       id: r.id.toString(),
       productId: r.productId.toString(),
@@ -281,7 +279,7 @@ export const reviewsAPI = {
       rating: r.rating,
       comment: r.comment,
       date: r.createdAt,
-      status: r.status || 'APPROVED' // Default to APPROVED if missing for older data
+      status: r.status || 'APPROVED'
     }));
   }
 }
@@ -289,35 +287,35 @@ export const reviewsAPI = {
 // User API
 export const userAPI = {
   getProfile: async (): Promise<any> => {
-    // Currently we rely on LocalStorage, but could fetch addresses here
     const userId = localStorage.getItem('userId');
     if (!userId) return null;
     return apiCall(`/addresses/${userId}`);
   },
 };
 
+// Wishlist API
 export const wishlistAPI = {
   get: async (): Promise<Product[]> => {
     const data = await apiCall<any[]>('/wishlist');
-    // Backend returns list of Wishlist objects { id, product: {...} }
-    return data.map((w: any) => ({
-          id: w.id.toString(),
-          name: w.name,
-          category: w.category ? w.category.name : 'Uncategorized',
-          price: w.price,
-          image: w.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400',
-          description: w.description,
-          inStock: (w.quantity || 0) > 0,
-          stockCount: w.quantity || 0,
-          requiresPrescription: false,
-          popularity: 80,
-          rating: 4.5,
-          reviewCount: 0,
-          model: 'Standard',
-          serialNumber: `SN-${w.id}`,
-          warrantyStatus: '1 Year',
-          distributor: 'Sabanci Pharmacy'
-    }));
+    // Ensure we handle the nested structure correctly as per previous fix
+    return Array.isArray(data) ? data.map((w: any) => ({
+      id: w.product.id.toString(),
+      name: w.product.name,
+      category: w.product.category ? w.product.category.name : 'Uncategorized',
+      price: w.product.price,
+      image: w.product.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400',
+      description: w.product.description,
+      inStock: (w.product.quantity || 0) > 0,
+      stockCount: w.product.quantity || 0,
+      requiresPrescription: false,
+      popularity: w.product.total_orders || 0,
+      rating: w.product.averageRating || 0,
+      reviewCount: 0,
+      model: w.product.model || 'Standard',
+      serialNumber: w.product.serialNumber || `SN-${w.product.id}`,
+      warrantyStatus: w.product.warrantyStatus || '1 Year',
+      distributor: w.product.distributor || 'Sabanci Pharmacy'
+    })) : [];
   },
 
   add: async (productId: string): Promise<void> => {

@@ -1,6 +1,6 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.cs308_team_3.sabanci_pharmacy.dto.Product.DeliveryItemDto;
+import com.cs308_team_3.sabanci_pharmacy.dto.Product.*;
 import com.cs308_team_3.sabanci_pharmacy.entity.*;
 import com.cs308_team_3.sabanci_pharmacy.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,41 @@ public class ProductManagerService {
         productRepository.deleteById(productId);
     }
 
+    @Transactional
+    public Product updateProduct(Integer id, ProductRequest request) {
+        Product existing = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // 1. Update simple fields
+        existing.setName(request.getName());
+        existing.setDescription(request.getDescription());
+        existing.setPrice(request.getPrice());
+        existing.setQuantity(request.getQuantity());
+        existing.setImageUrl(request.getImageUrl());
+        // existing.setRequiresPrescription(request.isRequiresPrescription()); // Uncomment if field exists in Entity
+
+        // 2. Handle Category Logic
+        if (request.getCategory() != null && !request.getCategory().isEmpty()) {
+            String categoryName = request.getCategory();
+            
+            // Try to find existing category, or create new one if it doesn't exist
+            Category category = categoryRepository.findByName(categoryName)
+                    .orElseGet(() -> {
+                        Category newCat = new Category();
+                        newCat.setName(categoryName);
+                        return categoryRepository.save(newCat);
+                    });
+            
+            existing.setCategory(category);
+        }
+
+        return productRepository.save(existing);
+    }
+
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAll();
+    }
+    
     public Category saveCategory(Category category) {
         return categoryRepository.save(category);
     }

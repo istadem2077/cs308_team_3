@@ -17,6 +17,7 @@ public interface OrderRepository extends JpaRepository<Order,Integer> {
     // NEW: Get all orders, newest first
     List<Order> findAllByOrderByCreatedAtDesc();
 
+    
     List<Order> findAllByCreatedAtBetweenAndStatus(LocalDateTime startDate, LocalDateTime endDate, String status);
 
     // We need to join multiple tables to get the delivery details
@@ -28,7 +29,7 @@ public interface OrderRepository extends JpaRepository<Order,Integer> {
 	   "o.status) " +
 	   "FROM Order o " +
 	   "JOIN o.orderItems i " +
-	   "JOIN o.shippingAddress a " +
+	   "LEFT JOIN o.shippingAddress a " +
 	   "ORDER BY o.createdAt DESC")
     List<DeliveryItemDto> findAllDeliveryItems();
 }
