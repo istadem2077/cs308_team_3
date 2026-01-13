@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 import type { User } from '../services/auth';
 import { authService } from '../services/auth';
-import { OrderResponse, Product } from '../services/api';
+import { OrderResponse } from '../services/api';
+import { Product } from '../App';
 import { CustomerChat } from './CustomerChat';
 import { Orders } from './Orders';
 import { TURKISH_CITIES } from '../services/auth';

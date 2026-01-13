@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Product } from '../services/api';
+import { Product } from '../App';
 import { Pdashboard } from './ProductManager/Pdashboard';
 import { Pcategories } from './ProductManager/Pcategories';
 import { Pproducts } from './ProductManager/Pproducts';
