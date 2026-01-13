@@ -9,6 +9,7 @@ export interface AuthResponse {
   address: string;
 }
 
+// Turkish Cities List (Kept as is...)
 export const TURKISH_CITIES = [
   'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya',
   'Artvin', 'Aydın', 'Balıkesir', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu',
@@ -26,7 +27,7 @@ export const TURKISH_CITIES = [
 
 export const authService = {
   // Login
-  login: async (credentials: any): Promise<AuthResponse> => {
+  login: async (credentials: {email: string, password: string}): Promise<AuthResponse> => {
     const response = await fetch(`${API_BASE_URL}/user/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,10 +40,11 @@ export const authService = {
 
     const data = await response.json();
     localStorage.setItem('token', data.token);
+    localStorage.setItem('userId', data.userId.toString()); // Store ID separately for easy access
     localStorage.setItem('user', JSON.stringify({
       id: data.userId.toString(),
       name: data.name,
-      email: credentials.email, // Backend doesn't return email in AuthResponse, so we preserve it
+      email: credentials.email,
       address: data.address
     }));
     return data;
@@ -50,18 +52,30 @@ export const authService = {
 
   // Register
   register: async (userData: any): Promise<AuthResponse> => {
+    // Backend RegisterRequest expects: 
+    // { name, email, password, confirmPassword, gender, phone, age, addressLine, city, province, zipCode }
+    
+    // Ensure numeric types are numbers
+    const payload = {
+        ...userData,
+        age: parseInt(userData.age),
+        phone: parseInt(userData.phone) // Backend uses BigInteger, JS number usually fine for simple check
+    };
+
     const response = await fetch(`${API_BASE_URL}/user/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      throw new Error('Registration failed');
+       const errText = await response.text();
+       throw new Error(errText || 'Registration failed');
     }
 
     const data = await response.json();
     localStorage.setItem('token', data.token);
+    localStorage.setItem('userId', data.userId.toString());
     localStorage.setItem('user', JSON.stringify({
       id: data.userId.toString(),
       name: data.name,
@@ -71,19 +85,13 @@ export const authService = {
     return data;
   },
 
-  // Logout
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
     window.location.href = '/login';
   },
 
-  // Get Current Token
-  getToken: (): string | null => {
-    return localStorage.getItem('token');
-  },
-
-  // Get Current User
   getCurrentUser: (): User | null => {
     const userStr = localStorage.getItem('user');
     if (!userStr) return null;
@@ -94,7 +102,7 @@ export const authService = {
     }
   },
 
-  isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('token');
+  getToken: (): string | null => {
+    return localStorage.getItem('token');
   }
 };

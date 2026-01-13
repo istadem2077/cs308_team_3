@@ -1,36 +1,7 @@
-import { authService } from './auth';
+import { User } from './auth';
 
 // Configuration
 const API_BASE_URL = 'http://localhost:8080/api';
-
-// Type definitions matching Frontend Components
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  stockCount: number;
-  inStock: boolean;
-  rating: number; // Mapped from backend reviews or defaulted
-  reviewCount: number;
-  isPrescriptionRequired?: boolean;
-}
-
-export interface CartItem extends Product {
-  quantity: number;
-}
-
-export interface Review {
-  id: string;
-  productId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-  status?: string;
-}
 
 // Helper function for API calls
 async function apiCall<T>(
@@ -38,270 +9,305 @@ async function apiCall<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = authService.getToken();
   
-  const defaultHeaders: Record<string, string> = {
+  const token = localStorage.getItem('token'); // Changed from 'authToken' to 'token' to match auth.ts
+  
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...options.headers,
   };
-
-  if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
-  }
 
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
+      headers,
     });
 
-    if (response.status === 401) {
-      authService.logout();
-      throw new Error('Session expired');
-    }
-
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error: ${response.status} - ${errorText}`);
+        // Try to parse error message from backend
+        let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+        try {
+            const errorBody = await response.text();
+            if(errorBody) errorMessage = errorBody;
+        } catch {}
+        throw new Error(errorMessage);
     }
 
-    // Handle empty responses
-    const text = await response.text();
-    return text ? JSON.parse(text) : {} as T;
+    // Handle empty responses (like from DELETE)
+    if (response.status === 204) return {} as T;
+    
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      return await response.json();
+    } else {
+      // Handle simple string responses (like "Product added to wishlist")
+      const text = await response.text();
+      return text as unknown as T; 
+    }
   } catch (error) {
     console.error('API call failed:', error);
     throw error;
   }
 }
 
-// --- Data Mappers (Backend -> Frontend) ---
+// Interfaces matching your Backend DTOs/Entities
+// --- NEW CART API ---
+export const cartAPI = {
+  getCart: async (userId: string): Promise<CartItem[]> => {
+    try {
+      // Backend returns a Cart object with a list of items
+      const cart = await apiCall<any>(`/cart/${userId}`);
+      if (!cart || !cart.items) return [];
 
-const mapProduct = (p: any): Product => ({
-  id: p.id.toString(),
-  name: p.name,
-  description: p.description || p.name, // Fallback if no desc
-  price: p.price,
-  image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400', // Fallback image
-  category: p.category ? p.category.name : 'General',
-  stockCount: p.quantity, // Backend uses 'quantity' for stock
-  inStock: p.quantity > 0,
-  rating: 4.5, // Backend might not calculate this yet, default for UI
-  reviewCount: 0,
-  isPrescriptionRequired: false // Backend needs this field, defaulting to false
-});
-
-const mapOrder = (o: any): OrderResponse => ({
-  orderId: o.orderId.toString(),
-  status: o.status.toLowerCase(),
-  estimatedDelivery: '3-5 Days',
-  totalPrice: o.totalAmount,
-  items: o.items.map((i: any) => ({
-    productId: i.productId.toString(),
-    productName: i.productName,
-    quantity: i.quantity,
-    price: i.unitPrice
-  })),
-  date: o.orderDate
-});
-
-// --- API Exports ---
-
-export const productsAPI = {
-  getAll: async (): Promise<Product[]> => {
-    const data = await apiCall<any[]>('/products');
-    return data.map(mapProduct);
+      // Mapper: Backend (item.product.name) -> Frontend (item.name)
+      return cart.items.map((item: any) => ({
+        ...productsAPI.mapProduct(item.product), // Flatten the product details
+        quantity: item.quantity,                 // Use the cart-specific quantity
+      }));
+    } catch (e) {
+      console.warn("Could not fetch cart (maybe empty or user new)", e);
+      return [];
+    }
   },
 
-  getById: async (id: string): Promise<Product> => {
-    const data = await apiCall<any>(`/products/${id}`);
-    return mapProduct(data);
-  },
-
-  search: async (query: string): Promise<Product[]> => {
-    const data = await apiCall<any[]>(`/products/search?query=${encodeURIComponent(query)}`);
-    return data.map(mapProduct);
-  },
-
-  getByCategory: async (category: string): Promise<Product[]> => {
-    // Backend doesn't have a direct 'get by category name' endpoint visible
-    // So we fetch all and filter client side for now, or you can add the endpoint
-    const all = await productsAPI.getAll();
-    return all.filter(p => p.category.toLowerCase() === category.toLowerCase());
-  }
-};
-
-export const reviewsAPI = {
-  getByProduct: async (productId: string): Promise<Review[]> => {
-    const data = await apiCall<any[]>(`/reviews/product/${productId}`);
-    return data.map((r: any) => ({
-      id: r.id.toString(),
-      productId: r.productId.toString(),
-      userName: r.userName,
-      rating: r.rating,
-      comment: r.comment,
-      date: r.createdAt,
-      status: r.status
-    }));
-  },
-
-  add: async (review: { productId: number, userId: number, rating: number, comment: string }) => {
-    return apiCall('/reviews', {
+  addToCart: async (userId: string, productId: string, quantity: number) => {
+    return apiCall('/cart/add', {
       method: 'POST',
-      body: JSON.stringify(review)
+      body: JSON.stringify({
+        userId: parseInt(userId),
+        productId: parseInt(productId),
+        quantity: quantity
+      })
     });
+  },
+
+  removeFromCart: async (userId: string, productId: string, quantity: number) => {
+    return apiCall('/cart/remove', {
+      method: 'POST',
+      body: JSON.stringify({
+        userId: parseInt(userId),
+        productId: parseInt(productId),
+        quantity: quantity
+      })
+    });
+  },
+  
+  clearCart: async (userId: string) => {
+    return apiCall(`/cart/${userId}`, { method: 'DELETE' });
   }
 };
 
+// ... (Keep existing ordersAPI, wishlistAPI, reviewsAPI) ...
+// NOTE: I updated productsAPI in the previous step, make sure to include it.
+export const productsAPI = {
+  mapProduct: (p: any): Product => ({
+    id: p.id.toString(),
+    name: p.name,
+    category: p.category ? p.category.name : 'Uncategorized',
+    price: p.price,
+    image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400',
+    description: p.description,
+    inStock: (p.quantity || 0) > 0,
+    stockCount: p.quantity || 0,
+    requiresPrescription: false,
+    popularity: p.total_orders || 0,
+    rating: p.averageRating || 0,
+    reviewCount: 0,
+    model: 'Standard',
+    serialNumber: `SN-${p.id}`,
+    warrantyStatus: '1 Year',
+    distributor: 'Sabanci Pharmacy'
+  }),
+  getAll: async (): Promise<Product[]> => {
+    const products = await apiCall<any[]>('/products');
+    return products.map(productsAPI.mapProduct);
+  },
+  getById: async (id: string): Promise<Product> => {
+    const p = await apiCall<any>(`/products/${id}`);
+    return productsAPI.mapProduct(p);
+  },
+  search: async (query: string): Promise<Product[]> => {
+    const products = await apiCall<any[]>(`/products/search?query=${encodeURIComponent(query)}`);
+    return products.map(productsAPI.mapProduct);
+  },
+};
+
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  image: string;
+  description: string;
+  inStock: boolean;
+  stockCount: number;
+  rating: number; 
+  popularity: number;
+  reviewCount: number;
+  requiresPrescription: boolean;
+  model: string;
+  serialNumber: string;
+  warrantyStatus: string;
+  distributor: string;
+}
+
+export interface CartItem extends Product {
+    quantity: number;
+}
+
+// Orders API
 export interface OrderData {
-  items: Array<{ productId: string; quantity: number }>;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    price: number;
+  }>;
   totalPrice: number;
+  deliveryAddress: any;
 }
 
 export interface OrderResponse {
   orderId: string;
-  status: 'pending' | 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded';
+  status: 'processing' | 'in-transit' | 'delivered' | 'cancelled';
   estimatedDelivery: string;
   totalPrice: number;
-  items: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-    price: number;
-  }>;
+  items: any[];
   date: string;
 }
 
+const mapStatus = (backendStatus: string): any => {
+    const status = backendStatus ? backendStatus.toUpperCase() : 'PENDING';
+    if (status === 'IN_TRANSIT' || status === 'SHIPPED') return 'in-transit';
+    if (status === 'DELIVERED') return 'delivered';
+    if (status === 'CANCELLED') return 'cancelled';
+    return 'processing'; 
+};
+
 export const ordersAPI = {
-  // Create Order (Sync Cart -> Checkout)
   create: async (orderData: OrderData): Promise<OrderResponse> => {
-    const user = authService.getCurrentUser();
-    if (!user) throw new Error("User not logged in");
-    
-    // 1. Ensure backend cart matches frontend order
-    // We clear the backend cart and re-add items to ensure sync
-    await cartAPI.clear(parseInt(user.id));
-    
+    const userId = localStorage.getItem('userId');
+    if (!userId) throw new Error("User not logged in");
+
+    // 1. Sync Cart (Logic moved to Backend mostly, but we ensure backend cart is ready)
+    // We send items to ensure backend cart has them before checkout
     for (const item of orderData.items) {
-      await cartAPI.addToCart({
-        userId: parseInt(user.id),
-        productId: parseInt(item.productId),
-        quantity: item.quantity
-      });
+         // Backend CartRequest: { userId, productId, quantity }
+        await apiCall('/cart/add', {
+            method: 'POST',
+            body: JSON.stringify({
+                userId: parseInt(userId),
+                productId: parseInt(item.productId),
+                quantity: item.quantity
+            })
+        });
     }
 
     // 2. Checkout
-    // The backend checkout creates the order from the Cart
-    const response = await apiCall<any>(`/cart/checkout/${user.id}`, {
-      method: 'POST'
+    // Backend returns the 'Order' entity. Warning: OrderItems might be null in JSON (@JsonIgnore)
+    const order = await apiCall<any>(`/cart/checkout/${userId}`, {
+        method: 'POST'
     });
 
-    // Map the backend Order entity to OrderResponse
-    // Note: The backend checkout returns the Order entity
-    // We need to fetch the mapped DTO or map it manually here
-    // Assuming backend returns Order entity structure:
+    // 3. Construct Response
+    // Since backend Order entity might hide items via @JsonIgnore, we use local data for the immediate UI response
     return {
-       orderId: response.id.toString(),
-       status: response.status.toLowerCase(),
-       estimatedDelivery: 'Pending',
-       totalPrice: response.orderItems.reduce((acc: number, item: any) => acc + (item.unitPrice * item.quantity), 0),
-       items: response.orderItems.map((i: any) => ({
-         productId: i.product.id.toString(),
-         productName: i.product.name,
-         quantity: i.quantity,
-         price: i.unitPrice
-       })),
-       date: response.createdAt
+        orderId: order.id.toString(),
+        status: 'processing',
+        estimatedDelivery: '2 Days',
+        totalPrice: orderData.totalPrice,
+        items: orderData.items,
+        date: order.createdAt || new Date().toISOString(),
     };
   },
 
+  // Get History using OrderResponseDto
   getHistory: async (): Promise<OrderResponse[]> => {
-    const user = authService.getCurrentUser();
-    if (!user) return [];
-    const data = await apiCall<any[]>(`/orders/user/${user.id}`);
-    return data.map(mapOrder);
+    const userId = localStorage.getItem('userId');
+    if (!userId) return [];
+
+    const orders = await apiCall<any[]>(`/orders/user/${userId}`);
+    return orders.map(order => ({
+        orderId: order.orderId.toString(),
+        status: mapStatus(order.status),
+        estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '2 Days',
+        totalPrice: order.totalAmount,
+        items: order.items.map((item: any) => ({
+            productId: item.productId.toString(),
+            name: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice
+        })),
+        date: order.orderDate
+    }));
   },
 
-  cancel: async (orderId: string): Promise<void> => {
-    await apiCall(`/orders/${orderId}/cancel`, { method: 'PUT' });
-  },
+  downloadInvoice: async (orderId: string) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/invoice/${orderId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
 
-  refund: async (orderId: string): Promise<void> => {
-    await apiCall(`/orders/${orderId}/return`, { method: 'PUT' });
+    if (!response.ok) throw new Error('Failed to download invoice');
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice_${orderId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 };
 
-export const cartAPI = {
-  // Clear cart
-  clear: async (userId: number) => {
-    await apiCall(`/cart/${userId}`, { method: 'DELETE' });
-  },
+// Wishlist API (NEW)
+export const wishlistAPI = {
+    getMyWishlist: async (): Promise<Product[]> => {
+        // Backend returns List<Wishlist>, where Wishlist has a 'product' field
+        const wishlistItems = await apiCall<any[]>('/wishlist');
+        return wishlistItems.map(w => productsAPI.mapProduct(w.product));
+    },
 
-  // Add single item
-  addToCart: async (data: { userId: number, productId: number, quantity: number }) => {
-    await apiCall('/cart/add', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-  },
+    add: async (productId: string) => {
+        return apiCall(`/wishlist/add/${productId}`, { method: 'POST' });
+    },
 
-  // Save full cart (Strategy: Clear then Add All)
-  // This is inefficient but ensures state sync if frontend is "master"
-  save: async (items: CartItem[]): Promise<void> => {
-    const user = authService.getCurrentUser();
-    if (!user) return;
-
-    await cartAPI.clear(parseInt(user.id));
-    for (const item of items) {
-      await cartAPI.addToCart({
-        userId: parseInt(user.id),
-        productId: parseInt(item.id),
-        quantity: item.quantity
-      });
+    remove: async (productId: string) => {
+        return apiCall(`/wishlist/remove/${productId}`, { method: 'DELETE' });
     }
-  },
-
-  load: async (): Promise<CartItem[]> => {
-    const user = authService.getCurrentUser();
-    if (!user) return [];
-
-    try {
-      const cart = await apiCall<any>(`/cart/${user.id}`);
-      if (!cart || !cart.items) return [];
-
-      return cart.items.map((item: any) => ({
-        ...mapProduct(item.product),
-        quantity: item.quantity
-      }));
-    } catch (e) {
-      console.warn("Could not load cart", e);
-      return [];
-    }
-  },
 };
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
+// Reviews API
+export interface Review {
+    id: string;
+    productId: string;
+    userName: string;
+    rating: number;
+    comment: string;
+    date: string;
+    status: string;
 }
 
-export const userAPI = {
-  getProfile: async (): Promise<User> => {
-    // If backend doesn't have a /me endpoint, return stored user
-    // Otherwise: return apiCall<User>('/user/me');
-    const user = authService.getCurrentUser();
-    if (!user) throw new Error("Not logged in");
-    return Promise.resolve(user);
-  },
+export const reviewsAPI = {
+    add: async (data: { productId: number; userId: number; rating: number; comment: string }) => {
+        return apiCall('/reviews', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
 
-  updateProfile: async (userData: Partial<User>): Promise<User> => {
-    // Backend doesn't show a generic update profile, only password
-    // Implement if backend adds it. For now, return input.
-    console.log("Update profile not fully supported by backend yet");
-    return Promise.resolve({ ...authService.getCurrentUser()!, ...userData });
-  }
-};
+    getByProduct: async (productId: string): Promise<Review[]> => {
+        const reviews = await apiCall<any[]>(`/reviews/product/${productId}`);
+        return reviews.map(r => ({
+            id: r.id.toString(),
+            productId: r.productId.toString(),
+            userName: r.userName || 'Anonymous',
+            rating: r.rating,
+            comment: r.comment,
+            date: r.createdAt,
+            status: r.status
+        }));
+    }
+}
