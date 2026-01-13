@@ -247,9 +247,6 @@ export function Porders({ orders, onBack, onNavigate, onUpdateOrderStatus }: Por
                         <span className="text-gray-600">{order.productId}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-gray-600">{order.productId}</span>
-                      </td>
-                      <td className="px-6 py-4">
                         <span className="text-gray-600">{order.deliveryAddress || '-'}</span>
                       </td>
                       <td className="px-6 py-4">

@@ -43,9 +43,9 @@ export function Previews({ reviews, onBack, onNavigate, onUpdateReviewStatus }: 
 
   const filteredReviews = reviewList.filter(
     review =>
-      review.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      review.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      review.comment.toLowerCase().includes(searchQuery.toLowerCase())
+        (review.userName || "anonymous").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (review.productName || "unknown").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (review.comment || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderStars = (rating: number) => {

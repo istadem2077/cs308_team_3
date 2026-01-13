@@ -208,7 +208,7 @@ export function ProductManager({ onBack, onLogout, ...props }: ProductManagerPro
   if (activeTab === 'reviews') {
     return (
       <Previews
-        reviews={Promise.resolve(deliveries)}
+        reviews={Promise.resolve(reviews)}
         onBack={onBack}
         onNavigate={handleNavigate}
         onUpdateReviewStatus={handleUpdateReviewStatus}
