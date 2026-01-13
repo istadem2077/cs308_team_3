@@ -1,8 +1,9 @@
-// Configuration - Replace these with your actual API endpoints
-const API_BASE_URL = 'https://your-api-endpoint.com/api';
-const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+import { authService } from './auth';
 
-// Type definitions
+// Configuration
+const API_BASE_URL = 'http://localhost:8080/api';
+
+// Type definitions matching Frontend Components
 export interface Product {
   id: string;
   name: string;
@@ -12,10 +13,9 @@ export interface Product {
   category: string;
   stockCount: number;
   inStock: boolean;
-  rating: number;
+  rating: number; // Mapped from backend reviews or defaulted
   reviewCount: number;
   isPrescriptionRequired?: boolean;
-  popularity: number;
 }
 
 export interface CartItem extends Product {
@@ -29,11 +29,8 @@ export interface Review {
   rating: number;
   comment: string;
   date: string;
+  status?: string;
 }
-
-// Mock data exports
-export { products as mockProducts } from '../data/products';
-export { mockReviews } from '../data/reviews';
 
 // Helper function for API calls
 async function apiCall<T>(
@@ -41,11 +38,15 @@ async function apiCall<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = authService.getToken();
   
-  const defaultHeaders = {
+  const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${API_KEY}`,
   };
+
+  if (token) {
+    defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
 
   try {
     const response = await fetch(url, {
@@ -56,84 +57,111 @@ async function apiCall<T>(
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    if (response.status === 401) {
+      authService.logout();
+      throw new Error('Session expired');
     }
 
-    return await response.json();
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error: ${response.status} - ${errorText}`);
+    }
+
+    // Handle empty responses
+    const text = await response.text();
+    return text ? JSON.parse(text) : {} as T;
   } catch (error) {
     console.error('API call failed:', error);
     throw error;
   }
 }
 
-// Products API
+// --- Data Mappers (Backend -> Frontend) ---
+
+const mapProduct = (p: any): Product => ({
+  id: p.id.toString(),
+  name: p.name,
+  description: p.description || p.name, // Fallback if no desc
+  price: p.price,
+  image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=400', // Fallback image
+  category: p.category ? p.category.name : 'General',
+  stockCount: p.quantity, // Backend uses 'quantity' for stock
+  inStock: p.quantity > 0,
+  rating: 4.5, // Backend might not calculate this yet, default for UI
+  reviewCount: 0,
+  isPrescriptionRequired: false // Backend needs this field, defaulting to false
+});
+
+const mapOrder = (o: any): OrderResponse => ({
+  orderId: o.orderId.toString(),
+  status: o.status.toLowerCase(),
+  estimatedDelivery: '3-5 Days',
+  totalPrice: o.totalAmount,
+  items: o.items.map((i: any) => ({
+    productId: i.productId.toString(),
+    productName: i.productName,
+    quantity: i.quantity,
+    price: i.unitPrice
+  })),
+  date: o.orderDate
+});
+
+// --- API Exports ---
+
 export const productsAPI = {
-  // Get all products
   getAll: async (): Promise<Product[]> => {
-    // Mock implementation - replace with real API call
-    // return apiCall<Product[]>('/products');
-    
-    // For now, using mock data
-    const { products } = await import('../data/products');
-    return new Promise(resolve => setTimeout(() => resolve(products), 500));
+    const data = await apiCall<any[]>('/products');
+    return data.map(mapProduct);
   },
 
-  // Get product by ID
   getById: async (id: string): Promise<Product> => {
-    // return apiCall<Product>(`/products/${id}`);
-    
-    const { products } = await import('../data/products');
-    const product = products.find(p => p.id === id);
-    if (!product) throw new Error('Product not found');
-    return new Promise(resolve => setTimeout(() => resolve(product), 300));
+    const data = await apiCall<any>(`/products/${id}`);
+    return mapProduct(data);
   },
 
-  // Search products
   search: async (query: string): Promise<Product[]> => {
-    // return apiCall<Product[]>(`/products/search?q=${encodeURIComponent(query)}`);
-    
-    const { products } = await import('../data/products');
-    const filtered = products.filter(p =>
-      p.name.toLowerCase().includes(query.toLowerCase())
-    );
-    return new Promise(resolve => setTimeout(() => resolve(filtered), 400));
+    const data = await apiCall<any[]>(`/products/search?query=${encodeURIComponent(query)}`);
+    return data.map(mapProduct);
   },
 
-  // Get products by category
   getByCategory: async (category: string): Promise<Product[]> => {
-    // return apiCall<Product[]>(`/products/category/${category}`);
-    
-    const { products } = await import('../data/products');
-    const filtered = products.filter(p => p.category === category);
-    return new Promise(resolve => setTimeout(() => resolve(filtered), 400));
-  },
+    // Backend doesn't have a direct 'get by category name' endpoint visible
+    // So we fetch all and filter client side for now, or you can add the endpoint
+    const all = await productsAPI.getAll();
+    return all.filter(p => p.category.toLowerCase() === category.toLowerCase());
+  }
 };
 
-// Orders API
+export const reviewsAPI = {
+  getByProduct: async (productId: string): Promise<Review[]> => {
+    const data = await apiCall<any[]>(`/reviews/product/${productId}`);
+    return data.map((r: any) => ({
+      id: r.id.toString(),
+      productId: r.productId.toString(),
+      userName: r.userName,
+      rating: r.rating,
+      comment: r.comment,
+      date: r.createdAt,
+      status: r.status
+    }));
+  },
+
+  add: async (review: { productId: number, userId: number, rating: number, comment: string }) => {
+    return apiCall('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(review)
+    });
+  }
+};
+
 export interface OrderData {
-  items: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-    price: number;
-  }>;
+  items: Array<{ productId: string; quantity: number }>;
   totalPrice: number;
-  deliveryAddress: {
-    name: string;
-    phone: string;
-    city: string;
-    province: string;
-    postcode: string;
-    addressLine: string;
-    notes: string;
-  };
-  prescriptionRequired: boolean;
 }
 
 export interface OrderResponse {
   orderId: string;
-  status: 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded';
+  status: 'pending' | 'processing' | 'in-transit' | 'delivered' | 'cancelled' | 'refunded';
   estimatedDelivery: string;
   totalPrice: number;
   items: Array<{
@@ -141,208 +169,139 @@ export interface OrderResponse {
     productName: string;
     quantity: number;
     price: number;
-    originalPrice?: number;
-    discount?: number;
   }>;
   date: string;
 }
 
 export const ordersAPI = {
-  // Create new order
+  // Create Order (Sync Cart -> Checkout)
   create: async (orderData: OrderData): Promise<OrderResponse> => {
-    // Real implementation:
-    // const formData = new FormData();
-    // formData.append('orderData', JSON.stringify(orderData));
-    // if (orderData.prescriptionFile) {
-    //   formData.append('prescription', orderData.prescriptionFile);
-    // }
-    // return apiCall<OrderResponse>('/orders', {
-    //   method: 'POST',
-    //   body: formData,
-    //   headers: {}, // Let browser set Content-Type for FormData
-    // });
-
-    // Mock implementation
-    console.log('Creating order:', orderData);
-    const orderId = `ORD-${Date.now()}`;
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            orderId,
-            status: 'processing',
-            estimatedDelivery: '2-4 hours',
-            totalPrice: orderData.totalPrice,
-            items: orderData.items.map(item => ({
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-            date: new Date().toISOString(),
-          }),
-        1000
-      )
-    );
-  },
-
-  // Get order by ID
-  getById: async (orderId: string): Promise<OrderResponse> => {
-    // return apiCall<OrderResponse>(`/orders/${orderId}`);
+    const user = authService.getCurrentUser();
+    if (!user) throw new Error("User not logged in");
     
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            orderId,
-            status: 'processing',
-            estimatedDelivery: '2-4 hours',
-            totalPrice: 450,
-            items: [
-              {
-                productId: '1',
-                productName: 'Product 1',
-                quantity: 2,
-                price: 200,
-              },
-              {
-                productId: '2',
-                productName: 'Product 2',
-                quantity: 1,
-                price: 50,
-              },
-            ],
-            date: new Date().toISOString(),
-          }),
-        500
-      )
-    );
+    // 1. Ensure backend cart matches frontend order
+    // We clear the backend cart and re-add items to ensure sync
+    await cartAPI.clear(parseInt(user.id));
+    
+    for (const item of orderData.items) {
+      await cartAPI.addToCart({
+        userId: parseInt(user.id),
+        productId: parseInt(item.productId),
+        quantity: item.quantity
+      });
+    }
+
+    // 2. Checkout
+    // The backend checkout creates the order from the Cart
+    const response = await apiCall<any>(`/cart/checkout/${user.id}`, {
+      method: 'POST'
+    });
+
+    // Map the backend Order entity to OrderResponse
+    // Note: The backend checkout returns the Order entity
+    // We need to fetch the mapped DTO or map it manually here
+    // Assuming backend returns Order entity structure:
+    return {
+       orderId: response.id.toString(),
+       status: response.status.toLowerCase(),
+       estimatedDelivery: 'Pending',
+       totalPrice: response.orderItems.reduce((acc: number, item: any) => acc + (item.unitPrice * item.quantity), 0),
+       items: response.orderItems.map((i: any) => ({
+         productId: i.product.id.toString(),
+         productName: i.product.name,
+         quantity: i.quantity,
+         price: i.unitPrice
+       })),
+       date: response.createdAt
+    };
   },
 
-  // Get user's order history
   getHistory: async (): Promise<OrderResponse[]> => {
-    // return apiCall<OrderResponse[]>('/orders/history');
-    
-    return new Promise(resolve => setTimeout(() => resolve([]), 500));
+    const user = authService.getCurrentUser();
+    if (!user) return [];
+    const data = await apiCall<any[]>(`/orders/user/${user.id}`);
+    return data.map(mapOrder);
   },
+
+  cancel: async (orderId: string): Promise<void> => {
+    await apiCall(`/orders/${orderId}/cancel`, { method: 'PUT' });
+  },
+
+  refund: async (orderId: string): Promise<void> => {
+    await apiCall(`/orders/${orderId}/return`, { method: 'PUT' });
+  }
 };
 
-// Cart API (if you want to persist cart on server)
 export const cartAPI = {
-  // Save cart to server
-  save: async (items: CartItem[]): Promise<void> => {
-    // return apiCall<void>('/cart', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ items }),
-    // });
-    
-    console.log('Saving cart:', items);
-    return new Promise(resolve => setTimeout(resolve, 300));
+  // Clear cart
+  clear: async (userId: number) => {
+    await apiCall(`/cart/${userId}`, { method: 'DELETE' });
   },
 
-  // Load cart from server
+  // Add single item
+  addToCart: async (data: { userId: number, productId: number, quantity: number }) => {
+    await apiCall('/cart/add', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // Save full cart (Strategy: Clear then Add All)
+  // This is inefficient but ensures state sync if frontend is "master"
+  save: async (items: CartItem[]): Promise<void> => {
+    const user = authService.getCurrentUser();
+    if (!user) return;
+
+    await cartAPI.clear(parseInt(user.id));
+    for (const item of items) {
+      await cartAPI.addToCart({
+        userId: parseInt(user.id),
+        productId: parseInt(item.id),
+        quantity: item.quantity
+      });
+    }
+  },
+
   load: async (): Promise<CartItem[]> => {
-    // return apiCall<CartItem[]>('/cart');
-    
-    return new Promise(resolve => setTimeout(() => resolve([]), 300));
+    const user = authService.getCurrentUser();
+    if (!user) return [];
+
+    try {
+      const cart = await apiCall<any>(`/cart/${user.id}`);
+      if (!cart || !cart.items) return [];
+
+      return cart.items.map((item: any) => ({
+        ...mapProduct(item.product),
+        quantity: item.quantity
+      }));
+    } catch (e) {
+      console.warn("Could not load cart", e);
+      return [];
+    }
   },
 };
 
-// User API
 export interface User {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  dormitory: string;
-  roomNumber: string;
+  phone?: string;
+  address?: string;
 }
 
 export const userAPI = {
-  // Get current user profile
   getProfile: async (): Promise<User> => {
-    // return apiCall<User>('/user/profile');
-    
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            id: '1',
-            name: 'Student Name',
-            email: 'student@sabanciuniv.edu',
-            phone: '+90 555 123 4567',
-            dormitory: 'A Block',
-            roomNumber: '301',
-          }),
-        500
-      )
-    );
+    // If backend doesn't have a /me endpoint, return stored user
+    // Otherwise: return apiCall<User>('/user/me');
+    const user = authService.getCurrentUser();
+    if (!user) throw new Error("Not logged in");
+    return Promise.resolve(user);
   },
 
-  // Update user profile
   updateProfile: async (userData: Partial<User>): Promise<User> => {
-    // return apiCall<User>('/user/profile', {
-    //   method: 'PUT',
-    //   body: JSON.stringify(userData),
-    // });
-    
-    console.log('Updating profile:', userData);
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            id: '1',
-            name: userData.name || 'Student Name',
-            email: userData.email || 'student@sabanciuniv.edu',
-            phone: userData.phone || '+90 555 123 4567',
-            dormitory: userData.dormitory || 'A Block',
-            roomNumber: userData.roomNumber || '301',
-          }),
-        500
-      )
-    );
-  },
-};
-
-// Prescription Upload API
-export const prescriptionAPI = {
-  upload: async (file: File, orderId: string): Promise<{ url: string }> => {
-    // const formData = new FormData();
-    // formData.append('prescription', file);
-    // formData.append('orderId', orderId);
-    // return apiCall<{ url: string }>('/prescriptions/upload', {
-    //   method: 'POST',
-    //   body: formData,
-    //   headers: {}, // Let browser set Content-Type
-    // });
-
-    console.log('Uploading prescription:', file.name, 'for order:', orderId);
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            url: `https://storage.example.com/prescriptions/${orderId}/${file.name}`,
-          }),
-        1000
-      )
-    );
-  },
-};
-
-// Inventory API (for real-time stock updates)
-export const inventoryAPI = {
-  checkStock: async (productId: string): Promise<{ inStock: boolean; quantity: number }> => {
-    // return apiCall<{ inStock: boolean; quantity: number }>(`/inventory/${productId}`);
-    
-    return new Promise(resolve =>
-      setTimeout(
-        () =>
-          resolve({
-            inStock: true,
-            quantity: 50,
-          }),
-        300
-      )
-    );
-  },
+    // Backend doesn't show a generic update profile, only password
+    // Implement if backend adds it. For now, return input.
+    console.log("Update profile not fully supported by backend yet");
+    return Promise.resolve({ ...authService.getCurrentUser()!, ...userData });
+  }
 };
