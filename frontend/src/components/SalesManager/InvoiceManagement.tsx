@@ -24,7 +24,7 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
       setLoading(true);
       // Fetch all orders (using the existing endpoint in OrderController which is mapped in managerApi)
       // Note: Reusing getDeliveries as it hits /api/orders/all
-      const data = await productManagerAPI.getDeliveries();
+      const data = await productManagerAPI.getAllOrders();
       setInvoices(data);
     } catch (error) {
       console.error("Failed to load invoices", error);
@@ -33,10 +33,14 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
     }
   };
 
-  const filteredInvoices = invoices.filter(invoice =>
-      invoice.id?.toString().includes(searchQuery) ||
-      invoice.userName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter(invoice => {
+    // FIX: Use 'deliveryId' instead of 'id' and 'customerId' instead of 'userName'
+    // Also added safe checks (|| "") to prevent crashes if fields are null
+    const idMatch = (invoice.deliveryId?.toString() || "").includes(searchQuery);
+    const userMatch = (invoice.productName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (invoice.customerId?.toString() || "").includes(searchQuery);
+    return idMatch || userMatch;
+  });
 
   return (
       <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -112,11 +116,11 @@ export function InvoiceManagement({ onBack, onNavigate }: InvoiceManagementProps
                   {loading ? (
                       <tr><td colSpan={5} className="p-4 text-center">Loading Invoices...</td></tr>
                   ) : filteredInvoices.map(invoice => (
-                      <tr key={invoice.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">#{invoice.id}</td>
+                      <tr key={invoice.orderId} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">#{invoice.orderId}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{invoice.userName}</td>
                         <td className="px-6 py-4 text-sm text-green-600 font-medium">
-                          ${invoice.totalPrice?.toFixed(2)}
+                          ${invoice.totalAmount?.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
                           {new Date(invoice.orderDate).toLocaleDateString()}

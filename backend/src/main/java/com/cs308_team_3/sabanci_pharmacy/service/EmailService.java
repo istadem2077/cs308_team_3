@@ -58,4 +58,13 @@ public class EmailService {
 	mailSender.send(message);
 	System.out.println("Email sent to" + toEmail);
     }
+
+    public void sendRefundNotif(String toEmail) {
+	SimpleMailMessage message = new SimpleMailMessage();
+	message.setTo(toEmail);
+	message.setSubject("The price of the order has been refunded!");
+	message.setText("Good news! Your order has been refunded!");
+	mailSender.send(message);
+	System.out.println("Sent to " + toEmail);
+    }
 }

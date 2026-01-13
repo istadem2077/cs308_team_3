@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Package, Clock, CheckCircle, Truck, Calendar, Star, XCircle, RotateCcw, AlertCircle, Mail, Info, Download } from 'lucide-react';
-import {OrderResponse, ordersAPI} from '../services/api';
+import {OrderResponse, ordersAPI, productsAPI} from '../services/api';
 import { authService } from '../services/auth';
 import {Order} from "./ProductManager/Porders";
 
@@ -45,6 +45,7 @@ export function Orders({ orders, onUpdateOrderStatus,onRateProduct, onAddComment
   const [showRefundConfirmation, setShowRefundConfirmation] = useState(false);
   const [refundStatuses, setRefundStatuses] = useState<ItemRefundStatus[]>([]);
   const [lastRefundAmount, setLastRefundAmount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
   const user = authService.getCurrentUser();
 
   const getStatusIcon = (status: string) => {
@@ -175,6 +176,24 @@ export function Orders({ orders, onUpdateOrderStatus,onRateProduct, onAddComment
     setSelectedRefundItems(new Set());
     setRefundReason('');
     setShowRefundModal(true);
+
+    try{
+      ordersAPI.returnOrder(order.orderId);
+    } catch (e) {
+      console.error(e)
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+
+    try {
+      // Call the specific Customer-allowed endpoint
+      await ordersAPI.cancel(orderId);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      alert("Failed to cancel order.");
+    }
   };
 
   const toggleItemSelection = (productId: string) => {
@@ -205,29 +224,29 @@ export function Orders({ orders, onUpdateOrderStatus,onRateProduct, onAddComment
     return refundStatuses.find(status => status.orderId === orderId && status.productId === productId);
   };
 
-  const handleSubmitRefund = () => {
+  const handleSubmitRefund = async () => {
     if (!currentRefundOrder || selectedRefundItems.size === 0 || !refundReason.trim()) {
       return;
     }
-    
-    const refundAmount = calculateRefundAmount();
-    
-    // Create refund status for each selected item
-    const newRefundStatuses: ItemRefundStatus[] = Array.from(selectedRefundItems).map(productId => {
-      const item = currentRefundOrder.items.find(i => i.productId === productId);
-      return {
-        orderId: currentRefundOrder.orderId,
-        productId: productId,
-        status: 'requested' as const,
-        refundAmount: item ? item.price * item.quantity : 0,
-        requestDate: new Date().toISOString(),
-      };
-    });
-    
-    setRefundStatuses(prev => [...prev, ...newRefundStatuses]);
-    setLastRefundAmount(refundAmount);
-    setShowRefundModal(false);
-    setShowRefundConfirmation(true);
+
+    setIsSubmitting(true);
+    try {
+      // Call the specific Customer-allowed endpoint
+      await ordersAPI.returnOrder(currentRefundOrder.orderId);
+
+      const refundAmount = calculateRefundAmount();
+      setLastRefundAmount(refundAmount);
+
+      // Refresh data if prop provided
+      if (onRefresh) onRefresh();
+
+      setShowRefundModal(false);
+      setShowRefundConfirmation(true);
+    } catch (error) {
+      alert("Failed to submit refund request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canRequestRefund = (order: OrderResponse): boolean => {
@@ -537,7 +556,7 @@ Sabanci University Pharmacy
                   {/* Download Invoice button - only for completed orders */}
                   {order.status === 'delivered' && (
                     <button
-                      onClick={() => handleDownloadInvoice(order)}
+                      onClick={() => ordersAPI.downloadInvoice(order.orderId) /*handleDownloadInvoice(order)*/}
                       className="text-blue-600 hover:text-blue-700 text-sm px-3 py-1 border border-blue-600 rounded-lg hover:bg-blue-50 flex items-center gap-1"
                     >
                       <Download className="w-4 h-4" />
@@ -547,19 +566,13 @@ Sabanci University Pharmacy
                   
                   {/* Cancel button - only for processing orders */}
                   {order.status === 'processing' && (
-                    <>
                       <button
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to cancel this order?')) {
-                            onUpdateOrderStatus(order.orderId, 'cancelled');
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-700 text-sm px-3 py-1 border border-red-600 rounded-lg hover:bg-red-50 flex items-center gap-1"
+                          onClick={() => handleCancelOrder(order.orderId)}
+                          className="text-red-600 hover:text-red-700 text-sm px-3 py-1 border border-red-600 rounded-lg hover:bg-red-50 flex items-center gap-1"
                       >
                         <XCircle className="w-4 h-4" />
                         Cancel Order
                       </button>
-                    </>
                   )}
                   
                   {/* Return/Refund button - only for delivered orders within 30 days */}
@@ -570,15 +583,6 @@ Sabanci University Pharmacy
                     >
                       <RotateCcw className="w-4 h-4" />
                       Request Refund
-                    </button>
-                  )}
-                  
-                  {order.status === 'in-transit' && (
-                    <button
-                      onClick={() => onUpdateOrderStatus(order.orderId, 'delivered')}
-                      className="text-green-600 hover:text-green-700 text-sm px-3 py-1 border border-green-600 rounded-lg hover:bg-green-50"
-                    >
-                      Mark as Delivered
                     </button>
                   )}
                 </div>

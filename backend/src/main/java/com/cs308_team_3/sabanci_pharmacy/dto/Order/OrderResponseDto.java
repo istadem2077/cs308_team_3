@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class OrderResponseDto {
     private Integer orderId;
+    private String userName;
     private LocalDateTime orderDate;
     private String status;
     private BigDecimal totalAmount;

@@ -91,6 +91,10 @@ export const productManagerAPI = {
         });
     },
 
+    getAllOrders: async () => {
+        return apiCall<any[]>('/orders/all');
+    },
+
     getDeliveries: async () => {
         return apiCall<any[]>('/pm/deliveries');
     },

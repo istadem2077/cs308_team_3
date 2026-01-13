@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,9 +21,6 @@ public class ChatController {
     @Autowired
     private ChatService chatService;
 
-    // --- REST Endpoints ---
-
-    // 1. Init Session (Called when user opens chat widget)
     @PostMapping("/session/init")
     public ChatSession initSession(@RequestParam(required = false) String email, 
                                    @RequestParam(required = false) String guestId) {
@@ -31,30 +28,43 @@ public class ChatController {
         return chatService.initiateSession(isRegistered ? email : guestId, isRegistered);
     }
 
-    // 2. Get Context (For Agents to see user details)
     @GetMapping("/context/{email}")
     @PreAuthorize("hasAuthority('SUPPORT_AGENT')")
     public CustomerContextDto getUserContext(@PathVariable String email) {
         return chatService.getCustomerContext(email);
     }
 
-    // 3. Get Waiting Queue (For Agents)
     @GetMapping("/queue")
     @PreAuthorize("hasAuthority('SUPPORT_AGENT')")
     public List<ChatSession> getQueue() {
         return chatService.getActiveQueue();
     }
     
-    // 4. Claim Session
+    // NEW: Get sessions claimed by current agent
+    @GetMapping("/my-sessions")
+    @PreAuthorize("hasAuthority('SUPPORT_AGENT')")
+    public List<ChatSession> getMySessions() {
+        String agentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        return chatService.getAgentSessions(agentEmail);
+    }
+    
     @PostMapping("/session/{sessionId}/claim")
     @PreAuthorize("hasAuthority('SUPPORT_AGENT')")
-    public void claimSession(@PathVariable String sessionId, @RequestParam String agentEmail) {
+    public void claimSession(@PathVariable String sessionId, @RequestParam(required=false) String agentEmail) {
+        // If agentEmail not provided in param, take from Context
+        if(agentEmail == null) {
+            agentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        }
         chatService.claimSession(sessionId, agentEmail);
     }
 
-    // --- WebSocket Endpoints ---
+    // NEW: Resolve/Close session
+    @PutMapping("/session/{sessionId}/resolve")
+    @PreAuthorize("hasAuthority('SUPPORT_AGENT')")
+    public void resolveSession(@PathVariable String sessionId) {
+        chatService.resolveSession(sessionId);
+    }
 
-    // Sent to /app/chat/{sessionId}/sendMessage
     @MessageMapping("/chat/{sessionId}/sendMessage")
     public void sendMessage(@DestinationVariable String sessionId, @Payload ChatMessageDto chatMessage) {
         chatMessage.setSessionId(sessionId);

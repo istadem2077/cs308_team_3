@@ -17,6 +17,7 @@ public class ProductManagerService {
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private OrderRepository orderRepository;
     @Autowired private ReviewRepository reviewRepository;
+    @Autowired private EmailService emailService;
 
     // --- 1. Product & Category Management ---
     public Product saveProduct(Product product) {
@@ -88,8 +89,12 @@ public class ProductManagerService {
     public void updateOrderStatus(Integer orderId, String newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+	User user = order.getUser();
         order.setStatus(newStatus); // e.g., "SHIPPED", "DELIVERED"
         orderRepository.save(order);
+	if (newStatus == "REFUNDED"){
+	    emailService.sendRefundNotif(user.getEmail());
+	}
     }
 
     // --- 4. Comment (Review) Moderation ---

@@ -7,8 +7,8 @@ class SocketService {
 
     constructor() {
         this.client = new Client({
-            // Point to your Spring Boot WebSocket endpoint
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+            // Ensure this URL matches your Spring Boot server
+            webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'), // Updated endpoint name to match Config
             onConnect: () => {
                 this.connected = true;
                 console.log('Connected to WebSocket');
@@ -17,7 +17,7 @@ class SocketService {
                 this.connected = false;
                 console.log('Disconnected from WebSocket');
             },
-            debug: (str) => console.log(str),
+            // debug: (str) => console.log(str),
         });
     }
 
@@ -33,16 +33,17 @@ class SocketService {
         this.client.deactivate();
     }
 
-    // Subscribe to a specific chat session (e.g., /topic/chat/session-123)
+    // Subscribe to a specific chat session
     subscribeToChat(sessionId: string, callback: (message: any) => void) {
         if (!this.client.connected) return;
 
-        return this.client.subscribe(`/topic/chat/${sessionId}`, (message) => {
+        // FIXED: Matched backend topic pattern "/topic/session/{id}"
+        return this.client.subscribe(`/topic/session/${sessionId}`, (message) => {
             callback(JSON.parse(message.body));
         });
     }
 
-    // Subscribe to the agent queue (for Support Manager)
+    // Subscribe to the agent queue (Broadcasted when new sessions are created)
     subscribeToQueue(callback: (session: any) => void) {
         if (!this.client.connected) return;
 

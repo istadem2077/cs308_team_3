@@ -19,6 +19,9 @@ public class OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private EmailService emailService;
     
     @Autowired
     private UserRepository userRepository;
@@ -87,7 +90,7 @@ public class OrderService {
         }
 
         // Changed from REFUNDED to RETURN_REQUESTED to allow Manager approval
-        order.setStatus("RETURN_REQUESTED"); 
+        order.setStatus("RETURN_REQUESTED");
         return mapToDto(orderRepository.save(order));
     }
 
@@ -109,8 +112,11 @@ public class OrderService {
         dto.setOrderId(order.getId());
         dto.setOrderDate(order.getCreatedAt());
         dto.setStatus(order.getStatus());
-        //dto.setUserName(order.getUser().getName()); // Ensure User name is mapped if needed for UI
 
+	if(order.getUser() != null) {
+            dto.setUserName(order.getUser().getName()); 
+        }
+	
         List<OrderItemDto> itemDtos = order.getOrderItems().stream().map(item -> {
             OrderItemDto itemDto = new OrderItemDto();
             itemDto.setProductName(item.getProduct().getName());

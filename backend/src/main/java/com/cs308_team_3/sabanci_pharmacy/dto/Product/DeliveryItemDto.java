@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -16,5 +17,6 @@ public class DeliveryItemDto {
     private Integer quantity;
     private BigDecimal totalPrice;   // Unit Price * Quantity
     private String deliveryAddress;  // Full address string
+    //    private LocalDateTime createdAt;
     private String status;           // PENDING, SHIPPED, DELIVERED
 }

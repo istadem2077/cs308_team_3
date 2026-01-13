@@ -130,7 +130,7 @@ const mapStatus = (backendStatus: string): 'processing' | 'in-transit' | 'delive
   if (status === 'IN_TRANSIT' || status === 'SHIPPED') return 'in-transit';
   if (status === 'DELIVERED') return 'delivered';
   if (status === 'CANCELLED') return 'cancelled';
-  if (status === 'REFUNDED' || status === 'RETURNED') return 'refunded';
+  if (status === 'REFUNDED' || status === 'RETURNED' || status === 'RETURN_REQUESTED') return 'refunded';
   return 'processing';
 };
 
@@ -167,6 +167,13 @@ export const ordersAPI = {
       date: order.createdAt || new Date().toISOString(),
     };
   },
+
+  updateOrderStatus: async (orderId: string, status: string) => {
+    return apiCall(`/pm/order/${orderId}/status?status=${status}`, {
+      method: 'PUT'
+    });
+  },
+
   syncCart: async (userId: string, items: CartItem[]) => {
     for (const item of items) {
       try {
@@ -229,6 +236,19 @@ export const ordersAPI = {
       orderId: response.orderId.toString(),
       status: mapStatus(response.status),
       estimatedDelivery: 'Cancelled',
+      totalPrice: response.totalAmount,
+      items: response.items || [],
+      date: response.orderDate
+    };
+  },
+
+  returnOrder: async (orderId: string): Promise<OrderResponse> => {
+    // Hits the authenticated-allowed endpoint
+    const response = await apiCall<any>(`/orders/${orderId}/return`, { method: 'PUT' });
+    return {
+      orderId: response.orderId.toString(),
+      status: mapStatus(response.status),
+      estimatedDelivery: 'Return Requested',
       totalPrice: response.totalAmount,
       items: response.items || [],
       date: response.orderDate

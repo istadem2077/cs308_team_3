@@ -65,6 +65,8 @@ public class SecurityConfig {
                         // 5. SALES MANAGER - Changed to hasRole
                         .requestMatchers("/api/sales/**").hasRole("SALES_MANAGER")
 
+				       //.requestMatchers("/api/pm/order/*/status*").permitAll()
+
                         // 6. SUPPORT AGENT - Changed to hasRole
                         .requestMatchers("/api/tickets/**", "/api/support/context/**", "/api/support/queue", "/api/support/session/*/claim").hasRole("SUPPORT_AGENT")
 

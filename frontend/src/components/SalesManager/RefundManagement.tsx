@@ -42,19 +42,23 @@ export function RefundManagement({ onBack, onNavigate }: RefundManagementProps) 
   const fetchRefundRequests = async () => {
     try {
       setLoading(true);
-      const orders = await productManagerAPI.getDeliveries(); // Fetches all orders
+
+      // CHANGED: Use getAllOrders instead of getDeliveries
+      const orders = await productManagerAPI.getAllOrders();
 
       // Filter for return-related statuses
       const returns = orders
           .filter((order: any) => ['RETURN_REQUESTED', 'REFUNDED', 'RETURN_REJECTED'].includes(order.status))
           .map((order: any) => ({
             id: order.orderId.toString(),
+            // Now mapping userName correctly from backend
             customerName: order.userName || 'Unknown Customer',
-            customerEmail: 'Contact Support', // Backend DTO update needed for email
-            productName: order.items.map((i: any) => i.productName).join(', '),
-            quantity: order.items.reduce((sum: number, i: any) => sum + i.quantity, 0),
+            customerEmail: 'Contact Support',
+            // Now safely accessing items array
+            productName: order.items ? order.items.map((i: any) => i.productName).join(', ') : 'Unknown Product',
+            quantity: order.items ? order.items.reduce((sum: number, i: any) => sum + i.quantity, 0) : 0,
             purchaseDate: new Date(order.orderDate).toLocaleDateString(),
-            requestDate: new Date(order.orderDate).toLocaleDateString(), // Ideally fetch update time
+            requestDate: new Date(order.orderDate).toLocaleDateString(),
             originalPrice: order.totalAmount,
             refundAmount: order.totalAmount,
             reason: 'Customer requested return via portal',

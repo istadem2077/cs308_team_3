@@ -41,11 +41,6 @@ export function Register({ onRegisterSuccess, onSwitchToLogin, onSkip }: Registe
       return;
     }
 
-    if (!(formData.email.includes("@"))) {
-      setError('Please enter a valid email.');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
