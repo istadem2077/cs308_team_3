@@ -358,10 +358,17 @@ export default function App() {
     filteredProducts = [...filteredProducts].sort((a, b) => b.popularity - a.popularity);
   }
 
-  const categories = [
-    'all',
-    ...Array.from(new Set(products.map(p => p.category))),
-  ];
+  // Build category list safely (backend might return non-string / null category values)
+  const categories = (() => {
+    const set = new Set<string>();
+    set.add('all');
+    products.forEach(p => {
+      if (p.category != null) {
+        set.add(String(p.category));
+      }
+    });
+    return Array.from(set);
+  })();
 
   // Show login/register modal if not authenticated and not in guest mode
   if (!user && !isGuestMode && !showAuthModal) {
