@@ -20,6 +20,12 @@ public class ProductController {
     public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
+    
+    // NEW: Search Endpoint
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String query) {
+        return ResponseEntity.ok(productService.searchProducts(query));
+    }
 
     @PreAuthorize("hasRole('PRODUCT_MANAGER')")
     @PostMapping("/add")
@@ -31,11 +37,6 @@ public class ProductController {
     public Product getProductById(@PathVariable Integer id) {
         return productService.getProductById(id);
     }
-
-    //@PostMapping
-    //public Product createProduct(@RequestBody Product product) {
-    //    return productService.saveProduct(product);
-    //}
 
     @PreAuthorize("hasRole('PRODUCT_MANAGER')")
     @DeleteMapping("/remove/{id}")
