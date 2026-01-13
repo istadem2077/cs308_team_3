@@ -1,7 +1,7 @@
 package com.cs308_team_3.sabanci_pharmacy.controller;
 
-import com.sabanci.pharmacy.dto.FinancialReportDto;
-import com.sabanci.pharmacy.service.SalesManagerService;
+import com.cs308_team_3.sabanci_pharmacy.dto.Order.FinancialReportDto;
+import com.cs308_team_3.sabanci_pharmacy.service.SalesManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

@@ -1,16 +1,17 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.sabanci.pharmacy.entity.Product;
-import com.sabanci.pharmacy.entity.User;
-import com.sabanci.pharmacy.entity.Wishlist;
-import com.sabanci.pharmacy.repository.ProductRepository;
-import com.sabanci.pharmacy.repository.UserRepository;
-import com.sabanci.pharmacy.repository.WishlistRepository;
+import com.cs308_team_3.sabanci_pharmacy.entity.Product;
+import com.cs308_team_3.sabanci_pharmacy.entity.User;
+import com.cs308_team_3.sabanci_pharmacy.entity.Wishlist;
+import com.cs308_team_3.sabanci_pharmacy.repository.ProductRepository;
+import com.cs308_team_3.sabanci_pharmacy.repository.UserRepository;
+import com.cs308_team_3.sabanci_pharmacy.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class WishlistService {
@@ -42,7 +43,9 @@ public class WishlistService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        Wishlist wishlist = new Wishlist(user, product);
+        Wishlist wishlist = new Wishlist();
+	wishlist.setUser(user);
+	wishlist.setProduct(product);
         wishlistRepository.save(wishlist);
     }
 

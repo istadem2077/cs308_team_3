@@ -1,7 +1,7 @@
 package com.cs308_team_3.sabanci_pharmacy.controller;
 
-import com.sabanci.pharmacy.entity.Wishlist;
-import com.sabanci.pharmacy.service.WishlistService;
+import com.cs308_team_3.sabanci_pharmacy.entity.Wishlist;
+import com.cs308_team_3.sabanci_pharmacy.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

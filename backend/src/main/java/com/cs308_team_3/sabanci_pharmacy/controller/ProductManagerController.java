@@ -1,15 +1,16 @@
 package com.cs308_team_3.sabanci_pharmacy.controller;
 
-import com.sabanci.pharmacy.dto.DeliveryItemDto;
-import com.sabanci.pharmacy.entity.Category;
-import com.sabanci.pharmacy.entity.Product;
-import com.sabanci.pharmacy.entity.Review;
-import com.sabanci.pharmacy.service.ProductManagerService;
+import com.cs308_team_3.sabanci_pharmacy.dto.Product.DeliveryItemDto;
+import com.cs308_team_3.sabanci_pharmacy.entity.Category;
+import com.cs308_team_3.sabanci_pharmacy.entity.Product;
+import com.cs308_team_3.sabanci_pharmacy.entity.Review;
+import com.cs308_team_3.sabanci_pharmacy.service.ProductManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.List;
 
 @RestController
@@ -58,7 +59,7 @@ public class ProductManagerController {
 
     // --- Reviews ---
     @GetMapping("/reviews/pending")
-    public ResponseEntity<List<Review>> getPendingReviews() {
+    public ResponseEntity<Optional<Review>> getPendingReviews() {
         return ResponseEntity.ok(pmService.getPendingReviews());
     }
 

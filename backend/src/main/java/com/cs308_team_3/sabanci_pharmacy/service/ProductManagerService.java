@@ -1,13 +1,14 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.sabanci.pharmacy.dto.DeliveryItemDto;
-import com.sabanci.pharmacy.entity.*;
-import com.sabanci.pharmacy.repository.*;
+import com.cs308_team_3.sabanci_pharmacy.dto.Product.DeliveryItemDto;
+import com.cs308_team_3.sabanci_pharmacy.entity.*;
+import com.cs308_team_3.sabanci_pharmacy.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductManagerService {
@@ -57,7 +58,7 @@ public class ProductManagerService {
     }
 
     // --- 4. Comment (Review) Moderation ---
-    public List<Review> getPendingReviews() {
+    public Optional<Review> getPendingReviews() {
         // Assuming your Review entity uses an Enum, you might need ReviewStatus.PENDING
         // If it uses String as per DDL:
         return reviewRepository.findByStatus("PENDING");

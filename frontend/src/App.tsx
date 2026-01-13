@@ -18,7 +18,7 @@ import { LoginPrompt } from './components/LoginPrompt';
 import { ProductReviews } from './components/ProductReviews';
 import { Wishlist } from './components/Wishlist';
 import { authService, User } from './services/auth';
-import { mockProducts, mockReviews } from './services/api';
+//import { mockProducts, mockReviews } from './services/api';
 import './styles/globals.css';
 
 type SortOption = 'none' | 'price-asc' | 'price-desc' | 'popularity';

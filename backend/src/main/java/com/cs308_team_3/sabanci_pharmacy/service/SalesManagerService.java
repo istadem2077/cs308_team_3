@@ -1,8 +1,8 @@
 package com.cs308_team_3.sabanci_pharmacy.service;
 
-import com.sabanci.pharmacy.dto.FinancialReportDto;
-import com.sabanci.pharmacy.entity.*;
-import com.sabanci.pharmacy.repository.*;
+import com.cs308_team_3.sabanci_pharmacy.dto.Order.FinancialReportDto;
+import com.cs308_team_3.sabanci_pharmacy.entity.*;
+import com.cs308_team_3.sabanci_pharmacy.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +16,7 @@ public class SalesManagerService {
 
     @Autowired private ProductRepository productRepository;
     @Autowired private WishlistRepository wishlistRepository;
-    @Autowired private NotificationService notificationService;
+    @Autowired private EmailService emailService;
     @Autowired private OrderRepository orderRepository;
 
     // --- 1. Discount Management ---
@@ -37,7 +37,7 @@ public class SalesManagerService {
         // Notify Users
         List<Wishlist> wishlists = wishlistRepository.findByProductId(productId); // You need to add this method to Repo
         for (Wishlist w : wishlists) {
-            notificationService.sendDiscountNotification(
+            emailService.sendDiscountNotification(
                 w.getUser().getEmail(), 
                 product.getName(), 
                 newPrice.doubleValue()
