@@ -23,7 +23,7 @@ import { authService } from '../services/auth';
 import { OrderResponse, Product } from '../services/api';
 import { CustomerChat } from './CustomerChat';
 import { Orders } from './Orders';
-//import { TURKISH_CITIES } from '../data/cities';
+import { TURKISH_CITIES } from '../data/cities';
 
 interface MyAccountProps {
   user: User;
