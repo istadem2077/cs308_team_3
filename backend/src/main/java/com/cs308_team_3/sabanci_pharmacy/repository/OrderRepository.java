@@ -12,4 +12,18 @@ public interface OrderRepository extends JpaRepository<Order,Integer> {
 
     // NEW: Get all orders, newest first
     List<Order> findAllByOrderByCreatedAtDesc();
+
+    List<Order> findAllByCreatedAtBetweenAndStatus();
+
+    // We need to join multiple tables to get the delivery details
+    @Query("SELECT new com.sabanci.pharmacy.dto.DeliveryItemDto(" +
+	   "o.id, o.user.id, i.product.id, i.product.name, i.quantity, " +
+	   "(i.unitPrice * i.quantity), " +
+	   "concat(a.addressLine, ', ', a.city, ', ', a.province, ' ', a.zipCode), " +
+	   "o.status) " +
+	   "FROM Order o " +
+	   "JOIN o.orderItems i " +
+	   "JOIN o.shippingAddress a " +
+	   "ORDER BY o.createdAt DESC")
+    List<DeliveryItemDto> findAllDeliveryItems();
 }

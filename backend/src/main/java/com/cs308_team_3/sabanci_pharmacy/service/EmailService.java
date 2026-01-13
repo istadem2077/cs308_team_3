@@ -9,6 +9,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.mail.SimpleMailMessage;
 
 import java.io.ByteArrayInputStream;
 
@@ -46,5 +47,15 @@ public class EmailService {
             // Log the error
             System.err.println("Failed to send email: " + e.getMessage());
         }
+    }
+
+    public void sendDiscountNotification(String toEmail, String productName, double newPrice) {
+	SimpleMailMessage message = new SimpleMailMessage();
+	message.setTo(toEmail);
+	message.setSubject("Price drop alert: " + productName);
+	message.setText("Good news! An item in your wishlist, " + productName + ", is now on sale for $" + newPrice + "!");
+
+	mailSender.send(message);
+	System.out.println("Email sent to" + toEmail);
     }
 }
