@@ -215,6 +215,9 @@ export function Porders({ orders, onBack, onNavigate, onUpdateOrderStatus }: Por
                       Product ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                      Shipping Address
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
                       Quantity
                     </th>
                     <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
@@ -242,6 +245,12 @@ export function Porders({ orders, onBack, onNavigate, onUpdateOrderStatus }: Por
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-gray-600">{order.productId}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-600">{order.productId}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-gray-600">{order.deliveryAddress || '-'}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-gray-900">{order.quantity}</span>

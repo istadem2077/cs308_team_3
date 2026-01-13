@@ -102,7 +102,11 @@ export default function App() {
     }
   };
 
-
+  useEffect(() => {
+    if (user) {
+      wishlistAPI.get().then(wishlistItem => setWishlistItems(wishlistItem))
+    }
+  }, []);
 
   useEffect(() => {
     // Check if user is already logged in

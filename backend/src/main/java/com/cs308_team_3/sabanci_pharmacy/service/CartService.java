@@ -87,6 +87,7 @@ public class CartService {
 
         Order order = new Order();
         order.setUser(cart.getUser());
+	order.setShippingAddress(cart.getUser().getAddresses().get(0));
         order.setStatus("PENDING");
 
         BigDecimal total = BigDecimal.ZERO;
